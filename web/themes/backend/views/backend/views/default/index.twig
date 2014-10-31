@@ -1,0 +1,38 @@
+{% extends '@themelayouts/main.twig' %}
+{% block content %}
+    <div id="cp_header">
+        <div class="cp-header">
+            <div class="cp-switch-interface">
+                {% if interface=='manage' %}
+                    <a href="{{ url('/backend/default/index') }}" title="Интерфейс менеджера"><img src="{{ urlTo('@theme') }}/images/header/manage-mode-tg.png"></a>
+                {% else %}
+                    <a href="{{ url('/backend/default/index') }}" title="Интерфейс менеджера"><img src="{{ urlTo('@theme') }}/images/header/manage-mode.png"></a>
+                {% endif %}
+
+                <a href="/" title="Переход на сайт (в новой вкладке)" target="_blank"><img src="{{ urlTo('@theme') }}/images/header/go-to-site.png"></a>
+
+                {% if interface=='settings' %}
+                    <a href="{{ url('/backend/default/index', {'interface': 'settings'}) }}" title="Интерфейс администратора"><img src="{{ urlTo('@theme') }}/images/header/settings-mode-tg.png"></a>
+                {% else %}
+                    <a href="{{ url('/backend/default/index', {'interface': 'settings'}) }}" title="Интерфейс администратора"><img src="{{ urlTo('@theme') }}/images/header/settings-mode.png"></a>
+                {% endif %}
+            </div>
+            <a class="cp-add-button" id="supper_button"></a>
+
+            {#<div class="cp-search-container">#}
+            {#<input type="text" id="cp-search" placeholder="Поиск"/>#}
+            {#</div>#}
+
+            <div class="cp-devider"></div>
+            <div class="cp-user-info-cont">
+                <img src="/cp-files/images/users/{{ userId }}.png">
+                <div class="cp-user-info-cont-right">
+                    <div class="cp-user-info-name">
+                        {{ userName }}
+                    </div>
+                    <a href="{{ url('/backend/default/logout') }}">Профиль</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url('/backend/default/logout') }}">Выйти</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

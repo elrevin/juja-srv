@@ -1,0 +1,16 @@
+{"manage": [
+  {
+    "title": "Тестовый узел",
+    "model": "",
+    "runAction": "",
+    "getSubTreeAction": "",
+    "list": [
+      {
+        "title": "Sub tree test",
+        "modelName": "TestTable",
+        "runAction": ["backend", "main", "get-interface"],
+        "getSubTreeAction": ""
+      }
+    ]
+  }
+]}
