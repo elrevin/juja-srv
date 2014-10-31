@@ -3,7 +3,6 @@
 $params = require(__DIR__ . '/params.php');
 $params = array_merge($params, require(__DIR__ . '/webParams.php'));
 $modules = require_once(__DIR__ . '/modules.php');
-$extensions = require_once(__DIR__ . '/extensions.php');
 
 $config = [
     'id' => 'basic',
@@ -102,7 +101,6 @@ $config = [
         ],
     ],
     'params' => $params,
-    'extensions' => $extensions,
 ];
 
 if (YII_ENV_DEV) {
