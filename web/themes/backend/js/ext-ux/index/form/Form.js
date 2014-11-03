@@ -335,7 +335,8 @@ Ext.define('Ext.ux.index.form.Form', {
         var me = this,
             modelFieldsCount,
             field,
-            input;
+            input,
+            values = {};
         me.fireEvent((me.mode == 'update' ? 'beforeupdate' : 'beforeinsert'), me);
 
         if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
@@ -343,10 +344,12 @@ Ext.define('Ext.ux.index.form.Form', {
                 field = me.model.fields.getAt(i);
                 input = Ext.getCmp(me.id + '_field_' + field.name);
                 if (input) {
-                    me.model.set(field.name, input.getValue());
+                    values[field.name] = input.getValue();
                 }
             }
         }
+
+        me.model.set(values);
 
         me.fireEvent((me.mode == 'update' ? 'afterupdate' : 'afterinsert'), me);
     }

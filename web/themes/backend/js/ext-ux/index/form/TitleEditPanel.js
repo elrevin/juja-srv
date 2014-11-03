@@ -139,6 +139,7 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
 
         me.form.on('afterload', function (form, record) {
             Ext.get('in2-title-edit-text-' + me.id).dom.innerHTML = me.getValueByText();
+            me.getLayout().setActiveItem(0);
         });
 
         me.callParent();
