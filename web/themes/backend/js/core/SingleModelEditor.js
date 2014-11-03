@@ -17,35 +17,45 @@ Ext.define('App.core.SingleModelEditor', {
      */
     createModelClass: function () {
         var me = this,
-            fieldIndex;
-        if (me.fields.length) {
-            me.modelClassName = me.modelName + "Model";
-            var modelClassDefinition = {
-                extend: 'Ext.data.Model',
-                fields: []
-            };
-            for (var i = 0; i < this.fields.length; i++) {
-                fieldIndex = modelClassDefinition.fields.length;
-                modelClassDefinition.fields[fieldIndex] = {
-                    name: me.fields[i].name,
-                    type: me.fields[i].type,
-                    title: me.fields[i].title,
-                    group: me.fields[i].group,
-                    identify: me.fields[i].identify
+            fieldIndex,
+            modelClassDefinition;
+        me.modelClassName = me.modelName + "Model";
+
+        if (!Ext.ClassManager.isCreated(me.modelClassName)) {
+            if (me.fields.length) {
+                me.modelClassName = me.modelName + "Model";
+                modelClassDefinition = {
+                    extend: 'Ext.data.Model',
+                    fields: [{
+                        name: 'id',
+                        type: 'int',
+                        defaultValue: 0
+                    }]
                 };
+                for (var i = 0; i < this.fields.length; i++) {
+                    fieldIndex = modelClassDefinition.fields.length;
+                    modelClassDefinition.fields[fieldIndex] = {
+                        name: me.fields[i].name,
+                        type: me.fields[i].type,
+                        title: me.fields[i].title,
+                        group: me.fields[i].group,
+                        identify: me.fields[i].identify
+                    };
+                }
+                Ext.define(me.modelClassName, modelClassDefinition);
             }
-            Ext.define(me.modelClassName, modelClassDefinition);
         }
     },
 
     createStore: function () {
         var me = this;
         me.store = new Ext.data.JsonStore ({
+            model: me.modelClassName,
             proxy: {
                 type: 'ajax',
                 reader: {
                     type: 'json',
-                    root: 'list',
+                    root: 'data',
                     idProperty: 'id',
                     successProperty: 'success'
                 },
@@ -64,10 +74,15 @@ Ext.define('App.core.SingleModelEditor', {
                     destroy : $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('Model', '')})
                 }
             },
-            model: me.modelClassName,
-            autoLoad: true,
             pageSize: me.pageSize,
-            autoSync: true
+            autoLoad: true,
+            autoSync: true,
+            listeners: {
+                update: function (store, record, operation) {
+                    // Загружаем в форму запись
+                    me.form.loadRecord(record);
+                }
+            }
         });
     },
     

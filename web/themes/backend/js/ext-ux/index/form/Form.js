@@ -17,6 +17,13 @@ Ext.define('Ext.ux.index.form.Form', {
     var me = this;
 
     if (field.type == Ext.data.Types.INTEGER) {
+      if (field.name == 'id') {
+        // если ID, то создаем скрытое поле
+        return Ext.create('Ext.form.field.Hidden', {
+          name: 'id',
+          id: me.id+'_field_'+field.name
+        });
+      }
       // Обычное целочисленное поле
       return Ext.create('Ext.form.field.Number', {
         allowDecimals: false,
@@ -122,7 +129,6 @@ Ext.define('Ext.ux.index.form.Form', {
       for (i = 0; i < modelFieldsCount; i++) {
         field = me.model.fields.getAt(i);
         if (field.identify) {
-          this.idetifyField = field;
           continue;
         }
         if (field.group) {
@@ -236,12 +242,22 @@ Ext.define('Ext.ux.index.form.Form', {
 
   initComponent: function() {
     var me = this,
-      editorPanelConfig;
+        editorPanelConfig,
+        modelFieldsCount;
 
     me.addEvents('beforeload', 'afterload', 'beforeupdate', 'afterupdate', 'beforeinsert', 'afterinsert');
     me.bodyCls = 'in2-editor-form';
     me.layout = 'border';
 
+    if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
+      for (i = 0; i < modelFieldsCount; i++) {
+        field = me.model.fields.getAt(i);
+        if (field.identify) {
+          me.idetifyField = field;
+          break;
+        }
+      }
+    }
     editorPanelConfig = {
       layout: 'anchor',
       region: 'center',
@@ -258,7 +274,9 @@ Ext.define('Ext.ux.index.form.Form', {
     me.editorPanel = Ext.create('Ext.Panel', editorPanelConfig);
 
     me.titlePanel = Ext.create('Ext.ux.index.form.TitleEditPanel', {
-      region: 'north'
+      region: 'north',
+      form: me,
+      field: me.idetifyField
     });
 
     me.items = [
@@ -297,13 +315,18 @@ Ext.define('Ext.ux.index.form.Form', {
     me.createFields();
   },
 
-  loadRecord: function () {
+  loadRecord: function (record) {
     var me = this;
 
-    me.fireEvent('beforeload', me);
     me.mode = 'update';
-    me.callParent([me.model]);
-    me.fireEvent('afterload', me);
+
+    if (record == undefined || !record) {
+      record = me.model;
+    }
+
+    me.fireEvent('beforeload', me, record);
+    me.callParent([record]);
+    me.fireEvent('afterload', me, record);
   },
 
   save: function () {

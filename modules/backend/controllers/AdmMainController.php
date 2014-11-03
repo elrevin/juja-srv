@@ -6,12 +6,64 @@ use \Yii;
 
 class AdmMainController extends \app\base\web\BackendController
 {
+    /**
+     * Обработка главного меню
+     * @param array $list
+     * @return array
+     */
+    private function processCpMenu($list)
+    {
+        foreach ($list as $key => $item) {
+            if (isset($item['list'])) {
+                $list[$key]['getSubTreeAction'] = [];
+                $list[$key]['modelName'] = "";
+                $list[$key]['moduleName'] = "";
+                $list[$key]['list'] = $this->processCpMenu($list[$key]['list']);
+            } else {
+                if (isset($item['modelName'])) {
+                    // Указана модель, смотрим - нужно ли подгружать подменю
+                    if (isset($item['moduleName'])) {
+                        // Читаем свойства модели
+                        $modelName = '\app\modules\\'.$item['moduleName'].'\models\\'.$item['modelName'];
+                        $recursive = call_user_func([$modelName, 'getRecursive']);
+                        if ($recursive) {
+                            $list[$key]['getSubTreeAction'] = [$item['moduleName'], "main", "cp-menu"];
+                        } elseif (call_user_func([$modelName, 'getChildModel'])) {
+                            // Ищем подчиненные модели
+                            $list[$key]['getSubTreeAction'] = [$item['moduleName'], "main", "cp-menu"];
+                        } else {
+                            // Подменю нет
+                            $list[$key]['getSubTreeAction'] = [];
+                            $list[$key]['leaf'] = true;
+                        }
+
+                        // В любом случае нужен runAction
+                        $list[$key]['runAction'] = [$item['moduleName'], "main", "get-interface"];
+                    } else {
+                        $this->ajaxError('\app\modules\backend\controllers\AdmMainController\processCpMenu');
+                    }
+                } else {
+                    $list[$key]['modelName'] = "";
+                    $list[$key]['moduleName'] = "backend";
+                    $list[$key]['runAction'] = [];
+                    $list[$key]['getSubTreeAction'] = [];
+                }
+            }
+        }
+        return $list;
+    }
+
     public function actionCpMenu()
     {
         $interface = $this->getCurrentInterfaceType();
 
         $list = \yii\helpers\Json::decode($this->getDataFile('cpmenu.json'));
-        return ['list' => $list[$interface]];
+
+        // Обходим меню и вносим коррективы, там где требуется
+
+
+
+        return ['list' => $this->processCpMenu($list[$interface])];
     }
 
     public function actionGetInterface() {
@@ -19,6 +71,8 @@ class AdmMainController extends \app\base\web\BackendController
         if (!$modelName) {
             $this->ajaxError('\app\base\web\BackendController\actionGetInterface');
         }
+
+
 
         $modelStructure = TestTable::getStructure();
 
@@ -58,10 +112,12 @@ class AdmMainController extends \app\base\web\BackendController
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
 
-            $list = call_user_func([$modelName, 'getList'], []);
+            $list = call_user_func([$modelName, 'getList'], ["sort" => [
+                "id" => SORT_ASC
+            ]]);
             return $list;
         }
-        $this->ajaxError('app\modules\backend\controllers\AdmMainController\actionList');
+        $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionList');
         return null;
     }
 
@@ -79,11 +135,16 @@ class AdmMainController extends \app\base\web\BackendController
                 $model = new $modelName();
                 $model->mapJson($data);
                 if ($model->save()) {
-                    return [
-                        'success' => true
-                    ];
+                    $data = call_user_func([$modelName, 'getList'], [
+                        "limit" => 1,
+                        "sort" => [
+                            "id" => SORT_DESC
+                        ]
+                    ]);
+                    $data['success'] = true;
+                    return $data;
                 } else {
-                    $this->ajaxError('\app\base\web\BackendController\AdmMainController\actionSave?add=1&modelName='.$modelName);
+                    $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave');
                 }
             } elseif ($data['id']) {
                 $model = call_user_func([$modelName, 'findOne'], $data['id']);
@@ -93,11 +154,11 @@ class AdmMainController extends \app\base\web\BackendController
                         'success' => true
                     ];
                 } else {
-                    $this->ajaxError('\app\base\web\BackendController\AdmMainController\actionSave?add=1&modelName='.$modelName);
+                    $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave');
                 }
             }
         }
-        $this->ajaxError('\app\base\web\BackendController\AdmMainController\actionSave?add=1&modelName='.$modelName);
+        $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave');
         return null;
     }
 }

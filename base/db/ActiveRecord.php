@@ -98,6 +98,24 @@ class ActiveRecord extends db\ActiveRecord
      */
     protected static $modelTitle = '';
 
+    /**
+     * Если модуль рекурсивная (древовидная), то это свойство = true
+     * @var bool
+     */
+    protected static $recursive = false;
+
+    /**
+     * Имя класса "master" модел
+     * @var string
+     */
+    protected static $masterModel = '';
+
+    /**
+     * Имя класса родительской модели
+     * @var string
+     */
+    protected static $parentModel = '';
+
     public static function find()
     {
         $cond = static::defaultWhere();
@@ -125,6 +143,42 @@ class ActiveRecord extends db\ActiveRecord
 
     public static function getModelTitle () {
         return static::$modelTitle;
+    }
+
+    public static function getRecursive () {
+        return static::$recursive;
+    }
+
+    public static function getMasterModel () {
+        return static::$masterModel;
+    }
+
+    public static function getParentModel () {
+        return static::$parentModel;
+    }
+
+    public static function getChildModel() {
+        $className = static::className();
+        $classNameSpace = preg_replace("/([a-zA-Z0-9_]+)$/", '', $className);
+        $classPath = "@".trim(str_replace("\\", "/", $classNameSpace), "/");
+        preg_match("/([a-zA-Z0-9_]+)$/", $className, $matches);
+        $className = $matches[0];
+
+        $files = scandir(Yii::getAlias($classPath));
+        foreach ($files as $file) {
+            if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
+                $modelName = str_replace(".php", "", $file);
+                if ($modelName != $className) {
+                    $modelName = $classNameSpace.str_replace(".php", "", $file);
+                    $parentModel = call_user_func([$modelName, 'getParentModel']);
+                    if ($parentModel == $className) {
+                        return $modelName;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -163,9 +217,8 @@ class ActiveRecord extends db\ActiveRecord
      *      'start' - начальная запись (первый параметр LIMIT)
      *      'limit' - количество записей
      *      'filter' - фильтр записей (массив, который отправляет стандартный фильтр grid библиотеки ExtJS)
-     *      'sort' - массив настроек сортировки, каждый элемент - вложенный ассоциативный массив:
-     *          'field' - имя поля;
-     *          'dir' - направление ('ASC' или 'DESC')
+     *      'sort' - массив настроек сортировки, каждый элемент - ассоциативный массив, в котором ключ - имя поля, а
+     *          значение - направление сортировки (константы  SORT_DESC или SORT_ASC, так же можно указать строки: 'ASC' и 'DESC')
      *          При обработке этого масиива учитывается тип поля, соответственно поля pointer и select обрабатываются
      *          особым образом
      *
@@ -174,7 +227,7 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getList($params)
     {
-        $select = [];
+        $select = ["`".static::tableName()."`.`id`"];
         $join = [];
         $pointers = [];
 
@@ -212,10 +265,15 @@ class ActiveRecord extends db\ActiveRecord
 
         if (isset($params['sort'])) {
             $orderBy = [];
-            foreach ($params['sort'] as $item) {
-                $dir = ($item['dir'] == 'DESC' ? SORT_DESC : SORT_ASC);
-                if (isset($pointers[$item['field']])) {
-                    $orderBy["`".$pointers[$item['field']]['table']."`.`".$pointers[$item['field']]['field']."`"] = $dir;
+            foreach ($params['sort'] as $key => $dir) {
+                if (is_string($dir)) {
+                    $dir = ($dir == 'DESC' ? SORT_DESC : SORT_ASC);
+                }
+
+                if (isset($pointers[$key])) {
+                    $orderBy["`".$pointers[$key]['table']."`.`".$pointers[$key]['field']."`"] = $dir;
+                } else {
+                    $orderBy["`".static::tableName()."`.`".$key."`"] = $dir;
                 }
             }
             $query->orderBy($orderBy);
@@ -237,7 +295,7 @@ class ActiveRecord extends db\ActiveRecord
                 }
             }
         }
-        return $list;
+        return ['data' => $list];
     }
 
     protected static function setType ($fieldName, $value) {

@@ -26,6 +26,8 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
         column = null,
         isIdentify = field.identify;
 
+    if (field.name == 'id') return;
+
     if (["string", "int", 'float'].indexOf(field.type.type) >= 0) {
       column = {
         dataIndex: field.name,
