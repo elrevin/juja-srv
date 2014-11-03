@@ -61,7 +61,7 @@ Ext.define('Ext.ux.grid.filter.ListFilter', {
      *             {id: 35, name:'large'},
      *             {id: 44, name:'extra large'}
      *         ]
-     * 
+     *
      *   - **String** :
      *
      *         options: ['extra small', 'small', 'medium', 'large', 'extra large']
@@ -93,7 +93,7 @@ Ext.define('Ext.ux.grid.filter.ListFilter', {
      *     filter : [{"type":"list","value":"small,medium","field":"size"}]
      *
      */
-    phpMode : false,
+    phpMode: false,
     /**
      * @cfg {Ext.data.Store} [store]
      * The {@link Ext.data.Store} this list should use as its data source
@@ -110,7 +110,7 @@ Ext.define('Ext.ux.grid.filter.ListFilter', {
      * Template method that is to initialize the filter.
      * @param {Object} config
      */
-    init : function (config) {
+    init: function (config) {
         this.dt = Ext.create('Ext.util.DelayedTask', this.fireUpdate, this);
     },
 
@@ -120,7 +120,7 @@ Ext.define('Ext.ux.grid.filter.ListFilter', {
      * @param {Object} config Filter configuration
      * @return {Ext.menu.Menu}
      */
-    createMenu: function(config) {
+    createMenu: function (config) {
         var menu = Ext.create('Ext.ux.grid.menu.ListMenu', config);
         menu.on('checkchange', this.onCheckChange, this);
         return menu;
@@ -131,7 +131,7 @@ Ext.define('Ext.ux.grid.filter.ListFilter', {
      * Template method that is to get and return the value of the filter.
      * @return {String} The value of this filter
      */
-    getValue : function () {
+    getValue: function () {
         return this.menu.getSelected();
     },
     /**
@@ -139,7 +139,7 @@ Ext.define('Ext.ux.grid.filter.ListFilter', {
      * Template method that is to set the value of the filter.
      * @param {Object} value The value to set the filter
      */
-    setValue : function (value) {
+    setValue: function (value) {
         this.menu.setSelected(value);
         this.fireEvent('update', this);
     },
@@ -149,7 +149,7 @@ Ext.define('Ext.ux.grid.filter.ListFilter', {
      * has enough configuration information to be activated.
      * @return {Boolean}
      */
-    isActivatable : function () {
+    isActivatable: function () {
         return this.getValue().length > 0;
     },
 
@@ -160,12 +160,12 @@ Ext.define('Ext.ux.grid.filter.ListFilter', {
      * @return {Object/Array} An object or collection of objects containing
      * key value pairs representing the current configuration of the filter.
      */
-    getSerialArgs : function () {
+    getSerialArgs: function () {
         return {type: 'list', value: this.phpMode ? this.getValue().join(',') : this.getValue()};
     },
 
     /** @private */
-    onCheckChange : function(){
+    onCheckChange: function () {
         this.dt.delay(this.updateBuffer);
     },
 
@@ -177,7 +177,7 @@ Ext.define('Ext.ux.grid.filter.ListFilter', {
      * @return {Boolean} true if the record is valid within the bounds
      * of the filter, false otherwise.
      */
-    validateRecord : function (record) {
+    validateRecord: function (record) {
         var valuesArray = this.getValue();
         return Ext.Array.indexOf(valuesArray, record.get(this.dataIndex)) > -1;
     }

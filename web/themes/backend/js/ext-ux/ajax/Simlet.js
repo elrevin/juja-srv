@@ -10,7 +10,7 @@ Ext.define('Ext.ux.ajax.Simlet', function () {
         intRegex = /^[+-]?\d+$/,
         floatRegex = /^[+-]?\d+\.\d+$/;
 
-    function parseParamValue (value) {
+    function parseParamValue(value) {
         var m;
 
         if (Ext.isDefined(value)) {
@@ -21,7 +21,7 @@ Ext.define('Ext.ux.ajax.Simlet', function () {
             } else if (floatRegex.test(value)) {
                 value = parseFloat(value);
             } else if (!!(m = dateRegex.test(value))) {
-                value = new Date(Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]));
+                value = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]));
             }
         }
 
@@ -95,7 +95,7 @@ Ext.define('Ext.ux.ajax.Simlet', function () {
             if (fn) {
                 ret = fn.call(me, me.getCtx(xhr.method, xhr.url, xhr));
             } else {
-                ret = { status: 405, statusText: 'Method Not Allowed' };
+                ret = {status: 405, statusText: 'Method Not Allowed'};
             }
 
             return ret;
@@ -129,7 +129,7 @@ Ext.define('Ext.ux.ajax.Simlet', function () {
             return xhr;
         },
 
-        parseQueryString : function (str) {
+        parseQueryString: function (str) {
             var m = urlRegex.exec(str),
                 ret = {},
                 key,
@@ -165,7 +165,7 @@ Ext.define('Ext.ux.ajax.Simlet', function () {
                         break;
                     }
                     params = url;
-                    // fall...
+                // fall...
                 case 1:
                     url = method;
                     method = 'GET';

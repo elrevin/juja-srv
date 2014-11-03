@@ -150,9 +150,11 @@ class AdmMainController extends \app\base\web\BackendController
                 $model = call_user_func([$modelName, 'findOne'], $data['id']);
                 $model->mapJson($data);
                 if ($model->save()) {
-                    return [
-                        'success' => true
-                    ];
+                    $data = call_user_func([$modelName, 'getList'], [
+                        "where" => ["id" => $data['id']]
+                    ]);
+                    $data['success'] = true;
+                    return $data;
                 } else {
                     $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave');
                 }

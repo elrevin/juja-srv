@@ -49,7 +49,7 @@ Ext.define('App.core.SingleModelEditor', {
 
     createStore: function () {
         var me = this;
-        me.store = new Ext.data.JsonStore ({
+        me.store = new Ext.data.JsonStore({
             model: me.modelClassName,
             proxy: {
                 type: 'ajax',
@@ -68,10 +68,13 @@ Ext.define('App.core.SingleModelEditor', {
                 },
                 actionMethods: {read: 'GET', update: 'POST'},
                 api: {
-                    create  : $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {modelName: me.modelClassName.replace('Model', ''), add: 1}),
-                    read    : $url(me.getDataAction[0], me.getDataAction[1], me.getDataAction[2], {modelName: me.modelClassName.replace('Model', '')}),
-                    update  : $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {modelName: me.modelClassName.replace('Model', '')}),
-                    destroy : $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('Model', '')})
+                    create: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {
+                        modelName: me.modelClassName.replace('Model', ''),
+                        add: 1
+                    }),
+                    read: $url(me.getDataAction[0], me.getDataAction[1], me.getDataAction[2], {modelName: me.modelClassName.replace('Model', '')}),
+                    update: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {modelName: me.modelClassName.replace('Model', '')}),
+                    destroy: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('Model', '')})
                 }
             },
             pageSize: me.pageSize,
@@ -85,7 +88,7 @@ Ext.define('App.core.SingleModelEditor', {
             }
         });
     },
-    
+
     createToolbar: function () {
         var me = this;
 
@@ -127,9 +130,16 @@ Ext.define('App.core.SingleModelEditor', {
             deleteAction: me.deleteAction,
             store: me.store,
             selModel: Ext.create('Ext.selection.CheckboxModel', {
-                mode: "MULTI"
+                //mode: "MULTI"
             }),
-            tbar: me.createToolbar()
+            tbar: me.createToolbar(),
+            listeners: {
+                selectionchange: function (grid, selected, eOpts) {
+                    if (selected.length) {
+                        me.form.loadRecord(selected[0]);
+                    }
+                }
+            }
         });
     },
 

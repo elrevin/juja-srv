@@ -13,7 +13,7 @@ Ext.define('Ext.ux.grid.menu.RangeMenu', {
      * fieldCls : Ext.form.field.Number
      * </pre>
      */
-    fieldCls : 'Ext.form.field.Number',
+    fieldCls: 'Ext.form.field.Number',
 
     /**
      * @cfg {Object} fieldCfg
@@ -24,7 +24,7 @@ Ext.define('Ext.ux.grid.menu.RangeMenu', {
      * </pre>
      * Example usage:
      * <pre><code>
-fieldCfg : {
+     fieldCfg : {
     width: 150,
 },
      * </code></pre>
@@ -36,12 +36,12 @@ fieldCfg : {
      * Defaults to <tt>undefined</tt>.
      * Example usage:
      * <pre><code>
-fields : {
+     fields : {
     gt: { // override fieldCfg options
         width: 200,
         fieldCls: Ext.ux.form.CustomNumberField // to override default {@link #fieldCls}
-    }
-},
+     }
+     },
      * </code></pre>
      */
 
@@ -49,24 +49,24 @@ fields : {
      * @cfg {Object} itemIconCls
      * The itemIconCls to be applied to each comparator field item.
      * Defaults to:<pre>
-itemIconCls : {
+     itemIconCls : {
     gt : 'ux-rangemenu-gt',
     lt : 'ux-rangemenu-lt',
     eq : 'ux-rangemenu-eq'
 }
      * </pre>
      */
-    itemIconCls : {
-        gt : 'ux-rangemenu-gt',
-        lt : 'ux-rangemenu-lt',
-        eq : 'ux-rangemenu-eq'
+    itemIconCls: {
+        gt: 'ux-rangemenu-gt',
+        lt: 'ux-rangemenu-lt',
+        eq: 'ux-rangemenu-eq'
     },
 
     /**
      * @cfg {Object} fieldLabels
      * Accessible label text for each comparator field item. Can be overridden by localization
      * files. Defaults to:<pre>
-fieldLabels : {
+     fieldLabels : {
      gt: 'Greater Than',
      lt: 'Less Than',
      eq: 'Equal To'
@@ -82,14 +82,14 @@ fieldLabels : {
      * @cfg {Object} menuItemCfgs
      * Default configuration options for each menu item
      * Defaults to:<pre>
-menuItemCfgs : {
+     menuItemCfgs : {
     emptyText: 'Enter Filter Text...',
     selectOnFocus: true,
     width: 125
 }
      * </pre>
      */
-    menuItemCfgs : {
+    menuItemCfgs: {
         emptyText: 'Введите число...',
         selectOnFocus: false,
         width: 155
@@ -102,11 +102,11 @@ menuItemCfgs : {
      * menuItems : ['lt','gt','-','eq']
      * </pre>
      */
-    menuItems : ['lt', 'gt', '-', 'eq'],
+    menuItems: ['lt', 'gt', '-', 'eq'],
 
     plain: true,
 
-    constructor : function (config) {
+    constructor: function (config) {
         var me = this,
             fields, fieldCfg, i, len, item, cfg, Cls;
 
@@ -114,7 +114,7 @@ menuItemCfgs : {
 
         fields = me.fields = me.fields || {};
         fieldCfg = me.fieldCfg = me.fieldCfg || {};
-        
+
         me.addEvents(
             /**
              * @event update
@@ -123,9 +123,9 @@ menuItemCfgs : {
              */
             'update'
         );
-      
+
         me.updateTask = Ext.create('Ext.util.DelayedTask', me.fireUpdate, me);
-    
+
         for (i = 0, len = me.menuItems.length; i < len; i++) {
             item = me.menuItems[i];
             if (item !== '-') {
@@ -161,8 +161,8 @@ menuItemCfgs : {
             me.add(item);
         }
     },
-    
-    stopFn: function(e) {
+
+    stopFn: function (e) {
         e.stopPropagation();
     },
 
@@ -170,19 +170,19 @@ menuItemCfgs : {
      * @private
      * called by this.updateTask
      */
-    fireUpdate : function () {
+    fireUpdate: function () {
         this.fireEvent('update', this);
     },
-    
+
     /**
      * Get and return the value of the filter.
      * @return {String} The value of this filter
      */
-    getValue : function () {
+    getValue: function () {
         var result = {},
-            fields = this.fields, 
+            fields = this.fields,
             key, field;
-            
+
         for (key in fields) {
             if (fields.hasOwnProperty(key)) {
                 field = fields[key];
@@ -193,12 +193,12 @@ menuItemCfgs : {
         }
         return result;
     },
-  
+
     /**
      * Set the value of this menu and fires the 'update' event.
      * @param {Object} data The data to assign to this menu
-     */	
-    setValue : function (data) {
+     */
+    setValue: function (data) {
         var me = this,
             fields = me.fields,
             key,
@@ -207,7 +207,7 @@ menuItemCfgs : {
         for (key in fields) {
             if (fields.hasOwnProperty(key)) {
                 // Prevent field's change event from tiggering a Store filter. The final upate event will do that
-                field =fields[key];
+                field = fields[key];
                 field.suspendEvents();
                 field.setValue(key in data ? data[key] : '');
                 field.resumeEvents();
@@ -218,12 +218,12 @@ menuItemCfgs : {
         me.fireEvent('update', me);
     },
 
-    /**  
+    /**
      * @private
      * Handler method called when there is a keyup event on an input
      * item of this menu.
      */
-    onInputKeyUp: function(field, e) {
+    onInputKeyUp: function (field, e) {
         if (e.getKey() === e.RETURN && field.isValid()) {
             e.stopEvent();
             this.hide();
@@ -235,7 +235,7 @@ menuItemCfgs : {
      * Handler method called when the user changes the value of one of the input
      * items in this menu.
      */
-    onInputChange: function(field) {
+    onInputChange: function (field) {
         var me = this,
             fields = me.fields,
             eq = fields.eq,

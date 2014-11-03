@@ -74,7 +74,7 @@ Ext.define('Ext.ux.form.TinyMCETextAreaWindowManager', {
         if (!w) {
             return;
         }
-        
+
         // TinyMCE window manager opens the windows in two steps
         //
         // 1. displaying and loading iframe
@@ -89,10 +89,14 @@ Ext.define('Ext.ux.form.TinyMCETextAreaWindowManager', {
         w.center();
 
         var tinypopupIframe = w.getComponent('tiny_popup_iframe');
-        if (!tinypopupIframe) { return; }
+        if (!tinypopupIframe) {
+            return;
+        }
 
         var doc = tinypopupIframe.getEl().dom.contentDocument;
-        if (!doc) { return; }
+        if (!doc) {
+            return;
+        }
 
         // We do not focus in the standard way. It does not work under IE.
         // The standard focusing occurs too early when using ExtJS windows for the popups.
@@ -122,7 +126,9 @@ Ext.define('Ext.ux.form.TinyMCETextAreaWindowManager', {
 
         var me = this;
 
-        Ext.util.Observable.capture(me.control, function () { return false; });
+        Ext.util.Observable.capture(me.control, function () {
+            return false;
+        });
 
         // Hide intermediate color popup menu if the more color dialog is displayed.
         // The z-index of the tinymce color popup menu is higher than that of the ExtJS
@@ -208,7 +214,7 @@ Ext.define('Ext.ux.form.TinyMCETextAreaWindowManager', {
                                 me.editor.selection.moveToBookmark(me.editor.windowManager.bookmark);
                             }
                             me.editor.focus();
-                            
+
                             me.control.popupActive = false;
                         }
                     }, 300);
@@ -221,7 +227,7 @@ Ext.define('Ext.ux.form.TinyMCETextAreaWindowManager', {
         p.mce_window_id = win.getId();
 
         me.control.popupActive = true;
-        
+
         win.show(null,
             function () {
                 // TinyMCE window manager opens the windows in two steps
@@ -244,8 +250,10 @@ Ext.define('Ext.ux.form.TinyMCETextAreaWindowManager', {
     close: function (win) {
 
         var me = this;
-        
-        if (!win || !win.tinyMCEPopup || !win.tinyMCEPopup.id) { return; }
+
+        if (!win || !win.tinyMCEPopup || !win.tinyMCEPopup.id) {
+            return;
+        }
 
         var w = Ext.getCmp(win.tinyMCEPopup.id);
         if (w) {
@@ -336,7 +344,7 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
                 // synchronized upon the blur event.
                 if (ed && ed.isHidden()) {
                     if (ctrl) {
-                        me.positionBeforeBlur = { start: ctrl.selectionStart, end: ctrl.selectionEnd };
+                        me.positionBeforeBlur = {start: ctrl.selectionStart, end: ctrl.selectionEnd};
                     }
 
                     ed.load();
@@ -344,7 +352,7 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
             }
             else {
                 if (ctrl) {
-                    me.positionBeforeBlur = { start: ctrl.selectionStart, end: ctrl.selectionEnd };
+                    me.positionBeforeBlur = {start: ctrl.selectionStart, end: ctrl.selectionEnd};
                 }
             }
         }, me);
@@ -378,9 +386,15 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
         var me = this;
 
         var widthCorrection = 0;
-        if (Ext.isGecko) { widthCorrection = -2; }
-        if (Ext.isOpera) { widthCorrection = -2; }
-        if (Ext.isIE) { widthCorrection = -2; }
+        if (Ext.isGecko) {
+            widthCorrection = -2;
+        }
+        if (Ext.isOpera) {
+            widthCorrection = -2;
+        }
+        if (Ext.isIE) {
+            widthCorrection = -2;
+        }
 
         return widthCorrection;
     },
@@ -388,7 +402,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     syncEditorSize: function (w, h) {
         var me = this;
 
-        if (!me.wysiwygIntialized || !me.rendered) { return; }
+        if (!me.wysiwygIntialized || !me.rendered) {
+            return;
+        }
 
         var ed = tinymce.get(me.getInputId());
 
@@ -396,7 +412,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
         // because the size values of the hidden editor
         // are calculated wrong.
 
-        if (ed.isHidden()) { return; }
+        if (ed.isHidden()) {
+            return;
+        }
 
         // Unfortunately, the TinyMCE has no setSize method
         // This method would help enormly and make the integration
@@ -414,8 +432,12 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
 
         var frameHeight = h - 2;
 
-        if (edToolbar) { frameHeight -= edToolbar.getHeight(); }
-        if (edStatusbar) { frameHeight -= edStatusbar.getHeight(); }
+        if (edToolbar) {
+            frameHeight -= edToolbar.getHeight();
+        }
+        if (edStatusbar) {
+            frameHeight -= edStatusbar.getHeight();
+        }
 
         edIframe.setHeight(frameHeight);
 
@@ -426,7 +448,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     initEditor: function () {
         var me = this;
 
-        if (me.noWysiwyg || me.intializationInProgress || me.wysiwygIntialized) { return; }
+        if (me.noWysiwyg || me.intializationInProgress || me.wysiwygIntialized) {
+            return;
+        }
 
         me.intializationInProgress = true;
 
@@ -470,8 +494,12 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
         var user_setup = null;
         var user_onchange_callback = null;
 
-        if (me.tinyMCEConfig.setup) { user_setup = me.tinyMCEConfig.setup; }
-        if (me.tinyMCEConfig.onchange_callback) { user_onchange_callback = me.tinyMCEConfig.onchange_callback; }
+        if (me.tinyMCEConfig.setup) {
+            user_setup = me.tinyMCEConfig.setup;
+        }
+        if (me.tinyMCEConfig.onchange_callback) {
+            user_onchange_callback = me.tinyMCEConfig.onchange_callback;
+        }
 
         me.tinyMCEConfig.onchange_callback = function (ed) {
 
@@ -486,17 +514,23 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
                 me.validate();
             }
 
-            if (user_onchange_callback) { user_onchange_callback(ed); }
+            if (user_onchange_callback) {
+                user_onchange_callback(ed);
+            }
         };
 
         me.tinyMCEConfig.setup = function (ed) {
 
             ed.onExecCommand.add(function (ed, cmd, ui, val) {
 
-                if (cmd !== 'mceFullScreen') { return; }
+                if (cmd !== 'mceFullScreen') {
+                    return;
+                }
 
                 var fullscreen_container = document.getElementById("mce_fullscreen_container");
-                if (!fullscreen_container) { return; }
+                if (!fullscreen_container) {
+                    return;
+                }
 
                 fullscreen_container.style.zIndex = Ext.ZIndexManager.zBase + 2;
 
@@ -513,25 +547,27 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
                 me.wysiwygIntialized = true;
                 me.intializationInProgress = false;
 
-                if (me.isDisabled()) { me.disableEditor(); }
+                if (me.isDisabled()) {
+                    me.disableEditor();
+                }
 
                 tinymce.dom.Event.add(ed.getWin(), 'focus', function (e) {
                     var w = me.findParentByType('window');
                     if (w && !me.popupActive) {
-                      // we use toFront to bring the parent window
-                      // to the front when the editor gets focus.
-                      // Under IE10, the editor gets focus, even if
-                      // a popup like image insert is opened. This is 
-                      // bad, because the popup goes into the back, and 
-                      // the editor to the front.
-                      //
-                      // We have introduced the flag 'popupActive',
-                      // which is set when the popup is opened and unset 
-                      // when the popup is closed.
-                      //
-                      // We do not do toFront id the popup is active.
-                      
-                      w.toFront(true);
+                        // we use toFront to bring the parent window
+                        // to the front when the editor gets focus.
+                        // Under IE10, the editor gets focus, even if
+                        // a popup like image insert is opened. This is
+                        // bad, because the popup goes into the back, and
+                        // the editor to the front.
+                        //
+                        // We have introduced the flag 'popupActive',
+                        // which is set when the popup is opened and unset
+                        // when the popup is closed.
+                        //
+                        // We do not do toFront id the popup is active.
+
+                        w.toFront(true);
                     }
                 });
             });
@@ -543,7 +579,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
                 });
             });
 
-            if (user_setup) { user_setup(ed); }
+            if (user_setup) {
+                user_setup(ed);
+            }
         };
 
         if (!tinymce.dom.Event.domLoaded) {
@@ -566,10 +604,14 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     isEditorHidden: function () {
         var me = this;
 
-        if (!me.wysiwygIntialized) { return true; }
+        if (!me.wysiwygIntialized) {
+            return true;
+        }
 
         var ed = tinymce.get(me.getInputId());
-        if (!ed) { return true; }
+        if (!ed) {
+            return true;
+        }
 
         return ed.isHidden();
     },
@@ -599,10 +641,14 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     hideEditor: function () {
         var me = this;
 
-        if (!me.wysiwygIntialized) { return; }
+        if (!me.wysiwygIntialized) {
+            return;
+        }
 
         var ed = tinymce.get(me.getInputId());
-        if (!ed) { return; }
+        if (!ed) {
+            return;
+        }
 
         var node = ed.selection.getNode();
 
@@ -668,9 +714,13 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     removeEditor: function () {
         var me = this;
 
-        if (me.intializationInProgress) {return me; }
+        if (me.intializationInProgress) {
+            return me;
+        }
 
-        if (!me.wysiwygIntialized) { return me; }
+        if (!me.wysiwygIntialized) {
+            return me;
+        }
 
         var ed = tinymce.get(me.getInputId());
         if (ed) {
@@ -694,15 +744,23 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     reinitEditor: function (cfg) {
         var me = this;
 
-        if (me.noWysiwyg || me.intializationInProgress) { return me; }
+        if (me.noWysiwyg || me.intializationInProgress) {
+            return me;
+        }
 
-        if (!me.tinyMCEConfig) { me.tinyMCEConfig = {}; }
-        if (!cfg) { cfg = {}; }
+        if (!me.tinyMCEConfig) {
+            me.tinyMCEConfig = {};
+        }
+        if (!cfg) {
+            cfg = {};
+        }
 
 
         Ext.apply(me.tinyMCEConfig, cfg);
 
-        if (!me.wysiwygIntialized) { return me; }
+        if (!me.wysiwygIntialized) {
+            return me;
+        }
 
         var hidden = true;
 
@@ -716,7 +774,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
 
         me.wysiwygIntialized = false;
 
-        if (!hidden) { me.initEditor(); }
+        if (!hidden) {
+            me.initEditor();
+        }
 
         return me;
     },
@@ -746,7 +806,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     enableEditorControls: function (state) {
         var me = this;
         var ed = tinymce.get(me.getInputId());
-        if (!ed) { return; }
+        if (!ed) {
+            return;
+        }
 
         tinymce.each(ed.controlManager.controls, function (c) {
             c.setDisabled(!state);
@@ -756,7 +818,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     enable: function (silent) {
         var me = this;
 
-        if (!me.isDisabled()) { return; }
+        if (!me.isDisabled()) {
+            return;
+        }
 
         var ed = tinymce.get(me.getInputId());
         if (ed) {
@@ -809,7 +873,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     disable: function (silent) {
         var me = this;
 
-        if (me.isDisabled()) { return; }
+        if (me.isDisabled()) {
+            return;
+        }
 
         me.disableEditor();
 
@@ -835,10 +901,14 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
     focus: function (selectText, delay) {
         var me = this;
 
-        if (me.isDisabled()) { return me; }
+        if (me.isDisabled()) {
+            return me;
+        }
 
         if (delay) {
-            if (isNaN(delay)) { delay = 10; }
+            if (isNaN(delay)) {
+                delay = 10;
+            }
 
             setTimeout(function () {
                 me.focus.call(me, selectText, false);
@@ -872,7 +942,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
         var ed = tinymce.get(me.getInputId());
 
         if (me.wysiwygIntialized) {
-            if (ed && !ed.isHidden()) { wwg_mode = true;}
+            if (ed && !ed.isHidden()) {
+                wwg_mode = true;
+            }
         }
 
         var ctrl = document.getElementById(me.getInputId());
@@ -956,7 +1028,9 @@ Ext.define('Ext.ux.form.TinyMCETextArea', {
         var edTable = Ext.get(me.getInputId() + "_tbl");
         var edIframe = Ext.get(me.getInputId() + "_ifr");
 
-        if (!edTable) { return me.callParent(arguments); }
+        if (!edTable) {
+            return me.callParent(arguments);
+        }
 
         /*
          Adding the red border to the mceIframeContainer is the most sure

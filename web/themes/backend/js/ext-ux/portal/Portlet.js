@@ -13,18 +13,18 @@ Ext.define('Ext.ux.portal.Portlet', {
     collapsible: true,
     animCollapse: true,
     draggable: {
-        moveOnDrag: false    
+        moveOnDrag: false
     },
     cls: 'x-portlet',
 
     // Override Panel's default doClose to provide a custom fade out effect
     // when a portlet is removed from the portal
-    doClose: function() {
+    doClose: function () {
         if (!this.closing) {
             this.closing = true;
             this.el.animate({
                 opacity: 0,
-                callback: function(){
+                callback: function () {
                     var closeAction = this.closeAction;
                     this.closing = false;
                     this.fireEvent('close', this);

@@ -62,8 +62,8 @@ class TestTable extends \app\base\db\ActiveRecord
         return [
             [['text'], 'string'],
             [['title'], 'string', 'max' => 1024],
-            [['dt'], 'date', 'format' => 'Y-m-d'],
-            [['dtt'], 'date', 'format' => 'Y-m-d H:i:s'],
+            [['dt'], 'date', 'format' => 'php:Y-m-d'],
+            [['dtt'], 'date', 'format' => 'php:Y-m-d H:i:s'],
             [['price'], 'number'],
             [['flag'], 'number', 'integerOnly' => true, 'min' => 0, 'max' => 1],
         ];

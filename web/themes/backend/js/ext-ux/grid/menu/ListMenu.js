@@ -5,44 +5,44 @@
  */
 Ext.define('Ext.ux.grid.menu.ListMenu', {
     extend: 'Ext.menu.Menu',
-    
+
     /**
      * @cfg {String} idField
      * Defaults to 'id'.
      */
-    idField :  'id',
+    idField: 'id',
 
     /**
      * @cfg {String} labelField
      * Defaults to 'text'.
      */
-    labelField :  'text',
+    labelField: 'text',
     /**
      * @cfg {String} paramPrefix
      * Defaults to 'Loading...'.
      */
-    loadingText : 'Loading...',
+    loadingText: 'Loading...',
     /**
      * @cfg {Boolean} loadOnShow
      * Defaults to true.
      */
-    loadOnShow : true,
+    loadOnShow: true,
     /**
      * @cfg {Boolean} single
      * Specify true to group all items in this list into a single-select
      * radio button group. Defaults to false.
      */
-    single : false,
+    single: false,
 
     plain: true,
 
-    constructor : function (cfg) {
+    constructor: function (cfg) {
         var me = this,
             options,
             i,
             len,
             value;
-            
+
         me.selected = [];
         me.addEvents(
             /**
@@ -63,10 +63,10 @@ Ext.define('Ext.ux.grid.menu.ListMenu', {
 
         if (!me.store && me.options) {
             options = [];
-            for(i = 0, len = me.options.length; i < len; i++) {
+            for (i = 0, len = me.options.length; i < len; i++) {
                 value = me.options[i];
                 switch (Ext.type(value)) {
-                    case 'array': 
+                    case 'array':
                         options.push(value);
                         break;
                     case 'object':
@@ -81,10 +81,10 @@ Ext.define('Ext.ux.grid.menu.ListMenu', {
 
             me.store = Ext.create('Ext.data.ArrayStore', {
                 fields: [me.idField, me.labelField],
-                data:   options,
+                data: options,
                 listeners: {
                     load: me.onLoad,
-                    scope:  me
+                    scope: me
                 }
             });
             me.loaded = true;
@@ -98,10 +98,10 @@ Ext.define('Ext.ux.grid.menu.ListMenu', {
         }
     },
 
-    destroy : function () {
+    destroy: function () {
         var me = this,
             store = me.store;
-            
+
         if (store) {
             if (me.autoStore) {
                 store.destroyStore();
@@ -119,7 +119,7 @@ Ext.define('Ext.ux.grid.menu.ListMenu', {
      * allow show to be called with no arguments to show with the previous arguments and
      * thus recalculate the width and potentially hang the menu from the left.
      */
-    show : function () {
+    show: function () {
         var me = this;
         if (me.loadOnShow && !me.loaded && !me.store.loading) {
             me.store.load();
@@ -128,7 +128,7 @@ Ext.define('Ext.ux.grid.menu.ListMenu', {
     },
 
     /** @private */
-    onLoad : function (store, records) {
+    onLoad: function (store, records) {
         var me = this,
             gid, itemValue, i, len,
             listeners = {
@@ -160,16 +160,16 @@ Ext.define('Ext.ux.grid.menu.ListMenu', {
      * Get the selected items.
      * @return {Array} selected
      */
-    getSelected : function () {
+    getSelected: function () {
         return this.selected;
     },
 
     /** @private */
-    setSelected : function (value) {
+    setSelected: function (value) {
         value = this.selected = [].concat(value);
 
         if (this.loaded) {
-            this.items.each(function(item){
+            this.items.each(function (item) {
                 item.setChecked(false, true);
                 for (var i = 0, len = value.length; i < len; i++) {
                     if (item.value == value[i]) {
@@ -185,9 +185,9 @@ Ext.define('Ext.ux.grid.menu.ListMenu', {
      * @param {Object} item Ext.menu.CheckItem
      * @param {Object} checked The checked value that was set
      */
-    checkChange : function (item, checked) {
+    checkChange: function (item, checked) {
         var value = [];
-        this.items.each(function(item){
+        this.items.each(function (item) {
             if (item.checked) {
                 value.push(item.value);
             }

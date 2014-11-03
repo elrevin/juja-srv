@@ -221,6 +221,7 @@ class ActiveRecord extends db\ActiveRecord
      *          значение - направление сортировки (константы  SORT_DESC или SORT_ASC, так же можно указать строки: 'ASC' и 'DESC')
      *          При обработке этого масиива учитывается тип поля, соответственно поля pointer и select обрабатываются
      *          особым образом
+     *      'where' - условия, используется в качестве аргумента метода andWhere
      *
      * @param $params
      * @return array|\yii\db\ActiveRecord[]
@@ -254,6 +255,26 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         $query = static::find()->select($select);
+
+        if (isset($params['filter'])) {
+            foreach ($params['filter'] as $filter) {
+                if ($filter['type'] == 'string') {
+                    $query->andWhere(['like', $filter['field'], $filter['value']]);
+                } elseif ($filter['type'] == 'numeric') {
+                    if ($filter['comparison'] == 'lt') {
+                        $query->andWhere(['<', $filter['field'], $filter['value']]);
+                    } elseif ($filter['comparison'] == 'gt') {
+                        $query->andWhere(['>', $filter['field'], $filter['value']]);
+                    } elseif ($filter['comparison'] == 'eq') {
+                        $query->andWhere([$filter['field'] => $filter['value']]);
+                    }
+                }
+            }
+        }
+
+        if (isset($params['where'])) {
+            $query->andWhere($params['where']);
+        }
 
         if (isset($params['limit'])) {
             $query->limit($params['limit']);

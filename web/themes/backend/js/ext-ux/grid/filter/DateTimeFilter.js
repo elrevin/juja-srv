@@ -207,8 +207,8 @@ Ext.define('Ext.ux.grid.filter.DateTimeFilter', {
             pickerCtnCfg, i, len, item, cfg,
             items = [dateCfg, timeCfg],
 
-            // we need to know the datepicker's position in the items array
-            // for when the itemId name is bound to it before adding to the menu
+        // we need to know the datepicker's position in the items array
+        // for when the itemId name is bound to it before adding to the menu
             datepickerPosition = 0;
 
         if (!me.positionDatepickerFirst) {
@@ -253,7 +253,7 @@ Ext.define('Ext.ux.grid.filter.DateTimeFilter', {
                             flex: 1,
                             listeners: defaultListeners.click
                         }
-                    ]   
+                    ]
                 };
             }
         }
@@ -302,7 +302,7 @@ Ext.define('Ext.ux.grid.filter.DateTimeFilter', {
         me.fireEvent('update', me);
     },
 
-    /** 
+    /**
      * Handler for when the DatePicker for a field fires the 'select' event
      * @param {Ext.picker.Date} picker
      * @param {Object} date
@@ -328,8 +328,8 @@ Ext.define('Ext.ux.grid.filter.DateTimeFilter', {
                 fields.before.setChecked(false, true);
             } else if (field == fields.before && me.getFieldValue('after') > date) {
                 fields.after.setChecked(false, true);
-            }   
-        }   
+            }
+        }
         me.fireEvent('update', me);
 
         // The timepicker's getBubbleTarget() returns the boundlist's implementation,
@@ -411,7 +411,7 @@ Ext.define('Ext.ux.grid.filter.DateTimeFilter', {
             pickerValue,
             val = record.get(me.dataIndex);
 
-        if(!Ext.isDate(val)){
+        if (!Ext.isDate(val)) {
             return false;
         }
 

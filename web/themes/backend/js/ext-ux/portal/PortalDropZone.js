@@ -6,7 +6,7 @@
 Ext.define('Ext.ux.portal.PortalDropZone', {
     extend: 'Ext.dd.DropTarget',
 
-    constructor: function(portal, cfg) {
+    constructor: function (portal, cfg) {
         this.portal = portal;
         Ext.dd.ScrollManager.register(portal.body);
         Ext.ux.portal.PortalDropZone.superclass.constructor.call(this, portal.body, cfg);
@@ -20,7 +20,7 @@ Ext.define('Ext.ux.portal.PortalDropZone', {
         increment: 200
     },
 
-    createEvent: function(dd, e, data, col, c, pos) {
+    createEvent: function (dd, e, data, col, c, pos) {
         return {
             portal: this.portal,
             panel: data.panel,
@@ -34,7 +34,7 @@ Ext.define('Ext.ux.portal.PortalDropZone', {
         };
     },
 
-    notifyOver: function(dd, e, data) {
+    notifyOver: function (dd, e, data) {
         var xy = e.getXY(),
             portal = this.portal,
             proxy = dd.proxy;
@@ -124,11 +124,11 @@ Ext.define('Ext.ux.portal.PortalDropZone', {
 
     },
 
-    notifyOut: function() {
+    notifyOut: function () {
         delete this.grid;
     },
 
-    notifyDrop: function(dd, e, data) {
+    notifyDrop: function (dd, e, data) {
         delete this.grid;
         if (!this.lastPos) {
             return;
@@ -139,11 +139,11 @@ Ext.define('Ext.ux.portal.PortalDropZone', {
             panel = dd.panel,
             dropEvent = this.createEvent(dd, e, data, col, c, pos !== false ? pos : c.items.getCount());
 
-        if (this.portal.fireEvent('validatedrop', dropEvent) !== false && 
+        if (this.portal.fireEvent('validatedrop', dropEvent) !== false &&
             this.portal.fireEvent('beforedrop', dropEvent) !== false) {
 
             Ext.suspendLayouts();
-            
+
             // make sure panel is visible prior to inserting so that the layout doesn't ignore it
             panel.el.dom.style.display = '';
             dd.panelProxy.hide();
@@ -163,22 +163,22 @@ Ext.define('Ext.ux.portal.PortalDropZone', {
             var st = this.scrollPos.top;
             if (st) {
                 var d = this.portal.body.dom;
-                setTimeout(function() {
-                    d.scrollTop = st;
-                },
-                10);
+                setTimeout(function () {
+                        d.scrollTop = st;
+                    },
+                    10);
             }
         }
-        
+
         delete this.lastPos;
         return true;
     },
 
     // internal cache of body and column coords
-    getGrid: function() {
+    getGrid: function () {
         var box = this.portal.body.getBox();
         box.columnX = [];
-        this.portal.items.each(function(c) {
+        this.portal.items.each(function (c) {
             box.columnX.push({
                 x: c.el.getX(),
                 w: c.el.getWidth()
@@ -188,7 +188,7 @@ Ext.define('Ext.ux.portal.PortalDropZone', {
     },
 
     // unregister the dropzone from ScrollManager
-    unreg: function() {
+    unreg: function () {
         Ext.dd.ScrollManager.unregister(this.portal.body);
         Ext.ux.portal.PortalDropZone.superclass.unreg.call(this);
     }

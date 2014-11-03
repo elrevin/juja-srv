@@ -1,10 +1,10 @@
 Ext.define('Ext.ux.index.MainMenuTreeHeader', {
-  extend: 'Ext.panel.Header',
-  alias: 'widget.mainmenutreeheader',
-  renderTpl: [
-    '<div id="{id}-body" class="ni-mainmenu-header',
-    '</div>'
-  ],
+    extend: 'Ext.panel.Header',
+    alias: 'widget.mainmenutreeheader',
+    renderTpl: [
+        '<div id="{id}-body" class="ni-mainmenu-header',
+        '</div>'
+    ],
 
 //  renderTpl: [
 //    '<div id="{id}-body" class="{headerCls}-body {baseCls}-body {bodyCls} {bodyTargetCls} ni-mainmenu-header',
