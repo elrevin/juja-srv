@@ -4,6 +4,8 @@ Ext.define('Ext.ux.index.form.Form', {
 
     model: null,
 
+    userRights: 0,
+
     idetifyField: null,
     titlePanel: null,
     editorPanel: null,
@@ -32,7 +34,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 fieldLabel: field.title,
                 labelAlign: 'top',
                 width: 150,
-                allowBlank: field.required
+                allowBlank: !field.required,
+                msgTarget: 'side'
             });
         } else if (field.type == Ext.data.Types.FLOAT) {
             // Число с точкой
@@ -43,7 +46,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 fieldLabel: field.title,
                 labelAlign: 'top',
                 width: 150,
-                allowBlank: field.required
+                allowBlank: !field.required,
+                msgTarget: 'side'
             });
         } else if (field.type == Ext.data.Types.STRING) {
             // Обычное строковое поле
@@ -53,7 +57,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 fieldLabel: field.title,
                 labelAlign: 'top',
                 width: 400,
-                allowBlank: field.required
+                allowBlank: !field.required,
+                msgTarget: 'side'
             });
         } else if (field.type == Ext.data.Types.TEXT) {
             // Многострочный текст
@@ -64,7 +69,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 labelAlign: 'top',
                 width: 400,
                 height: 80,
-                allowBlank: field.required
+                allowBlank: !field.required,
+                msgTarget: 'side'
             });
         } else if (field.type == Ext.data.Types.DATE) {
             // Дата
@@ -74,9 +80,10 @@ Ext.define('Ext.ux.index.form.Form', {
                 fieldLabel: field.title,
                 labelAlign: 'top',
                 width: 110,
-                allowBlank: field.required,
+                allowBlank: !field.required,
                 format: 'd.m.Y',
-                submitFormat: 'Y-m-d'
+                submitFormat: 'Y-m-d',
+                msgTarget: 'side'
             });
         } else if (field.type == Ext.data.Types.DATETIME) {
             // Дата и время
@@ -86,9 +93,10 @@ Ext.define('Ext.ux.index.form.Form', {
                 fieldLabel: field.title,
                 labelAlign: 'top',
                 width: 160,
-                allowBlank: field.required,
+                allowBlank: !field.required,
                 format: 'd.m.Y',
-                submitFormat: 'Y-m-d H:i:s'
+                submitFormat: 'Y-m-d H:i:s',
+                msgTarget: 'side'
             });
         } else if (field.type == Ext.data.Types.BOOL) {
             // Дата и время
@@ -199,44 +207,48 @@ Ext.define('Ext.ux.index.form.Form', {
     createTopToolbar: function () {
         var me = this;
 
-        me.topToolbar = Ext.create('Ext.toolbar.Toolbar', {
-            height: 58,
-            cls: (me.tabs.length ? 'in2-editor-form-toolbar-tab-form' : 'in2-editor-form-toolbar'),
-            defaults: {
-                scale: 'medium'
-            },
-            items: [
-                {
-                    text: 'Сохранить',
-                    handler: function () {
-                        me.save();
+        if (me.userRights > 1) {
+            me.topToolbar = Ext.create('Ext.toolbar.Toolbar', {
+                height: 58,
+                cls: (me.tabs.length ? 'in2-editor-form-toolbar-tab-form' : 'in2-editor-form-toolbar'),
+                defaults: {
+                    scale: 'medium'
+                },
+                items: [
+                    {
+                        text: 'Сохранить',
+                        handler: function () {
+                            me.save();
+                        }
                     }
-                }
-            ]
-        });
+                ]
+            });
+        }
         return me.topToolbar;
     },
 
     createBottomToolbar: function () {
         var me = this;
 
-        me.bottomToolbar = Ext.create('Ext.toolbar.Toolbar', {
-            height: 58,
-            cls: 'in2-editor-form-bottom-toolbar',
-            defaults: {
-                scale: 'medium'
-            },
-            items: [
-                {
-                    text: 'Сохранить',
-                    handler: function () {
-                        me.save();
+        if (me.userRights > 1) {
+            me.bottomToolbar = Ext.create('Ext.toolbar.Toolbar', {
+                height: 58,
+                cls: 'in2-editor-form-bottom-toolbar',
+                defaults: {
+                    scale: 'medium'
+                },
+                items: [
+                    {
+                        text: 'Сохранить',
+                        handler: function () {
+                            me.save();
+                        }
+                    }, '->', {
+                        text: 'Сохранить и добавить'
                     }
-                }, '->', {
-                    text: 'Сохранить и добавить'
-                }
-            ]
-        });
+                ]
+            });
+        }
         return me.bottomToolbar;
     },
 
@@ -337,21 +349,26 @@ Ext.define('Ext.ux.index.form.Form', {
             field,
             input,
             values = {};
-        me.fireEvent((me.mode == 'update' ? 'beforeupdate' : 'beforeinsert'), me);
 
-        if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
-            for (var i = 0; i < modelFieldsCount; i++) {
-                field = me.model.fields.getAt(i);
-                input = Ext.getCmp(me.id + '_field_' + field.name);
-                if (input) {
-                    values[field.name] = input.getValue();
+        if (me.isValid()) {
+            me.fireEvent((me.mode == 'update' ? 'beforeupdate' : 'beforeinsert'), me);
+
+            if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
+                for (var i = 0; i < modelFieldsCount; i++) {
+                    field = me.model.fields.getAt(i);
+                    input = Ext.getCmp(me.id + '_field_' + field.name);
+                    if (input) {
+                        values[field.name] = input.getValue();
+                    }
                 }
             }
+
+            me.model.set(values);
+
+            me.fireEvent((me.mode == 'update' ? 'afterupdate' : 'afterinsert'), me);
+
+            me.mode = (me.mode == 'insert' ? 'update' : 'update');
         }
-
-        me.model.set(values);
-
-        me.fireEvent((me.mode == 'update' ? 'afterupdate' : 'afterinsert'), me);
     }
 
 });

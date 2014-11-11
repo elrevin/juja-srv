@@ -9,9 +9,10 @@ return [
         'ruleName' => 'userGroupRule',
         'children' => [
             'backend-list',
-            'backend-update-record',
-            'backend-create-record',
+            'backend-save-record',
             'backend-delete-record',
+            'backend-cp-menu',
+            'backend-get-interface',
         ],
     ],
     'admin' => [
@@ -19,25 +20,29 @@ return [
         'ruleName' => 'userGroupRule',
         'children' => [
             'backend-list',
-            'backend-update-record',
-            'backend-create-record',
-            'backend-delete-record',
+            'backend-save-record',
+            'backend-cp-menu',
+            'backend-get-interface',
         ],
     ],
     'backend-list' => [
         'type' => 2,
         'ruleName' => 'backendReadRule',
     ],
-    'backend-create-record' => [
-        'type' => 2,
-        'ruleName' => 'backendWriteRule',
-    ],
-    'backend-update-record' => [
+    'backend-save-record' => [
         'type' => 2,
         'ruleName' => 'backendWriteRule',
     ],
     'backend-delete-record' => [
         'type' => 2,
         'ruleName' => 'backendDeleteRule',
+    ],
+    'backend-cp-menu' => [
+        'type' => 2,
+        'ruleName' => 'backendCpMenuRule',
+    ],
+    'backend-get-interface' => [
+        'type' => 2,
+        'ruleName' => 'backendGetInterfaceRule',
     ],
 ];

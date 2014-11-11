@@ -29,11 +29,10 @@ Ext.application({
 
             // Получаем конфигурацию
             Ext.Ajax.request({
-                url: $url(runAction[0], runAction[1], runAction[2], '', 'js'),
-                params: {
+                url: $url(runAction[0], runAction[1], runAction[2], {
                     modelName: modelName,
                     idRecord: idRecord
-                },
+                }, 'js'),
                 success: function (response) {
                     var code = response.responseText;
                     eval(code);
@@ -58,6 +57,22 @@ Ext.application({
         Ext.Loader.setPath('App.core', $themeUrl('/js/core'));
 
         doOverride();
+
+        Ext.Ajax.on('requestcomplete', function (conn, response) {
+            if (/^application\/json/.test(response.getResponseHeader('content-type'))) {
+                var data = response.responseText;
+
+                data = Ext.JSON.decode(data);
+                if (data && data.success != undefined && !data.success) {
+                    // Ошибка
+                    IndexNextApp.getApplication().showErrorMessage(
+                      (data.error != undefined ? data.error : 0),
+                      (data.message != undefined ? data.message : '')
+                    )
+                }
+                return false;
+            }
+        });
 
         this._mainMenuStore = Ext.create('Ext.data.TreeStore', {
             //autoLoad: true,
@@ -148,6 +163,14 @@ Ext.application({
             }
         });
 
-    }
+    },
 
+    showErrorMessage: function (code, message) {
+        Ext.Msg.show({
+            title: 'Ошибка'+(code ? " #"+code : ""),
+            msg: (message ? message : "Не установленная ошибка, обратитесь в техническую поддержку"),
+            buttons: Ext.Msg.OK,
+            icon: Ext.window.MessageBox.ERROR
+        });
+    }
 });

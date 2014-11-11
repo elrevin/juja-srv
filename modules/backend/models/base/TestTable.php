@@ -10,7 +10,6 @@ class TestTable extends \app\base\db\ActiveRecord
         'title' => [
             'title' => 'Название',
             'type' => 'string',
-            'identify' => true,
             'required' => true
         ],
         'text' => [
@@ -24,11 +23,13 @@ class TestTable extends \app\base\db\ActiveRecord
                 "round" => 2,
                 "min" => 0,
                 "max" => 20000
-            ]
+            ],
+            'required' => true
         ],
         'dt' => [
             'title' => 'Дата',
-            'type' => 'date'
+            'type' => 'date',
+            'required' => true
         ],
         'flag' => [
             'title' => 'Флаг',
@@ -36,6 +37,7 @@ class TestTable extends \app\base\db\ActiveRecord
         ],
         'dtt' => [
             'title' => 'Дата и время',
+            'identify' => true,
             'type' => 'datetime'
         ],
     ];
@@ -60,11 +62,14 @@ class TestTable extends \app\base\db\ActiveRecord
     public function rules()
     {
         return [
-            [['text'], 'string'],
-            [['title'], 'string', 'max' => 1024],
-            [['dt'], 'date', 'format' => 'php:Y-m-d'],
-            [['dtt'], 'date', 'format' => 'php:Y-m-d H:i:s'],
-            [['price'], 'number'],
+            [['title'], 'required', 'message' => 'Поле "'.static::$structure['title']['title'].'" обязательно для заполнения.'],
+            [['price'], 'required', 'message' => 'Поле "'.static::$structure['price']['title'].'" обязательно для заполнения.'],
+            [['dt'], 'required', 'message' => 'Поле "'.static::$structure['dt']['title'].'" обязательно для заполнения.'],
+            [['text'], 'string', 'message' => 'В поле "'.static::$structure['text']['title'].'" ожидается строка.'],
+            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "'.static::$structure['title']['title'].'" не может быть длинее 1024 символов.', ],
+            [['dt'], 'date', 'format' => 'php:Y-m-d', 'message' => 'Неверный формат даты в поле "'.static::$structure['dt']['title'].'"'],
+            [['dtt'], 'date', 'format' => 'php:Y-m-d H:i:s', 'message' => 'Неверный формат даты в поле "'.static::$structure['dtt']['title'].'"'],
+            [['price'], 'number', 'integerOnly' => false, 'min' => 0, 'max' => 20000, "tooBig" => 'Поле "'.static::$structure['price']['title'].'" не может принимать значения больше 20000', "tooSmall" => 'Поле "'.static::$structure['price']['title'].'" не может принимать значения меньше 0'],
             [['flag'], 'number', 'integerOnly' => true, 'min' => 0, 'max' => 1],
         ];
     }

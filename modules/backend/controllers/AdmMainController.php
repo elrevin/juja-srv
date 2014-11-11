@@ -40,7 +40,7 @@ class AdmMainController extends \app\base\web\BackendController
                         // В любом случае нужен runAction
                         $list[$key]['runAction'] = [$item['moduleName'], "main", "get-interface"];
                     } else {
-                        $this->ajaxError('\app\modules\backend\controllers\AdmMainController\processCpMenu');
+                        $this->ajaxError('\app\modules\backend\controllers\AdmMainController\processCpMenu', "Ошибка обработки главного меню.");
                     }
                 } else {
                     $list[$key]['modelName'] = "";
@@ -67,9 +67,9 @@ class AdmMainController extends \app\base\web\BackendController
     }
 
     public function actionGetInterface() {
-        $modelName = Yii::$app->request->post('modelName', '');
+        $modelName = Yii::$app->request->get('modelName', '');
         if (!$modelName) {
-            $this->ajaxError('\app\base\web\BackendController\actionGetInterface');
+            $this->ajaxError('\app\base\web\BackendController\actionGetInterface', 'Справочник не найден.');
         }
 
 
@@ -94,11 +94,22 @@ class AdmMainController extends \app\base\web\BackendController
 
         $getDataAction = \yii\helpers\Json::encode([$this->module->id, $controllerName, 'list']);
 
+        $userRights = 0;
+
+        if (Yii::$app->user->can('backend-delete-record', ['modelName' => $modelName])) {
+            $userRights = 3;
+        } elseif (Yii::$app->user->can('backend-save-record', ['modelName' => $modelName])) {
+            $userRights = 2;
+        } elseif (Yii::$app->user->can('backend-list', ['modelName' => $modelName])) {
+            $userRights = 1;
+        }
+
         return ("
           var module = Ext.create('App.core.SingleModelEditor', {
             fields: {$fields},
             getDataAction: {$getDataAction},
-            modelName: '{$modelName}'
+            modelName: '{$modelName}',
+            userRights: {$userRights}
           });
         ");
     }
@@ -117,11 +128,11 @@ class AdmMainController extends \app\base\web\BackendController
             ]]);
             return $list;
         }
-        $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionList');
+        $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionList', 'Справочник не найден.');
         return null;
     }
 
-    public function actionSave() {
+    public function actionSaveRecord() {
         $modelName = Yii::$app->request->get('modelName', '');
         $add = intval(Yii::$app->request->get('add', 0));
         $data = \yii\helpers\Json::decode(Yii::$app->request->post('data', '[]'));
@@ -144,7 +155,11 @@ class AdmMainController extends \app\base\web\BackendController
                     $data['success'] = true;
                     return $data;
                 } else {
-                    $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave');
+                    $errors = "";
+                    foreach ($model->errors as $error) {
+                        $errors .= implode("<br/>", $error);
+                    }
+                    $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave', 'Ошибка сохранения данных:<br/>'.$errors);
                 }
             } elseif ($data['id']) {
                 $model = call_user_func([$modelName, 'findOne'], $data['id']);
@@ -156,11 +171,15 @@ class AdmMainController extends \app\base\web\BackendController
                     $data['success'] = true;
                     return $data;
                 } else {
-                    $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave');
+                    $errors = "";
+                    foreach ($model->errors as $error) {
+                        $errors .= implode("<br/>", $error);
+                    }
+                    $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave', 'Ошибка сохранения данных:<br/>'.$errors);
                 }
             }
         }
-        $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave');
+        $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave', 'Справочник не найден.');
         return null;
     }
 }

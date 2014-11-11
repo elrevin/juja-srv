@@ -24,26 +24,48 @@ class BackendController extends Controller
         parent::init();
     }
 
+    /**
+     * Проверка прав доступа пользователя
+     * @param string $action ID действия
+     * @return bool
+     */
+    public function checkAccess($action) {
+        if ($action == 'list') {
+            $modelName = Yii::$app->request->get('modelName', '');
+            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName]);
+        } elseif ($action == 'save-record') {
+            $modelName = Yii::$app->request->get('modelName', '');
+            $data = Yii::$app->request->post('data', []);
+            if (!isset($data['id'])) {
+                $data = ['id' => 0];
+            }
+            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id']]);
+        } elseif ($action == 'delete-record') {
+            $modelName = Yii::$app->request->get('modelName', '');
+            $data = Yii::$app->request->post('data', []);
+            if (!isset($data['id'])) {
+                $data = ['id' => 0];
+            }
+            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id']]);
+        } elseif ($action == 'cp-menu') {
+            return Yii::$app->user->can('backend-'.$action);
+        } elseif ($action == 'get-interface') {
+            $modelName = Yii::$app->request->get('modelName', '');
+            $recordId = Yii::$app->request->get('recordId', 0);
+            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $recordId]);
+        }
+        return false; // По умолчанию все запрещено
+    }
+
     public function beforeAction($action)
     {
         if (parent::beforeAction($action)) {
             if (Yii::$app->user->identity->isSU) {
                 return true;
             } else {
-                $access = false; // По умолчанию все запрещено
-                if ($action->id == 'list') {
-                    $access = Yii::$app->user->can('backend-'.$action->id);
-                } elseif ($action->id == 'create-record') {
-                    $access = Yii::$app->user->can('backend-'.$action->id);
-                } elseif ($action->id == 'update-record') {
-                    $access = Yii::$app->user->can('backend-'.$action->id);
-                } elseif ($action->id == 'delete-record') {
-                    $access = Yii::$app->user->can('backend-'.$action->id);
-                }
-
-                if (!$access) {
+                if (!$this->checkAccess($action->id)) {
                     if (Yii::$app->request->isAjax) {
-                        $this->ajaxError('app\base\web\BackendController\beforeAction\cpAccessDeny');
+                        $this->ajaxError('app\base\web\BackendController\beforeAction\cpAccessDeny?action='.$action->id, 'У Вас не хватает прав для выполнения операции');
                     } else {
                         throw new ForbiddenHttpException('Access denied');
                     }
@@ -92,7 +114,7 @@ class BackendController extends Controller
      * @param $type
      * @throws \yii\base\ExitException
      */
-    public function ajaxError($type)
+    public function ajaxError($type, $message = "")
     {
         $code = intval(file_get_contents(Yii::getAlias('@app/data/base/lastErrorCode.txt')));
         $code++;
@@ -100,13 +122,16 @@ class BackendController extends Controller
 
         Yii::error('Error #'.$code.": ".$type);
         if (Yii::$app->response->format == \yii\web\Response::FORMAT_JSON || Yii::$app->response->format == \yii\web\Response::FORMAT_RAW) {
+            header('content-type: application/json; charset=UTF-8');
             echo \yii\helpers\Json::encode([
                 'success' => false,
                 'error' => $code,
-                'type' => $type
+                'message' => $message
             ]);
         } elseif (Yii::$app->response->format == \yii\web\Response::FORMAT_HTML) {
-            echo "<script>app.getApplication().showErrorMessage(code, type)</script>";
+            echo "<script>IndexNextApp.getApplication().showErrorMessage('$code', '$message')</script>";
+        } elseif (Yii::$app->response->format == 'js') {
+            echo "IndexNextApp.getApplication().showErrorMessage('$code', '$message');";
         } elseif (Yii::$app->response->format == \yii\web\Response::FORMAT_HTML) {
             Yii::$app->response->statusCode = 500;
         }

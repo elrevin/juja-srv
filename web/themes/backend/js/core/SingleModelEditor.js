@@ -11,6 +11,12 @@ Ext.define('App.core.SingleModelEditor', {
     deleteAction: [],
     store: null,
     toolbar: null,
+    // Права общие пользователя на справочник:
+    // 0 - нет прав вобще, просто валимся с ошибкой
+    // 1 - Только чтение, все поля должны быть readonly и скрываем кнопки "Добавить", "Удалить", "Сохранить"  и пр.
+    // 2 - Возможна запись, скрываем кнопку "Удалить"
+    // 3 - Полный доступ
+    userRights: 0,
 
     /**
      * Функция создает базовый класс модели, по набору полей в свойстве fields
@@ -39,7 +45,8 @@ Ext.define('App.core.SingleModelEditor', {
                         type: me.fields[i].type,
                         title: me.fields[i].title,
                         group: me.fields[i].group,
-                        identify: me.fields[i].identify
+                        identify: me.fields[i].identify,
+                        required: me.fields[i].required
                     };
                 }
                 Ext.define(me.modelClassName, modelClassDefinition);
@@ -78,8 +85,8 @@ Ext.define('App.core.SingleModelEditor', {
                 }
             },
             pageSize: me.pageSize,
-            autoLoad: true,
-            autoSync: true,
+            autoLoad: me.userRights >= 1,
+            //autoSync: true,
             listeners: {
                 update: function (store, record, operation) {
                     // Загружаем в форму запись
@@ -90,106 +97,145 @@ Ext.define('App.core.SingleModelEditor', {
     },
 
     createToolbar: function () {
-        var me = this;
+        var me = this,
+          buttons = [];
 
-        me.toolbar = Ext.create('Ext.toolbar.Toolbar', {
-            height: 58,
-            style: "background: #f0f0f0",
-            defaults: {
-                scale: 'medium'
-            },
-            items: [
-                {
-                    xtype: 'button',
-                    text: 'Добавить',
-                    icon: $themeUrl('/images/buttons/plus.png'),
-                    scope: this,
-                    handler: function () {
-                    }
-                }, '-', {
+        if (me.userRights > 1) {
+            buttons[buttons.length] = {
+                xtype: 'button',
+                text: 'Добавить',
+                icon: $themeUrl('/images/buttons/plus.png'),
+                scope: this,
+                handler: function () {
+                }
+            };
+            buttons[buttons.length] = '-';
+
+            if (me.userRights > 2) {
+                buttons[buttons.length] = {
                     xtype: 'button',
                     icon: $themeUrl('/images/buttons/del.png'),
                     scope: this,
                     handler: function () {
                     }
-                }, {
-                    icon: $themeUrl('/images/buttons/copy.png')
-                }
-            ]
-        });
+                };
+            }
+
+            buttons[buttons.length] = {
+                icon: $themeUrl('/images/buttons/copy.png')
+            };
+
+            me.toolbar = Ext.create('Ext.toolbar.Toolbar', {
+                height: 58,
+                style: "background: #f0f0f0",
+                defaults: {
+                    scale: 'medium'
+                },
+                items: buttons
+            });
+        }
+
         return me.toolbar;
     },
 
     createListGrid: function () {
-        var me = this;
+        var me = this,
+          gridConfig;
 
-        me.grid = Ext.create('Ext.ux.index.grid.ListGrid', {
-            modelClassName: me.modelClassName,
-            getDataAction: me.getDataAction,
-            saveAction: me.saveAction,
-            deleteAction: me.deleteAction,
-            store: me.store,
-            selModel: Ext.create('Ext.selection.CheckboxModel', {
-                //mode: "MULTI"
-            }),
-            tbar: me.createToolbar(),
-            listeners: {
-                selectionchange: function (grid, selected, eOpts) {
-                    if (selected.length) {
-                        me.form.loadRecord(selected[0]);
+        if (me.userRights > 0) {
+            gridConfig = {
+                modelClassName: me.modelClassName,
+                getDataAction: me.getDataAction,
+                saveAction: me.saveAction,
+                deleteAction: me.deleteAction,
+                store: me.store,
+                selModel: Ext.create('Ext.selection.CheckboxModel', {
+                    //mode: "MULTI"
+                }),
+                tbar: me.createToolbar(),
+                listeners: {
+                    selectionchange: function (grid, selected, eOpts) {
+                        if (selected.length) {
+                            me.form.loadRecord(selected[0]);
+                        }
                     }
                 }
+            };
+
+            if (me.createToolbar()) {
+                gridConfig['tbar'] = me.toolbar;
             }
-        });
+
+            me.grid = Ext.create('Ext.ux.index.grid.ListGrid', gridConfig);
+        }
     },
 
     init: function () {
         var me = this;
-        if (me.getDataAction.length) {
-            if (!me.saveAction.length) {
-                me.saveAction[0] = me.getDataAction[0];
-                me.saveAction[1] = me.getDataAction[1];
-                me.saveAction[2] = 'save';
-            }
+        if (me.userRights > 0) {
+            if (me.getDataAction.length) {
+                if (!me.saveAction.length) {
+                    me.saveAction[0] = me.getDataAction[0];
+                    me.saveAction[1] = me.getDataAction[1];
+                    me.saveAction[2] = 'save-record';
+                }
 
-            if (!me.deleteAction.length) {
-                me.deleteAction[0] = me.getDataAction[0];
-                me.deleteAction[1] = me.getDataAction[1];
-                me.deleteAction[2] = 'delete';
-            }
+                if (!me.deleteAction.length) {
+                    me.deleteAction[0] = me.getDataAction[0];
+                    me.deleteAction[1] = me.getDataAction[1];
+                    me.deleteAction[2] = 'delete-record';
+                }
 
-            me.createModelClass();
-            if (me.modelClassName) {
-                me.model = Ext.create(me.modelClassName, {});
-                me.form = Ext.create('Ext.ux.index.form.Form', {
-                    model: me.model,
-                    listeners: {
-                        afterinsert: function () {
-                            me.store.add(me.model);
-                        }
-                    }
-                });
+                me.createModelClass();
+                if (me.modelClassName) {
+                    me.model = Ext.create(me.modelClassName, {});
+                    me.form = Ext.create('Ext.ux.index.form.Form', {
+                        model: me.model,
+                        listeners: {
+                            afterinsert: function () {
+                                me.store.add(me.model);
+                                me.store.sync({
+                                    failure: function () {
+                                        me.store.reload();
+                                        // Возвращяем режим записи
+                                        me.form.mode = 'insert';
+                                    }
+                                });
+                            },
+                            afterupdate: function () {
+                                me.store.sync({
+                                    failure: function () {
+                                        me.store.reload();
+                                    }
+                                });
+                            }
+                        },
+                        userRights: me.userRights
+                    });
 
-                me.createStore();
+                    me.createStore();
 
-                me.createListGrid();
+                    me.createListGrid();
 
-                me._mainPanel = Ext.create('Ext.Panel', {
-                    layout: 'border',
-                    items: [
-                        me.grid,
-                        {
-                            xtype: 'panel',
-                            layout: 'fit',
-                            region: 'center',
-                            items: [
-                                me.form
-                            ]
-                        }
-                    ]
-                });
-                //me.store.reload();
-                me.callParent();
+                    me._mainPanel = Ext.create('Ext.Panel', {
+                        layout: 'border',
+                        items: [
+                            me.grid,
+                            {
+                                xtype: 'panel',
+                                layout: 'fit',
+                                region: 'center',
+                                items: [
+                                    me.form
+                                ]
+                            }
+                        ]
+                    });
+                    //me.store.reload();
+                    me.callParent();
+                } else {
+                    me.fireEvent('initfail');
+                }
             } else {
                 me.fireEvent('initfail');
             }

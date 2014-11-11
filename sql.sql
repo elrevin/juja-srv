@@ -67,7 +67,7 @@ CREATE TABLE `s_rights_rules` (
 
 LOCK TABLES `s_rights_rules` WRITE;
 /*!40000 ALTER TABLE `s_rights_rules` DISABLE KEYS */;
-INSERT INTO `s_rights_rules` VALUES (1,'TestTable',1,NULL,1),(2,'TestTable',NULL,2,3);
+INSERT INTO `s_rights_rules` VALUES (1,'TestTable',1,NULL,1),(2,'TestTable',NULL,2,2);
 /*!40000 ALTER TABLE `s_rights_rules` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -150,7 +150,7 @@ CREATE TABLE `test_table` (
   `flag` tinyint(1) NOT NULL DEFAULT '0',
   `dtt` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -159,7 +159,7 @@ CREATE TABLE `test_table` (
 
 LOCK TABLES `test_table` WRITE;
 /*!40000 ALTER TABLE `test_table` DISABLE KEYS */;
-INSERT INTO `test_table` VALUES (1,0,0,'','dfghjkl',1254,NULL,1,NULL);
+INSERT INTO `test_table` VALUES (1,0,0,'','dfghjkl',1254,NULL,1,NULL),(2,0,0,'','ыавпр',0,NULL,0,NULL),(3,0,0,'','апври',0,NULL,0,NULL),(4,0,0,'','ампиртоьл',155,NULL,0,NULL),(5,0,0,'','sdfvbcvfds',0,NULL,0,NULL),(6,0,0,'','ghnhjnk0000',0,NULL,0,NULL),(7,0,0,'','uikhu',0,NULL,0,NULL),(8,0,0,'','dfgv9988989',0,NULL,0,NULL),(9,0,0,'','55555',0,NULL,0,NULL),(10,0,0,'','yuyuuyu777',0,NULL,0,NULL),(11,0,0,'','00099',0,NULL,0,NULL),(12,0,0,'','yuyuy',0,NULL,0,NULL),(13,0,0,'','uiuiui',0,NULL,0,NULL),(14,0,0,'sdfasfsdf 434535345 r4444 rgfed','ioi vdfgdfgdfg utkykjyuykujh grgrg',3443,'2014-11-20',1,'2014-11-29 01:04:35'),(15,0,0,'test sdgsdfg','wqergfds',0,'2014-11-26',0,'2014-11-27 01:41:02'),(16,0,0,'wrwerwer','',32,'2014-11-20',0,NULL),(17,0,0,'3ertyhjhv ','',34,'2014-11-14',0,'2014-11-30 10:30:33'),(18,0,0,'3232323 56 4','TEXT',232,'2014-10-19',1,'2014-11-07 10:31:08');
 /*!40000 ALTER TABLE `test_table` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -176,4 +176,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-10-31 18:21:24
+-- Dump completed on 2014-11-11 10:31:16

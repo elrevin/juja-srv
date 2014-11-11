@@ -16,21 +16,26 @@ class BackendWriteRule extends Rule
      * @param array $params
      * @return bool|void
      */
-    public function execute($user, $item, $params)
+    public function execute($user, $item, $params = [])
     {
         if (!\Yii::$app->user->isGuest) {
 
-            if ($item->name == 'manager') {
+            if (Yii::$app->user->can('manager')) {
                 // Менеджеру можно только то что ему разрешено и только в интерфейсе менеджера
                 if (Yii::$app->params['backendCurrentInterfaceType'] == 'manage') {
                     // Проверяем настройки прав в БД
-                    $modelName = $params['modelName'];
-                    $recordId = $params['recordId'];
-
-                    $rights = SRightsRules::findRights($modelName);
-                    return $rights > SRightsRules::RIGHTS_READ;
+                    if (isset($params['modelName'])) {
+                        $modelName = $params['modelName'];
+                        if (isset($params['recordId'])) {
+                            $recordId = $params['recordId'];
+                        } else {
+                            $recordId = false;
+                        }
+                        $rights = SRightsRules::findRights($modelName, $recordId);
+                        return $rights > SRightsRules::RIGHTS_READ;
+                    }
                 }
-            } elseif ($item->name == 'admin') {
+            } elseif (Yii::$app->user->can('admin')) {
                 return true;
             }
         }

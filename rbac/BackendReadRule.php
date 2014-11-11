@@ -20,17 +20,21 @@ class BackendReadRule extends Rule
     {
         if (!\Yii::$app->user->isGuest) {
 
-            if ($item->name == 'manager') {
+            if (Yii::$app->user->can('manager')) {
                 // Менеджеру можно только то что ему разрешено и только в интерфейсе менеджера
                 if (Yii::$app->params['backendCurrentInterfaceType'] == 'manage') {
                     // Проверяем настройки прав в БД
-                    $modelName = $params['modelName'];
-                    $recordId = $params['recordId'];
+                    if (isset($params['modelName'])) {
+                        $modelName = $params['modelName'];
+                        if ($modelName) {
+                            $recordId = isset($params['recordId']) ? $params['recordId'] : false;
 
-                    $rights = SRightsRules::findRights($modelName);
-                    return $rights > SRightsRules::RIGHTS_NONE;
+                            $rights = SRightsRules::findRights($modelName);
+                            return $rights > SRightsRules::RIGHTS_NONE;
+                        }
+                    }
                 }
-            } elseif ($item->name == 'admin') {
+            } elseif (Yii::$app->user->can('admin')) {
                 return true;
             }
         }
