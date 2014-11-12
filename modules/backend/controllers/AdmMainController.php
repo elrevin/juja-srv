@@ -73,26 +73,47 @@ class AdmMainController extends \app\base\web\BackendController
         }
 
 
-
-        $modelStructure = TestTable::getStructure();
+        $moduleName = $this->module->id;
+        $modelStructure = call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getStructure']);
 
         $fields = [];
 
         foreach ($modelStructure as $fieldName => $config) {
-            $fields[] = array_merge([
+            $relativeModel = [];
+            if ($config['type'] == 'pointer') {
+                if (strncmp($config['relativeModel'], '\app\modules', 12) == 0) {
+                    $relativeModelFullName = $config['relativeModel'];
+                    $relativeModel = str_replace('\app\modules\\', '', str_replace('\models', '', $config['relativeModel']));
+                    $relativeModel = explode('\\', $relativeModel);
+                    $relativeModel[2] = call_user_func([$relativeModelFullName, 'getIdentifyFieldConf']);
+                    if (!$relativeModel[2]) {
+                        continue;
+                    }
+                    $relativeModel[3] = $relativeModel[2]['type'];
+                    $relativeModel[2] = $relativeModel[2]['name'];
+                } else {
+                    continue;
+                }
+            }
+
+            $i = count($fields);
+            $fields[$i] = array_merge([
                 'name' => $fieldName
             ], $config);
+
+            if ($relativeModel) {
+                $fields[$i]['relativeModel'] = [
+                    'moduleName' => $relativeModel[0],
+                    'name' => $relativeModel[1],
+                    'identifyFieldName' => $relativeModel[2],
+                    'identifyFieldType' => $relativeModel[3]
+                ];
+            }
         }
 
         $fields = \yii\helpers\Json::encode($fields);
 
-        $controllerName = $this->id;
-
-        if (strncmp('adm', $controllerName, 3) == 0) {
-            $controllerName = substr($controllerName, 3);
-        }
-
-        $getDataAction = \yii\helpers\Json::encode([$this->module->id, $controllerName, 'list']);
+        $getDataAction = \yii\helpers\Json::encode([$this->module->id, 'main', 'list']);
 
         $userRights = 0;
 
@@ -123,9 +144,7 @@ class AdmMainController extends \app\base\web\BackendController
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
 
-            $list = call_user_func([$modelName, 'getList'], ["sort" => [
-                "id" => SORT_ASC
-            ]]);
+            $list = call_user_func([$modelName, 'getList'], ["identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false)]);
             return $list;
         }
         $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionList', 'Справочник не найден.');
@@ -145,14 +164,11 @@ class AdmMainController extends \app\base\web\BackendController
                  */
                 $model = new $modelName();
                 $model->mapJson($data);
-                if ($model->save()) {
-                    $data = call_user_func([$modelName, 'getList'], [
-                        "limit" => 1,
-                        "sort" => [
-                            "id" => SORT_DESC
-                        ]
-                    ]);
-                    $data['success'] = true;
+                if ($result = $model->saveData($data, true)) {
+                    $data = [
+                        'data' => $result,
+                        'success' => true
+                    ];
                     return $data;
                 } else {
                     $errors = "";
@@ -160,15 +176,15 @@ class AdmMainController extends \app\base\web\BackendController
                         $errors .= implode("<br/>", $error);
                     }
                     $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave', 'Ошибка сохранения данных:<br/>'.$errors);
+                    return null;
                 }
-            } elseif ($data['id']) {
+            } elseif (isset($data['id']) && $data['id']) {
                 $model = call_user_func([$modelName, 'findOne'], $data['id']);
-                $model->mapJson($data);
-                if ($model->save()) {
-                    $data = call_user_func([$modelName, 'getList'], [
-                        "where" => ["id" => $data['id']]
-                    ]);
-                    $data['success'] = true;
+                if ($result = $model->saveData($data)) {
+                    $data = [
+                        'data' => $result,
+                        'success' => true
+                    ];
                     return $data;
                 } else {
                     $errors = "";
@@ -176,6 +192,7 @@ class AdmMainController extends \app\base\web\BackendController
                         $errors .= implode("<br/>", $error);
                     }
                     $this->ajaxError('\app\modules\backend\controllers\AdmMainController\actionSave', 'Ошибка сохранения данных:<br/>'.$errors);
+                    return null;
                 }
             }
         }

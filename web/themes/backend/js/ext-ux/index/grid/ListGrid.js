@@ -101,6 +101,22 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
                     return 'Нет';
                 }
             };
+        } else if (field.type.type == 'pointer') {
+            column = {
+                dataIndex: field.name,
+                text: field.title,
+                width: (field.settings && field.settings.width ? field.settings.width : 60),
+                renderer: function (val, metaData, record, rowIndex, colIndex) {
+                    if (val && val.id != undefined && val.value != undefined) {
+                        if (isIdentify) {
+                            return '<b>'+val.value+'</b>';
+                        } else {
+                            return val.value;
+                        }
+                    }
+                    return '';
+                }
+            };
         }
 
         if (column) {

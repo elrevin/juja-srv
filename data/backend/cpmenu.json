@@ -1,10 +1,15 @@
 {"manage": [
   {
-    "title": "Тестовый узел",
+    "title": "Какой-то узел",
     "list": [
       {
-        "title": "Sub tree test",
+        "title": "Тестовый справочник",
         "modelName": "TestTable",
+        "moduleName": "backend"
+      },
+      {
+        "title": "Еще один тестовый справочник",
+        "modelName": "PointTestTable",
         "moduleName": "backend"
       }
     ]

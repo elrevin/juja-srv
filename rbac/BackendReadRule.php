@@ -27,7 +27,7 @@ class BackendReadRule extends Rule
                     if (isset($params['modelName'])) {
                         $modelName = $params['modelName'];
                         if ($modelName) {
-                            $recordId = isset($params['recordId']) ? $params['recordId'] : false;
+                            $recordId = isset($params['recordId']) ? $params['recordId'] : 0;
 
                             $rights = SRightsRules::findRights($modelName);
                             return $rights > SRightsRules::RIGHTS_NONE;

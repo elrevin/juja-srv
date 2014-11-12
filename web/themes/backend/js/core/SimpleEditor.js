@@ -7,22 +7,30 @@ Ext.define('App.core.SimpleEditor', {
     fields: [],
 
     createModelClass: function () {
-        if (this.fields.length) {
-            this._modelClassName = this.modelName + "Model";
+        var me = this,
+          fieldConf;
+        if (me.fields.length) {
+            me._modelClassName = this.modelName + "Model";
             var modelClassDefinition = {
                 extend: 'Ext.data.Model',
                 fields: []
             };
-            for (var i = 0; i < this.fields.length; i++) {
-                modelClassDefinition.fields[modelClassDefinition.fields.length] = {
-                    name: this.fields[i].name,
-                    type: this.fields[i].type,
-                    title: this.fields[i].title,
-                    group: this.fields[i].group,
-                    identify: this.fields[i].identify
+            for (var i = 0; i < me.fields.length; i++) {
+                fieldConf = {
+                    name: me.fields[i].name,
+                    type: me.fields[i].type,
+                    title: me.fields[i].title,
+                    group: me.fields[i].group,
+                    identify: me.fields[i].identify
                 };
+
+                if (fieldConf.type == 'pointer' && me.fields[i].relativeModel != undefined && relativeModel.name != undefined && relativeModel.moduleName != undefined) {
+                    fieldConf['relativeModel'] = me.fields[i].relativeModel;
+                }
+
+                modelClassDefinition.fields[modelClassDefinition.fields.length] = fieldConf;
             }
-            Ext.define(this._modelClassName, modelClassDefinition);
+            Ext.define(me._modelClassName, modelClassDefinition);
         }
     },
 

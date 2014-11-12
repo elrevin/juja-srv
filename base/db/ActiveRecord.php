@@ -10,7 +10,6 @@ class ActiveRecord extends db\ActiveRecord
      * Массив в первом уровне в качестве ключей элементов используются имена полей в таблице
      * каждый такой элемент - вложенный ассоциативный массив:
      *      'title' - Название поля,
-     *      'name' - имя поля,
      *
      *      'type' - тип поля:
      *          'int' - целое число,
@@ -196,7 +195,7 @@ class ActiveRecord extends db\ActiveRecord
     }
 
     /**
-     * Возвращает конфигурацию поля отмеченного флагом identify
+     * Возвращает конфигурацию поля отмеченного флагом identify, в конфигурацию добавляется ключ "name" содержащий имя поля
      *
      * @return array|null
      */
@@ -204,6 +203,7 @@ class ActiveRecord extends db\ActiveRecord
     {
         foreach (static::$structure as $fieldName => $fieldConf) {
             if ($fieldConf['identify']) {
+                $fieldConf['name'] = $fieldName;
                 return $fieldConf;
             }
         }
@@ -222,6 +222,7 @@ class ActiveRecord extends db\ActiveRecord
      *          При обработке этого масиива учитывается тип поля, соответственно поля pointer и select обрабатываются
      *          особым образом
      *      'where' - условия, используется в качестве аргумента метода andWhere
+     *      'identifyOnly' - true если требуется выгрузить только идентифицирующее поле (например для выпадающих списков)
      *
      * @param $params
      * @return array|\yii\db\ActiveRecord[]
@@ -233,6 +234,12 @@ class ActiveRecord extends db\ActiveRecord
         $pointers = [];
 
         foreach (static::$structure as $fieldName => $fieldConf) {
+            if (isset($params['identifyOnly']) && $params['identifyOnly']) {
+                if ((isset($fieldConf['identify']) && !$fieldConf['identify']) || (!isset($fieldConf['identify']))) {
+                    continue;
+                }
+            }
+
             if ($fieldConf['type'] == 'pointer') {
                 $relatedIdentifyFieldConf = call_user_func([$fieldConf['relativeModel'], 'getIdentifyFieldConf']);
                 if ($relatedIdentifyFieldConf) {
@@ -259,14 +266,14 @@ class ActiveRecord extends db\ActiveRecord
         if (isset($params['filter'])) {
             foreach ($params['filter'] as $filter) {
                 if ($filter['type'] == 'string') {
-                    $query->andWhere(['like', $filter['field'], $filter['value']]);
+                    $query->andWhere(['like', "`".static::tableName()."`.`".$filter['field']."`", $filter['value']]);
                 } elseif ($filter['type'] == 'numeric') {
                     if ($filter['comparison'] == 'lt') {
-                        $query->andWhere(['<', $filter['field'], $filter['value']]);
+                        $query->andWhere(['<', "`".static::tableName()."`.`".$filter['field']."`", $filter['value']]);
                     } elseif ($filter['comparison'] == 'gt') {
-                        $query->andWhere(['>', $filter['field'], $filter['value']]);
+                        $query->andWhere(['>', "`".static::tableName()."`.`".$filter['field']."`", $filter['value']]);
                     } elseif ($filter['comparison'] == 'eq') {
-                        $query->andWhere([$filter['field'] => $filter['value']]);
+                        $query->andWhere(["`".static::tableName()."`.`".$filter['field']."`" => $filter['value']]);
                     }
                 }
             }
@@ -309,20 +316,27 @@ class ActiveRecord extends db\ActiveRecord
         if ($pointers) {
             foreach ($list as $key => $item) {
                 foreach ($pointers as $fieldName => $some) {
-                    $list[$key][$fieldName] = [
+                    $list[$key][$fieldName] = \yii\helpers\Json::encode([
                         'id' => $item[$fieldName],
                         'value' => $item['valof_'.$fieldName]
-                    ];
+                    ]);
                 }
             }
         }
         return ['data' => $list];
     }
 
-    protected static function setType ($fieldName, $value) {
+    /**
+     * Приводит значение value к типу поля fieldName
+     * @param $fieldName
+     * @param $value
+     * @return int|null|string
+     */
+    protected static function setType ($fieldName, $value)
+    {
         $type = static::$structure[$fieldName]['type'];
 
-        if ($type == 'int' || $type == 'pointer' || $type == 'file' || $type == 'img') {
+        if ($type == 'int' || $type == 'file' || $type == 'img') {
             return intval($value);
         } elseif ($type == 'float') {
             return floatval($value);
@@ -351,12 +365,19 @@ class ActiveRecord extends db\ActiveRecord
             }
         } elseif ($type == 'bool') {
             return $value ? 1 : 0;
+        } elseif ($type == 'pointer') {
+            return $value['id'];
         }
 
         return null;
     }
 
-    public function mapJson($data) {
+    /**
+     * "Накладывает" массив данных или JSON строку на модель
+     * @param $data
+     */
+    public function mapJson($data)
+    {
         if (is_string($data)) {
             $data = \yii\helpers\Json::decode($data);
         }
@@ -366,6 +387,33 @@ class ActiveRecord extends db\ActiveRecord
                     $this->$key = static::setType($key, $val);
                 }
             }
+        }
+    }
+
+    /**
+     * Сохраняет данные переданные в массиве $data
+     * @param array $data
+     * @param bool $add
+     * @return array|bool|\yii\db\ActiveRecord[]
+     */
+    public function saveData($data, $add = false)
+    {
+        $this->mapJson($data);
+        if ($this->save()) {
+            if ($add) {
+                return static::getList([
+                    "limit" => 1,
+                    "sort" => [
+                        "`".static::tableName()."`.id" => SORT_DESC
+                    ]
+                ]);
+            } else {
+                return static::getList([
+                    "where" => "`".static::tableName()."`.id"
+                ]);
+            }
+        } else {
+            return false;
         }
     }
 }

@@ -23,7 +23,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 // если ID, то создаем скрытое поле
                 return Ext.create('Ext.form.field.Hidden', {
                     name: 'id',
-                    id: me.id + '_field_' + field.name
+                    id: me.id + '_field_' + field.name,
+                    modelField: field
                 });
             }
             // Обычное целочисленное поле
@@ -35,7 +36,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 labelAlign: 'top',
                 width: 150,
                 allowBlank: !field.required,
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: field
             });
         } else if (field.type == Ext.data.Types.FLOAT) {
             // Число с точкой
@@ -47,7 +49,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 labelAlign: 'top',
                 width: 150,
                 allowBlank: !field.required,
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: field
             });
         } else if (field.type == Ext.data.Types.STRING) {
             // Обычное строковое поле
@@ -58,7 +61,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 labelAlign: 'top',
                 width: 400,
                 allowBlank: !field.required,
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: field
             });
         } else if (field.type == Ext.data.Types.TEXT) {
             // Многострочный текст
@@ -70,7 +74,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 width: 400,
                 height: 80,
                 allowBlank: !field.required,
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: field
             });
         } else if (field.type == Ext.data.Types.DATE) {
             // Дата
@@ -83,7 +88,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 allowBlank: !field.required,
                 format: 'd.m.Y',
                 submitFormat: 'Y-m-d',
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: field
             });
         } else if (field.type == Ext.data.Types.DATETIME) {
             // Дата и время
@@ -96,7 +102,8 @@ Ext.define('Ext.ux.index.form.Form', {
                 allowBlank: !field.required,
                 format: 'd.m.Y',
                 submitFormat: 'Y-m-d H:i:s',
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: field
             });
         } else if (field.type == Ext.data.Types.BOOL) {
             // Дата и время
@@ -108,16 +115,42 @@ Ext.define('Ext.ux.index.form.Form', {
                 id: me.id + '_field_' + field.name,
                 fieldLabel: field.title,
                 labelAlign: 'left',
-                labelWidth: labelWidth
+                labelWidth: labelWidth,
+                modelField: field
             });
         } else if (field.type == Ext.data.Types.POINTER) {
             // Справочник
-
-//      return Ext.create('Ext.form.field.Text', {
-//        name: field.name,
-//        id: me.id+'_field_'+field.name,
-//        allowBlank: field.required
-//      });
+            var url = $url(field.relativeModel.moduleName, 'main', 'list', {modelName: field.relativeModel.name, identifyOnly: 1});
+            return Ext.create('Ext.ux.form.ClearableComboBox', {
+                name: field.name,
+                id: me.id+'_field_'+field.name,
+                fieldLabel: field.title,
+                labelAlign: 'top',
+                width: 400,
+                allowBlank: !field.required,
+                msgTarget: 'side',
+                displayField: field.relativeModel.identifyFieldName,
+                valueField: 'id',
+                editable: false,
+                isPointerField: true,
+                store: new Ext.data.JsonStore ({
+                    proxy: {
+                        type: 'ajax',
+                        url: url,
+                        actionMethods:  {read: "GET"},
+                        extraParams: {},
+                        reader: {
+                            type: 'json',
+                            root: 'data',
+                            idProperty: 'id'
+                        }
+                    },
+                    fields: [{name: 'id', type: 'integer'}, {name: field.relativeModel.identifyFieldName, type: field.relativeModel.identifyFieldType}],
+                    pageSize: 50,
+                    autoLoad: true
+                }),
+                modelField: field
+            });
         }
 
         return null;
@@ -358,7 +391,11 @@ Ext.define('Ext.ux.index.form.Form', {
                     field = me.model.fields.getAt(i);
                     input = Ext.getCmp(me.id + '_field_' + field.name);
                     if (input) {
-                        values[field.name] = input.getValue();
+                        if (input.modelField.type == Ext.data.Types.POINTER) {
+                            values[field.name] = Ext.JSON.encode(input.getValue());
+                        } else {
+                            values[field.name] = input.getValue();
+                        }
                     }
                 }
             }

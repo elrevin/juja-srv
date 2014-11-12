@@ -76,10 +76,10 @@ class SRightsRules extends \app\base\db\ActiveRecord
     /**
      * Возвращает права текущего пользователя на модель
      * @param $modelName
-     * @param int|bool $idRecord
+     * @param int $idRecord
      * @return int|mixed
      */
-    public static function findRights($modelName, $idRecord = false)
+    public static function findRights($modelName, $idRecord = 0)
     {
         if (!Yii::$app->user->isGuest) {
             if (Yii::$app->user->getIdentity()->isSU) {
@@ -96,7 +96,9 @@ class SRightsRules extends \app\base\db\ActiveRecord
                     ':uid' => Yii::$app->user->id,
                     ':modelName' => $modelName
                 ])->orderBy(['user_id' => SORT_DESC])->limit(1)->one();
-                return $rights->rights;
+                if ($rights) {
+                    return $rights->rights;
+                }
             }
         }
         return self::RIGHTS_NONE;

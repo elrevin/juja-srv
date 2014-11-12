@@ -24,7 +24,8 @@ Ext.define('App.core.SingleModelEditor', {
     createModelClass: function () {
         var me = this,
             fieldIndex,
-            modelClassDefinition;
+            modelClassDefinition,
+            fieldConf;
         me.modelClassName = me.modelName + "Model";
 
         if (!Ext.ClassManager.isCreated(me.modelClassName)) {
@@ -40,7 +41,7 @@ Ext.define('App.core.SingleModelEditor', {
                 };
                 for (var i = 0; i < this.fields.length; i++) {
                     fieldIndex = modelClassDefinition.fields.length;
-                    modelClassDefinition.fields[fieldIndex] = {
+                    fieldConf = {
                         name: me.fields[i].name,
                         type: me.fields[i].type,
                         title: me.fields[i].title,
@@ -48,6 +49,12 @@ Ext.define('App.core.SingleModelEditor', {
                         identify: me.fields[i].identify,
                         required: me.fields[i].required
                     };
+
+                    if (fieldConf.type == 'pointer' && me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {
+                        fieldConf['relativeModel'] = me.fields[i].relativeModel;
+                    }
+
+                    modelClassDefinition.fields[fieldIndex] = fieldConf;
                 }
                 Ext.define(me.modelClassName, modelClassDefinition);
             }

@@ -8,6 +8,7 @@ Ext.define('Ext.ux.form.ClearableComboBox', {
     trigger1Class: 'x-form-select-trigger',
     trigger2Class: 'x-form-clear-trigger',
     triggerWidth: 54,
+    isPointerField: false,
     onRender: function (ct, position) {
         Ext.ux.form.ClearableComboBox.superclass.onRender.call(this, ct, position);
         var id = this.getId();
@@ -56,5 +57,35 @@ Ext.define('Ext.ux.form.ClearableComboBox', {
         var trigger2 = Ext.get("trigger2" + id);
         trigger1.addClsOnOver('x-form-trigger-over');
         trigger2.addClsOnOver('x-form-trigger-over');
+    },
+
+    setValue: function(value, doSelect) {
+        var me = this;
+        if (value && value.id != undefined) {
+            return me.callParent([parseInt(value.id), doSelect]);
+        }
+        return me.callParent([value, doSelect]);
+    },
+    getValue: function(getObj) {
+        var me = this,
+          picker = me.picker,
+          rawValue = me.getRawValue(),
+          value = me.value;
+        if (me.getDisplayValue() !== rawValue) {
+            value = rawValue;
+            me.value = me.displayTplData = me.valueModels = null;
+            if (picker) {
+                me.ignoreSelection++;
+                picker.getSelectionModel().deselectAll();
+                me.ignoreSelection--;
+            }
+        } else if (me.isPointerField){
+            return {
+                id: value,
+                value: rawValue
+            };
+        }
+
+        return value;
     }
 });

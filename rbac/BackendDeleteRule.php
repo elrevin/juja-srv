@@ -28,7 +28,7 @@ class BackendDeleteRule extends Rule
                         if (isset($params['recordId'])) {
                             $recordId = $params['recordId'];
                         } else {
-                            $recordId = false;
+                            $recordId = 0;
                         }
                         $rights = SRightsRules::findRights($modelName, $recordId);
                         return $rights > SRightsRules::RIGHTS_ALL;

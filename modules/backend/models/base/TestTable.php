@@ -10,7 +10,7 @@ class TestTable extends \app\base\db\ActiveRecord
         'title' => [
             'title' => 'Название',
             'type' => 'string',
-            'required' => true
+            'identify' => true,
         ],
         'text' => [
             'title' => 'Текст',
@@ -37,7 +37,6 @@ class TestTable extends \app\base\db\ActiveRecord
         ],
         'dtt' => [
             'title' => 'Дата и время',
-            'identify' => true,
             'type' => 'datetime'
         ],
     ];

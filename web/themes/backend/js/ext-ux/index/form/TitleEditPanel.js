@@ -12,7 +12,6 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
             formField = null,
             form = me.form;
         if (me.field.type == Ext.data.Types.STRING) {
-            console.log(me.field);
             formField = Ext.create('Ext.form.field.Text', {
                 hideLabel: true,
                 width: 300,
@@ -20,7 +19,8 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
                 id: form.id + '_field_' + field.name,
                 name: me.field.name,
                 allowBlank: false,
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: me.field
             });
         } else if (me.field.type == Ext.data.Types.INTEGER) {
             formField = Ext.create('Ext.form.field.Number', {
@@ -32,7 +32,8 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
                 allowBlank: false,
                 value: 0,
                 allowBlank: me.field.required,
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: me.field
             });
         } else if (me.field.type == Ext.data.Types.FLOAT) {
             formField = Ext.create('Ext.form.field.Number', {
@@ -44,7 +45,8 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
                 allowBlank: false,
                 value: 0,
                 allowBlank: me.field.required,
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: me.field
             });
         } else if (me.field.type == Ext.data.Types.DATE) {
             formField = Ext.create('Ext.form.field.Date', {
@@ -57,7 +59,8 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
                 format: 'd.m.Y',
                 submitFormat: 'Y-m-d',
                 allowBlank: me.field.required,
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: me.field
             });
         } else if (me.field.type == Ext.data.Types.DATETIME) {
             formField = Ext.create('Ext.ux.form.DateTimeField', {
@@ -70,7 +73,8 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
                 format: 'd.m.Y',
                 submitFormat: 'Y-m-d H:i:s',
                 allowBlank: me.field.required,
-                msgTarget: 'side'
+                msgTarget: 'side',
+                modelField: me.field
             });
         } else if (me.field.type == Ext.data.Types.POINTER) {
             //formField = Ext.create('Ext.ux.form.DateTimeField', {

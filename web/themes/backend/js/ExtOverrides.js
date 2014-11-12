@@ -44,9 +44,11 @@ function doOverride() {
         group: '',
         required: false,
         identify: false,
-        relationModel: {
+        relativeModel: {
             name: '',
-            moduleName: ''
+            moduleName: '',
+            identifyFieldName: '',
+            identifyFieldType: ''
         }
     });
 
@@ -84,4 +86,24 @@ function doOverride() {
         type: 'datetime'
     };
 
+    Ext.data.Types.POINTER = {
+        convert: function(v, data) {
+            var me=this;
+            if (v == undefined) {
+                return v;
+            }
+            if (!v.length) {
+                return null
+            }
+            var obj = Ext.JSON.decode(v);
+            if (obj.id != undefined && obj.value != undefined) {
+                return obj;
+            }
+            return null;
+        },
+        sortType: function(v) {
+            return v.value;
+        },
+        type: 'pointer'
+    };
 }
