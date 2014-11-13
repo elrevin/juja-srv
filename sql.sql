@@ -16,6 +16,64 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
+-- Table structure for table `point_test_table`
+--
+
+DROP TABLE IF EXISTS `point_test_table`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `point_test_table` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `del` tinyint(1) NOT NULL DEFAULT '0',
+  `title` varchar(1024) NOT NULL DEFAULT '',
+  `price` double DEFAULT NULL,
+  `test_table_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_point_test_table_test_table_id` (`test_table_id`),
+  CONSTRAINT `FK_point_test_table_test_table_id` FOREIGN KEY (`test_table_id`) REFERENCES `test_table` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `point_test_table`
+--
+
+LOCK TABLES `point_test_table` WRITE;
+/*!40000 ALTER TABLE `point_test_table` DISABLE KEYS */;
+INSERT INTO `point_test_table` VALUES (1,0,'Тестовая запись 3',127,17),(8,0,'Что-то там',12,18);
+/*!40000 ALTER TABLE `point_test_table` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pttp`
+--
+
+DROP TABLE IF EXISTS `pttp`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pttp` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `del` tinyint(1) NOT NULL DEFAULT '0',
+  `hidden` tinyint(1) NOT NULL DEFAULT '0',
+  `master_table_id` int(11) DEFAULT NULL,
+  `title` varchar(1024) NOT NULL DEFAULT '',
+  `count` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `FK_pttp_point_test_table_id` (`master_table_id`),
+  CONSTRAINT `FK_pttp_point_test_table_id` FOREIGN KEY (`master_table_id`) REFERENCES `point_test_table` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pttp`
+--
+
+LOCK TABLES `pttp` WRITE;
+/*!40000 ALTER TABLE `pttp` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pttp` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `s_config`
 --
 
@@ -58,7 +116,7 @@ CREATE TABLE `s_rights_rules` (
   KEY `FK_s_rights_rules_s_users_id` (`user_id`),
   CONSTRAINT `FK_s_rights_rules_s_users_groups_id` FOREIGN KEY (`user_group_id`) REFERENCES `s_users_groups` (`id`),
   CONSTRAINT `FK_s_rights_rules_s_users_id` FOREIGN KEY (`user_id`) REFERENCES `s_users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -67,7 +125,7 @@ CREATE TABLE `s_rights_rules` (
 
 LOCK TABLES `s_rights_rules` WRITE;
 /*!40000 ALTER TABLE `s_rights_rules` DISABLE KEYS */;
-INSERT INTO `s_rights_rules` VALUES (1,'TestTable',1,NULL,1),(2,'TestTable',NULL,2,2);
+INSERT INTO `s_rights_rules` VALUES (1,'TestTable',1,NULL,1),(2,'TestTable',NULL,2,2),(3,'PointTestTable',NULL,2,2);
 /*!40000 ALTER TABLE `s_rights_rules` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -159,7 +217,7 @@ CREATE TABLE `test_table` (
 
 LOCK TABLES `test_table` WRITE;
 /*!40000 ALTER TABLE `test_table` DISABLE KEYS */;
-INSERT INTO `test_table` VALUES (1,0,0,'','dfghjkl',1254,NULL,1,NULL),(2,0,0,'','ыавпр',0,NULL,0,NULL),(3,0,0,'','апври',0,NULL,0,NULL),(4,0,0,'','ампиртоьл',155,NULL,0,NULL),(5,0,0,'','sdfvbcvfds',0,NULL,0,NULL),(6,0,0,'','ghnhjnk0000',0,NULL,0,NULL),(7,0,0,'','uikhu',0,NULL,0,NULL),(8,0,0,'','dfgv9988989',0,NULL,0,NULL),(9,0,0,'','55555',0,NULL,0,NULL),(10,0,0,'','yuyuuyu777',0,NULL,0,NULL),(11,0,0,'','00099',0,NULL,0,NULL),(12,0,0,'','yuyuy',0,NULL,0,NULL),(13,0,0,'','uiuiui',0,NULL,0,NULL),(14,0,0,'sdfasfsdf 434535345 r4444 rgfed','ioi vdfgdfgdfg utkykjyuykujh grgrg',3443,'2014-11-20',1,'2014-11-29 01:04:35'),(15,0,0,'test sdgsdfg','wqergfds',0,'2014-11-26',0,'2014-11-27 01:41:02'),(16,0,0,'wrwerwer','',32,'2014-11-20',0,NULL),(17,0,0,'3ertyhjhv ','',34,'2014-11-14',0,'2014-11-30 10:30:33'),(18,0,0,'3232323 56 4','TEXT',232,'2014-10-19',1,'2014-11-07 10:31:08');
+INSERT INTO `test_table` VALUES (17,0,0,'ку','ыаываыва',34,'2014-11-14',0,'2014-11-30 10:30:33'),(18,0,0,'3232323 56 4','TEXT',232,'2014-10-19',1,'2014-11-07 10:31:08');
 /*!40000 ALTER TABLE `test_table` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -176,4 +234,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-11-11 10:31:16
+-- Dump completed on 2014-11-13 12:03:16

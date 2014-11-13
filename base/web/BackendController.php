@@ -143,4 +143,104 @@ class BackendController extends Controller
         $moduleName = $this->module->id;
         return file_get_contents(Yii::getAlias("@app/data/{$moduleName}/{$fileName}"));
     }
+
+    /**
+     * Действие, возвращает интерфейс редактора
+     * @return string
+     */
+    public function actionGetInterface() {
+        $modelName = Yii::$app->request->get('modelName', '');
+        if (!$modelName) {
+            $this->ajaxError('\app\base\web\BackendController\actionGetInterface?modelName='.$modelName, 'Справочник не найден.');
+        }
+
+
+        $moduleName = $this->module->id;
+        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface']);
+
+    }
+
+    public function beforeList($modelName, $params)
+    {
+        return $params;
+    }
+
+    public function actionAfterList($modelName, $list)
+    {
+        return $list;
+    }
+
+    /**
+     * Возвращает список записей для отображения в панели управления
+     * @return mixed|null
+     */
+    public function actionList()
+    {
+        $modelName = Yii::$app->request->get('modelName', '');
+        if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
+            $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+
+            $params = $this->beforeList($modelName, ["identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false)]);
+
+            $list = $this->actionAfterList($modelName, call_user_func([$modelName, 'getList'], $params));
+
+            return $list;
+        }
+        $this->ajaxError('\app\base\web\BackendController\actionList?modelName='.$modelName, 'Справочник не найден.');
+        return null;
+    }
+
+    /**
+     * Сохранение записи
+     * @return array|mixed|null
+     */
+    public function actionSaveRecord()
+    {
+        $modelName = Yii::$app->request->get('modelName', '');
+        $add = intval(Yii::$app->request->get('add', 0));
+        $data = \yii\helpers\Json::decode(Yii::$app->request->post('data', '[]'));
+
+        if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
+            $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+            if ($add) {
+                /**
+                 * @var \yii\db\ActiveRecord
+                 */
+                $model = new $modelName();
+                $model->mapJson($data);
+                if ($result = $model->saveData($data, true)) {
+                    $data = [
+                        'data' => $result,
+                        'success' => true
+                    ];
+                    return $data;
+                } else {
+                    $errors = "";
+                    foreach ($model->errors as $error) {
+                        $errors .= implode("<br/>", $error);
+                    }
+                    $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName.'&add=1', 'Ошибка сохранения данных:<br/>'.$errors);
+                    return null;
+                }
+            } elseif (isset($data['id']) && $data['id']) {
+                $model = call_user_func([$modelName, 'findOne'], $data['id']);
+                if ($result = $model->saveData($data)) {
+                    $data = [
+                        'data' => $result,
+                        'success' => true
+                    ];
+                    return $data;
+                } else {
+                    $errors = "";
+                    foreach ($model->errors as $error) {
+                        $errors .= implode("<br/>", $error);
+                    }
+                    $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName.'&id='.$data['id'], 'Ошибка сохранения данных:<br/>'.$errors);
+                    return null;
+                }
+            }
+        }
+        $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName, 'Справочник не найден.');
+        return null;
+    }
 }

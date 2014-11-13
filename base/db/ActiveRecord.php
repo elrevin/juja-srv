@@ -115,6 +115,18 @@ class ActiveRecord extends db\ActiveRecord
      */
     protected static $parentModel = '';
 
+    /**
+     * Имя модуля, которой принадлежит модель
+     * @var string
+     */
+    protected static $moduleName = '';
+
+    /**
+     * Имя класса модели, без namespace
+     * @var string
+     */
+    protected static $modelName = '';
+
     public static function find()
     {
         $cond = static::defaultWhere();
@@ -152,23 +164,60 @@ class ActiveRecord extends db\ActiveRecord
         return static::$masterModel;
     }
 
-    public static function getParentModel () {
+    public static function getParentModel ()
+    {
         return static::$parentModel;
     }
 
-    public static function getChildModel() {
-        $className = static::className();
-        $classNameSpace = preg_replace("/([a-zA-Z0-9_]+)$/", '', $className);
-        $classPath = "@".trim(str_replace("\\", "/", $classNameSpace), "/");
-        preg_match("/([a-zA-Z0-9_]+)$/", $className, $matches);
-        $className = $matches[0];
+    /**
+     * Возвращает имя модуля, которому принадлежит модель
+     * @return mixed
+     */
+    public static function getModuleName()
+    {
+        if (static::$moduleName) {
+            return static::$moduleName;
+        }
 
+        $className = static::className();
+        $classNameSpace = trim(preg_replace("/([a-zA-Z0-9_]+)$/", '', $className), '\\');
+        $classNameSpace = str_replace('app\modules\\', '', $classNameSpace);
+        $moduleName = str_replace('\models', '', $classNameSpace);
+        static::$moduleName = $moduleName;
+        return $moduleName;
+    }
+
+    /**
+     * Возвращает имя класса моудели, без пространства имен.
+     * @return string
+     */
+    public static function getModelName()
+    {
+        if (static::$modelName) {
+            return static::$modelName;
+        }
+
+        $className = trim(static::className(), '\\');
+        static::$modelName = str_replace('app\modules\\'.static::getModuleName().'\models\\', '', $className);
+        return static::$modelName;
+    }
+
+    /**
+     * Возвращает имя класса модели (с указанием пространства имен), которая является подчиненной данной модели, если таковая есть
+     * если подчиненных моделей нет, то возвращается false
+     * @return bool|mixed|string
+     */
+    public static function getChildModel()
+    {
+        $className = static::className();
+        $classPath = "@app/modules/".static::getModuleName()."/models";
+        $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
         $files = scandir(Yii::getAlias($classPath));
         foreach ($files as $file) {
             if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
                 $modelName = str_replace(".php", "", $file);
                 if ($modelName != $className) {
-                    $modelName = $classNameSpace.str_replace(".php", "", $file);
+                    $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
                     $parentModel = call_user_func([$modelName, 'getParentModel']);
                     if ($parentModel == $className) {
                         return $modelName;
@@ -178,6 +227,34 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         return false;
+    }
+
+    /**
+     * Возвращает модели-детализации, для которых вкачестве мастер-модели указана текущая (если таковые есть).
+     * Возвращаются имена классов, включая пространства имен, в массиве.
+     * Если модели-деталицации не найдены, возвращается false
+     * @return array|bool
+     */
+    public static function getDetailModels() {
+        $className = static::className();
+        $classPath = "@app/modules/".static::getModuleName()."/models";
+        $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
+        $files = scandir(Yii::getAlias($classPath));
+        $result = [];
+        foreach ($files as $file) {
+            if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
+                $modelName = str_replace(".php", "", $file);
+                if ($modelName != $className) {
+                    $modelName = $classNameSpace.str_replace(".php", "", $file);
+                    $masterModel = call_user_func([$modelName, 'getMasterModel']);
+                    if ($masterModel == $className) {
+                        $result[] = $modelName;
+                    }
+                }
+            }
+        }
+
+        return ($result ? $result : false);
     }
 
     /**
@@ -415,5 +492,67 @@ class ActiveRecord extends db\ActiveRecord
         } else {
             return false;
         }
+    }
+
+    public static function getUserInterface()
+    {
+        $modelStructure = static::getStructure();
+        $fields = [];
+        foreach ($modelStructure as $fieldName => $config) {
+            $relativeModel = [];
+            if ($config['type'] == 'pointer') {
+                if (strncmp($config['relativeModel'], '\app\modules', 12) == 0) {
+                    $relativeModelFullName = $config['relativeModel'];
+                    $relativeModel = str_replace('\app\modules\\', '', str_replace('\models', '', $config['relativeModel']));
+                    $relativeModel = explode('\\', $relativeModel);
+                    $relativeModel[2] = call_user_func([$relativeModelFullName, 'getIdentifyFieldConf']);
+                    if (!$relativeModel[2]) {
+                        continue;
+                    }
+                    $relativeModel[3] = $relativeModel[2]['type'];
+                    $relativeModel[2] = $relativeModel[2]['name'];
+                } else {
+                    continue;
+                }
+            }
+
+            $i = count($fields);
+            $fields[$i] = array_merge([
+                'name' => $fieldName
+            ], $config);
+
+            if ($relativeModel) {
+                $fields[$i]['relativeModel'] = [
+                    'moduleName' => $relativeModel[0],
+                    'name' => $relativeModel[1],
+                    'identifyFieldName' => $relativeModel[2],
+                    'identifyFieldType' => $relativeModel[3]
+                ];
+            }
+        }
+
+        $fields = \yii\helpers\Json::encode($fields);
+
+        $getDataAction = \yii\helpers\Json::encode([static::getModuleName(), 'main', 'list']);
+
+        $userRights = 0;
+
+        $modelName = static::getModelName();
+        if (Yii::$app->user->can('backend-delete-record', ['modelName' => $modelName])) {
+            $userRights = 3;
+        } elseif (Yii::$app->user->can('backend-save-record', ['modelName' => $modelName])) {
+            $userRights = 2;
+        } elseif (Yii::$app->user->can('backend-list', ['modelName' => $modelName])) {
+            $userRights = 1;
+        }
+
+        return ("
+          var module = Ext.create('App.core.SingleModelEditor', {
+            fields: {$fields},
+            getDataAction: {$getDataAction},
+            modelName: '{$modelName}',
+            userRights: {$userRights}
+          });
+        ");
     }
 }
