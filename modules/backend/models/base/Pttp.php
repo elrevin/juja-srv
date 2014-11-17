@@ -25,9 +25,11 @@ class Pttp extends \app\base\db\ActiveRecord
 
     public static $permanentlyDelete = false;
 
-    protected static $hiddable = false;
+    protected static $hiddable = true;
 
     protected static $modelTitle = 'Детализация тестовая';
+
+    protected static $masterModel = '\app\modules\backend\models\PointTestTable';
 
     /**
      * @inheritdoc

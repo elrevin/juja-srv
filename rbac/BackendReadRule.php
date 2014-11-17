@@ -26,12 +26,22 @@ class BackendReadRule extends Rule
                     // Проверяем настройки прав в БД
                     if (isset($params['modelName'])) {
                         $modelName = $params['modelName'];
-                        if ($modelName) {
-                            $recordId = isset($params['recordId']) ? $params['recordId'] : 0;
-
-                            $rights = SRightsRules::findRights($modelName);
-                            return $rights > SRightsRules::RIGHTS_NONE;
+                        if ($modelName[0] != '\\') $modelName = '\\'.$modelName;
+                        if (isset($params['parentId']) && intval($params['parentId'])) {
+                            $recordId = $params['parentId'];
+                        } elseif (isset($params['recordId'])) {
+                            $recordId = $params['recordId'];
+                        } else {
+                            $recordId = 0;
                         }
+
+                        $masterModel = call_user_func([$modelName, 'getMasterModel']);
+                        if ($masterModel) {
+                            $modelName = $masterModel;
+                        }
+
+                        $rights = SRightsRules::findRights(trim($modelName, '\\'), $recordId);
+                        return $rights > SRightsRules::RIGHTS_NONE;
                     }
                 }
             } elseif (Yii::$app->user->can('admin')) {

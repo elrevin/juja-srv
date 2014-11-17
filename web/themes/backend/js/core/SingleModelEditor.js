@@ -18,6 +18,8 @@ Ext.define('App.core.SingleModelEditor', {
     // 3 - Полный доступ
     userRights: 0,
 
+    tabs: [],
+
     /**
      * Функция создает базовый класс модели, по набору полей в свойстве fields
      */
@@ -198,6 +200,7 @@ Ext.define('App.core.SingleModelEditor', {
                     me.model = Ext.create(me.modelClassName, {});
                     me.form = Ext.create('Ext.ux.index.form.Form', {
                         model: me.model,
+                        tabs: me.tabs,
                         listeners: {
                             afterinsert: function () {
                                 me.store.add(me.model);

@@ -104,7 +104,7 @@ class ActiveRecord extends db\ActiveRecord
     protected static $recursive = false;
 
     /**
-     * Имя класса "master" модел
+     * Имя класса "master" модель
      * @var string
      */
     protected static $masterModel = '';
@@ -126,6 +126,15 @@ class ActiveRecord extends db\ActiveRecord
      * @var string
      */
     protected static $modelName = '';
+
+    /**
+     * Создавать интерфейс только для существующих предков, актуально только для детализаций.
+     * Если это свойство равно true, то таб-панель для данной модели будет создана только если
+     * запись, с которой модель связана будет существовать, иными словами после при редактировании
+     * существующей записи, либо после ее создания.
+     * @var bool
+     */
+    public static $createInterfaceForExistingParentOnly = true;
 
     public static function find()
     {
@@ -236,7 +245,7 @@ class ActiveRecord extends db\ActiveRecord
      * @return array|bool
      */
     public static function getDetailModels() {
-        $className = static::className();
+        $className = trim(static::className(), '\\');
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
         $files = scandir(Yii::getAlias($classPath));
@@ -245,9 +254,9 @@ class ActiveRecord extends db\ActiveRecord
             if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
                 $modelName = str_replace(".php", "", $file);
                 if ($modelName != $className) {
-                    $modelName = $classNameSpace.str_replace(".php", "", $file);
+                    $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
                     $masterModel = call_user_func([$modelName, 'getMasterModel']);
-                    if ($masterModel == $className) {
+                    if (trim($masterModel, '\\') == $className) {
                         $result[] = $modelName;
                     }
                 }
@@ -494,13 +503,21 @@ class ActiveRecord extends db\ActiveRecord
         }
     }
 
-    public static function getUserInterface()
+    /**
+     * Возвращает настройки пользовательского интерфейса.
+     * Если $configOnly == true, то возвращается только массив настроек, если false, то возвращается полностью javascript редактора.
+     *
+     * @param bool $configOnly
+     * @return string
+     */
+    public static function getUserInterface($configOnly = false, $parentId = 0)
     {
         $modelStructure = static::getStructure();
         $fields = [];
         foreach ($modelStructure as $fieldName => $config) {
             $relativeModel = [];
             if ($config['type'] == 'pointer') {
+                // Для полей типа pointer получаем конфигурацию связанной модели
                 if (strncmp($config['relativeModel'], '\app\modules', 12) == 0) {
                     $relativeModelFullName = $config['relativeModel'];
                     $relativeModel = str_replace('\app\modules\\', '', str_replace('\models', '', $config['relativeModel']));
@@ -522,6 +539,7 @@ class ActiveRecord extends db\ActiveRecord
             ], $config);
 
             if ($relativeModel) {
+                // есть связанная модель, добавляем ее конфигурацию в конфигурацию поля
                 $fields[$i]['relativeModel'] = [
                     'moduleName' => $relativeModel[0],
                     'name' => $relativeModel[1],
@@ -531,28 +549,50 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        $fields = \yii\helpers\Json::encode($fields);
-
-        $getDataAction = \yii\helpers\Json::encode([static::getModuleName(), 'main', 'list']);
+        $getDataAction = [static::getModuleName(), 'main', 'list'];
 
         $userRights = 0;
 
         $modelName = static::getModelName();
-        if (Yii::$app->user->can('backend-delete-record', ['modelName' => $modelName])) {
+
+        if (Yii::$app->user->can('backend-delete-record', ['modelName' => static::className(), 'parentId' => $parentId])) {
             $userRights = 3;
-        } elseif (Yii::$app->user->can('backend-save-record', ['modelName' => $modelName])) {
+        } elseif (Yii::$app->user->can('backend-save-record', ['modelName' => static::className(), 'parentId' => $parentId])) {
             $userRights = 2;
-        } elseif (Yii::$app->user->can('backend-list', ['modelName' => $modelName])) {
+        } elseif (Yii::$app->user->can('backend-list', ['modelName' => static::className(), 'parentId' => $parentId])) {
             $userRights = 1;
         }
 
+        $conf = [
+            'fields' => $fields,
+            'getDataAction' => $getDataAction,
+            'modelName' => $modelName,
+            'userRights' => $userRights,
+            'createInterfaceForExistingParentOnly' => static::$createInterfaceForExistingParentOnly,
+            'title' => static::getModelTitle()
+        ];
+
+        $tabs = [];
+        $detailModels = static::getDetailModels();
+        if ($detailModels) {
+            foreach ($detailModels as $item) {
+                // Получаем конфиг модели-детализации
+                $tabConfig = call_user_func([$item, 'getUserInterface'], true);
+                $tabConfig['modelName'] = str_replace('app\modules\\'.static::getModuleName().'\models\\', '', trim($item, '\\'));
+                $tabs[] = $tabConfig;
+            }
+        }
+
+        if ($tabs) {
+            $conf['tabs'] = $tabs;
+        }
+
+        if ($configOnly) {
+            return $conf;
+        }
+
         return ("
-          var module = Ext.create('App.core.SingleModelEditor', {
-            fields: {$fields},
-            getDataAction: {$getDataAction},
-            modelName: '{$modelName}',
-            userRights: {$userRights}
-          });
+          var module = Ext.create('App.core.SingleModelEditor', ".\yii\helpers\Json::encode($conf).");
         ");
     }
 }

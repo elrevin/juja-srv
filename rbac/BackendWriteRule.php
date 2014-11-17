@@ -26,12 +26,21 @@ class BackendWriteRule extends Rule
                     // Проверяем настройки прав в БД
                     if (isset($params['modelName'])) {
                         $modelName = $params['modelName'];
-                        if (isset($params['recordId'])) {
+                        if ($modelName[0] != '\\') $modelName = '\\'.$modelName;
+                        if (isset($params['parentId']) && intval($params['parentId'])) {
+                            $recordId = $params['parentId'];
+                        } elseif (isset($params['recordId'])) {
                             $recordId = $params['recordId'];
                         } else {
                             $recordId = 0;
                         }
-                        $rights = SRightsRules::findRights($modelName, $recordId);
+
+                        $masterModel = call_user_func([$modelName, 'getMasterModel']);
+                        if ($masterModel) {
+                            $modelName = $masterModel;
+                        }
+
+                        $rights = SRightsRules::findRights(trim($modelName, '\\'), $recordId);
                         return $rights > SRightsRules::RIGHTS_READ;
                     }
                 }

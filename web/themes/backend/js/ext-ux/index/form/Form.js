@@ -6,7 +6,7 @@ Ext.define('Ext.ux.index.form.Form', {
 
     userRights: 0,
 
-    idetifyField: null,
+    identifyField: null,
     titlePanel: null,
     editorPanel: null,
     tabPanel: null,
@@ -288,7 +288,10 @@ Ext.define('Ext.ux.index.form.Form', {
     initComponent: function () {
         var me = this,
             editorPanelConfig,
-            modelFieldsCount;
+            modelFieldsCount,
+            tab,
+            tabClassName,
+            createTabNow;
 
         me.addEvents('beforeload', 'afterload', 'beforeupdate', 'afterupdate', 'beforeinsert', 'afterinsert');
         me.bodyCls = 'in2-editor-form';
@@ -298,7 +301,7 @@ Ext.define('Ext.ux.index.form.Form', {
             for (i = 0; i < modelFieldsCount; i++) {
                 field = me.model.fields.getAt(i);
                 if (field.identify) {
-                    me.idetifyField = field;
+                    me.identifyField = field;
                     break;
                 }
             }
@@ -321,7 +324,7 @@ Ext.define('Ext.ux.index.form.Form', {
         me.titlePanel = Ext.create('Ext.ux.index.form.TitleEditPanel', {
             region: 'north',
             form: me,
-            field: me.idetifyField
+            field: me.identifyField
         });
 
         me.items = [
@@ -350,7 +353,21 @@ Ext.define('Ext.ux.index.form.Form', {
             me.items[me.items.length] = me.tabPanel;
 
             for (var i = 0; i < me.tabs.length; i++) {
-                me.tabs[i].setForm(me);
+                tabClassName = 'Ext.ux.index.tab.DetailPanel';
+                createTabNow = false;
+                if (me.tabs[i].createInterfaceForExistingParentOnly == undefined || !me.tabs[i].createInterfaceForExistingParentOnly) {
+                    createTabNow = true;
+                    delete me.tabs[i].createInterfaceForExistingParentOnly;
+                }
+
+                if (createTabNow) {
+                    if (me.tabs[i].className != undefined && me.tabs[i].className) {
+                        tabClassName = me.tabs[i].className;
+                        delete me.tabs[i].className;
+                    }
+                    me.tabs[i]['form'] = me;
+                    tab = Ext.create(tabClassName, me.tabs[i]);
+                }
             }
         } else {
             me.items[me.items.length] = me.editorPanel;
@@ -361,7 +378,9 @@ Ext.define('Ext.ux.index.form.Form', {
     },
 
     loadRecord: function (record) {
-        var me = this;
+        var me = this,
+          tabClassName,
+          tab;
 
         me.mode = 'update';
 
@@ -373,6 +392,23 @@ Ext.define('Ext.ux.index.form.Form', {
 
         me.fireEvent('beforeload', me, record);
         me.callParent([record]);
+
+        // Создаем табы, которые помечены флагом createInterfaceForExistingParentOnly
+
+        for (var i = 0; i < me.tabs.length; i++) {
+            if (me.tabs[i].createInterfaceForExistingParentOnly != undefined || me.tabs[i].createInterfaceForExistingParentOnly) {
+                tabClassName = 'Ext.ux.index.tab.DetailPanel';
+                delete me.tabs[i].createInterfaceForExistingParentOnly;
+                if (me.tabs[i].className != undefined && me.tabs[i].className) {
+                    tabClassName = me.tabs[i].className;
+                    delete me.tabs[i].className;
+                }
+                me.tabs[i]['form'] = me;
+                tab = Ext.create(tabClassName, me.tabs[i]);
+                me.tabPanel.add(tab);
+            }
+        }
+
         me.fireEvent('afterload', me, record);
     },
 

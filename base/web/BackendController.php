@@ -30,18 +30,19 @@ class BackendController extends Controller
      * @return bool
      */
     public function checkAccess($action) {
+        $modelName = '\app\modules\\'.$this->module->id.'\models\\';
         if ($action == 'list') {
-            $modelName = Yii::$app->request->get('modelName', '');
+            $modelName .= Yii::$app->request->get('modelName', '');
             return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName]);
         } elseif ($action == 'save-record') {
-            $modelName = Yii::$app->request->get('modelName', '');
+            $modelName .= Yii::$app->request->get('modelName', '');
             $data = Yii::$app->request->post('data', []);
             if (!isset($data['id'])) {
                 $data = ['id' => 0];
             }
             return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id']]);
         } elseif ($action == 'delete-record') {
-            $modelName = Yii::$app->request->get('modelName', '');
+            $modelName .= Yii::$app->request->get('modelName', '');
             $data = Yii::$app->request->post('data', []);
             if (!isset($data['id'])) {
                 $data = ['id' => 0];
@@ -50,7 +51,7 @@ class BackendController extends Controller
         } elseif ($action == 'cp-menu') {
             return Yii::$app->user->can('backend-'.$action);
         } elseif ($action == 'get-interface') {
-            $modelName = Yii::$app->request->get('modelName', '');
+            $modelName .= Yii::$app->request->get('modelName', '');
             $recordId = Yii::$app->request->get('recordId', 0);
             return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $recordId]);
         }
@@ -145,18 +146,23 @@ class BackendController extends Controller
     }
 
     /**
-     * Действие, возвращает интерфейс редактора
+     * Действие, возвращает интерфейс редактора.
+     * в аргументе $parentId передается id родительской записи для детализаций, этот id так же может быть пеередан в
+     * get запросе.
+     * @param int $parentId
      * @return string
      */
-    public function actionGetInterface() {
+    public function actionGetInterface($parentId = 0) {
         $modelName = Yii::$app->request->get('modelName', '');
         if (!$modelName) {
             $this->ajaxError('\app\base\web\BackendController\actionGetInterface?modelName='.$modelName, 'Справочник не найден.');
         }
 
-
         $moduleName = $this->module->id;
-        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface']);
+
+        $parentId = ($parentId ? $parentId : intval(Yii::$app->request->get('parentRecordId', 0)));
+
+        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $parentId);
 
     }
 
