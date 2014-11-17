@@ -74,12 +74,14 @@ class SRightsRules extends \app\base\db\ActiveRecord
     }
 
     /**
-     * Возвращает права текущего пользователя на модель
+     * Возвращает права текущего пользователя на модель.
+     * Если в аргументе strict передается true, то производится строгая проверка прав (обязательно учитывается idRecord)
      * @param $modelName
      * @param int $idRecord
+     * @param $strict
      * @return int|mixed
      */
-    public static function findRights($modelName, $idRecord = 0)
+    public static function findRights($modelName, $idRecord = 0, $strict = false)
     {
         if (!Yii::$app->user->isGuest) {
             if (Yii::$app->user->getIdentity()->isSU) {
@@ -87,7 +89,7 @@ class SRightsRules extends \app\base\db\ActiveRecord
                 return self::RIGHTS_ALL;
             }
 
-            if ($idRecord == 0) {
+            if ($idRecord == 0 || 1==1) {
                 $rights = self::find()->where(
                     "(user_group_id = :ugroup OR ".
                     "user_id = :uid) AND model_name = :modelName"

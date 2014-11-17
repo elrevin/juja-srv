@@ -149,7 +149,7 @@ Ext.define('Ext.ux.index.editors.RelatedListsEditor', {
                                 icon: Ext.Msg.WARNING,
                                 fn: function (buttonId) {
                                     if (buttonId == 'yes') {
-                                        this.editorForm.del();
+                                        this.editorWindow.del();
                                     }
                                 },
                                 scope: this
@@ -253,7 +253,7 @@ Ext.define('Ext.ux.index.editors.RelatedListsEditor', {
                         icon: Ext.Msg.WARNING,
                         fn: function (buttonId) {
                             if (buttonId == 'yes') {
-                                this.editorForm.del(ids);
+                                this.editorWindow.del(ids);
                             }
                         },
                         scope: this

@@ -12,6 +12,8 @@ Ext.define('Ext.ux.index.form.Form', {
     tabPanel: null,
     topToolbar: null,
     bottomToolbar: null,
+    recordTitle: '',
+    accusativeRecordTitle: '',
     tabs: [],
     mode: 'insert', // По умолчанию режим добавления записи
 
@@ -334,10 +336,7 @@ Ext.define('Ext.ux.index.form.Form', {
         if (me.tabs.length) {
             me.tabPanel = Ext.create('Ext.tab.Panel', {
                 activeTab: 0,
-                region: 'center',
                 border: false,
-                tbar: me.createTopToolbar(),
-                bbar: me.createBottomToolbar(),
                 items: [
                     {
                         title: 'Основные свойства',
@@ -350,7 +349,13 @@ Ext.define('Ext.ux.index.form.Form', {
                 ]
             });
 
-            me.items[me.items.length] = me.tabPanel;
+            me.items[me.items.length] = Ext.create('Ext.Panel', {
+                region: 'center',
+                items: [me.tabPanel],
+                tbar: me.createTopToolbar(),
+                bbar: me.createBottomToolbar(),
+                layout: 'fit'
+            });
 
             for (var i = 0; i < me.tabs.length; i++) {
                 tabClassName = 'Ext.ux.index.tab.DetailPanel';
@@ -367,6 +372,8 @@ Ext.define('Ext.ux.index.form.Form', {
                     }
                     me.tabs[i]['form'] = me;
                     tab = Ext.create(tabClassName, me.tabs[i]);
+                    me.tabs[i]['object'] = tab;
+                    me.tabPanel.add(tab);
                 }
             }
         } else {
@@ -405,6 +412,7 @@ Ext.define('Ext.ux.index.form.Form', {
                 }
                 me.tabs[i]['form'] = me;
                 tab = Ext.create(tabClassName, me.tabs[i]);
+                me.tabs[i]['object'] = tab;
                 me.tabPanel.add(tab);
             }
         }

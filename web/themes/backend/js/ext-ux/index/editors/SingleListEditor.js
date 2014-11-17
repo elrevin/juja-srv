@@ -159,7 +159,7 @@ Ext.define('Ext.ux.index.editors.SingleListEditor', {
                                 icon: Ext.Msg.WARNING,
                                 fn: function (buttonId) {
                                     if (buttonId == 'yes') {
-                                        this.editorForm.del(ids);
+                                        this.editorWindow.del(ids);
                                     }
                                 },
                                 scope: this

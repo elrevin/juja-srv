@@ -88,7 +88,7 @@ Ext.define('Ext.ux.index.editors.SimpleEditor', {
                         icon: Ext.Msg.WARNING,
                         fn: function (buttonId) {
                             if (buttonId == 'yes') {
-                                this.editorForm.del();
+                                this.editorWindow.del();
                             }
                         },
                         scope: this

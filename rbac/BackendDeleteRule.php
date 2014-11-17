@@ -24,23 +24,24 @@ class BackendDeleteRule extends Rule
                 // Менеджеру можно только то что ему разрешено и только в интерфейсе менеджера
                 if (Yii::$app->params['backendCurrentInterfaceType'] == 'manage') {
                     if (isset($params['modelName'])) {
+                        $recordId = 0;
                         $modelName = $params['modelName'];
                         if ($modelName[0] != '\\') $modelName = '\\'.$modelName;
-                        if (isset($params['parentId']) && intval($params['parentId'])) {
-                            $recordId = $params['parentId'];
-                        } elseif (isset($params['recordId'])) {
-                            $recordId = $params['recordId'];
-                        } else {
-                            $recordId = 0;
-                        }
-
                         $masterModel = call_user_func([$modelName, 'getMasterModel']);
                         if ($masterModel) {
                             $modelName = $masterModel;
+                            if ($modelName[0] != '\\') $modelName = '\\'.$modelName;
+                            if (isset($params['parentId']) && intval($params['parentId'])) {
+                                $recordId = $params['parentId'];
+                            }
+                        } elseif (isset($params['recordId'])) {
+                            $recordId = $params['recordId'];
                         }
 
-                        $rights = SRightsRules::findRights(trim($modelName, '\\'), $recordId);
-                        return $rights > SRightsRules::RIGHTS_ALL;
+                        $strict = isset($params['strict']) && $params['strict'];
+
+                        $rights = SRightsRules::findRights(trim($modelName, '\\'), $recordId, $strict);
+                        return $rights > ($masterModel ? SRightsRules::RIGHTS_WRITE : SRightsRules::RIGHTS_ALL);
                     }
                 }
             } elseif (Yii::$app->user->can('admin')) {

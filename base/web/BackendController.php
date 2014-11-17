@@ -33,27 +33,30 @@ class BackendController extends Controller
         $modelName = '\app\modules\\'.$this->module->id.'\models\\';
         if ($action == 'list') {
             $modelName .= Yii::$app->request->get('modelName', '');
-            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName]);
+            $parentId = intval(Yii::$app->request->get('parentId', 0));
+            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'parentId' => $parentId]);
         } elseif ($action == 'save-record') {
             $modelName .= Yii::$app->request->get('modelName', '');
             $data = Yii::$app->request->post('data', []);
+            $parentId = intval(Yii::$app->request->post('parentId', 0));
             if (!isset($data['id'])) {
                 $data = ['id' => 0];
             }
-            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id']]);
+            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id'], 'parentId' => $parentId, 'strict' => true]);
         } elseif ($action == 'delete-record') {
             $modelName .= Yii::$app->request->get('modelName', '');
+            $parentId = intval(Yii::$app->request->post('parentId', 0));
             $data = Yii::$app->request->post('data', []);
             if (!isset($data['id'])) {
                 $data = ['id' => 0];
             }
-            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id']]);
+            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id'], 'parentId' => $parentId, 'strict' => true]);
         } elseif ($action == 'cp-menu') {
             return Yii::$app->user->can('backend-'.$action);
         } elseif ($action == 'get-interface') {
             $modelName .= Yii::$app->request->get('modelName', '');
             $recordId = Yii::$app->request->get('recordId', 0);
-            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $recordId]);
+            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $recordId, 'strict' => true]);
         }
         return false; // По умолчанию все запрещено
     }
@@ -186,7 +189,10 @@ class BackendController extends Controller
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
 
-            $params = $this->beforeList($modelName, ["identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false)]);
+            $params = $this->beforeList($modelName, [
+                "identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false),
+                'parentId' => intval(Yii::$app->request->get('parentId', 0))
+            ]);
 
             $list = $this->actionAfterList($modelName, call_user_func([$modelName, 'getList'], $params));
 
@@ -205,6 +211,7 @@ class BackendController extends Controller
         $modelName = Yii::$app->request->get('modelName', '');
         $add = intval(Yii::$app->request->get('add', 0));
         $data = \yii\helpers\Json::decode(Yii::$app->request->post('data', '[]'));
+        $parentId = intval(Yii::$app->request->post('parentId', 0));
 
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
@@ -214,7 +221,7 @@ class BackendController extends Controller
                  */
                 $model = new $modelName();
                 $model->mapJson($data);
-                if ($result = $model->saveData($data, true)) {
+                if ($result = $model->saveData($data, true, $parentId)) {
                     $data = [
                         'data' => $result,
                         'success' => true
@@ -230,7 +237,7 @@ class BackendController extends Controller
                 }
             } elseif (isset($data['id']) && $data['id']) {
                 $model = call_user_func([$modelName, 'findOne'], $data['id']);
-                if ($result = $model->saveData($data)) {
+                if ($result = $model->saveData($data, false, $parentId)) {
                     $data = [
                         'data' => $result,
                         'success' => true

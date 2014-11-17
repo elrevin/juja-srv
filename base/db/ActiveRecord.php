@@ -128,6 +128,18 @@ class ActiveRecord extends db\ActiveRecord
     protected static $modelName = '';
 
     /**
+     * Название записи в едиственном чистел в именительном падеже, нпрмер "характеристика"
+     * @var string
+     */
+    protected static $recordTitle = '';
+
+    /**
+     * Название записи в единственном числе в винительном падеже, например "характеристику"
+     * @var string
+     */
+    protected static $accusativeRecordTitle = '';
+
+    /**
      * Создавать интерфейс только для существующих предков, актуально только для детализаций.
      * Если это свойство равно true, то таб-панель для данной модели будет создана только если
      * запись, с которой модель связана будет существовать, иными словами после при редактировании
@@ -184,10 +196,6 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getModuleName()
     {
-        if (static::$moduleName) {
-            return static::$moduleName;
-        }
-
         $className = static::className();
         $classNameSpace = trim(preg_replace("/([a-zA-Z0-9_]+)$/", '', $className), '\\');
         $classNameSpace = str_replace('app\modules\\', '', $classNameSpace);
@@ -202,10 +210,6 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getModelName()
     {
-        if (static::$modelName) {
-            return static::$modelName;
-        }
-
         $className = trim(static::className(), '\\');
         static::$modelName = str_replace('app\modules\\'.static::getModuleName().'\models\\', '', $className);
         return static::$modelName;
@@ -309,6 +313,7 @@ class ActiveRecord extends db\ActiveRecord
      *          особым образом
      *      'where' - условия, используется в качестве аргумента метода andWhere
      *      'identifyOnly' - true если требуется выгрузить только идентифицирующее поле (например для выпадающих списков)
+     *      'parentId' - id родительской записи, если запрошены данные детализации
      *
      * @param $params
      * @return array|\yii\db\ActiveRecord[]
@@ -367,6 +372,10 @@ class ActiveRecord extends db\ActiveRecord
 
         if (isset($params['where'])) {
             $query->andWhere($params['where']);
+        }
+
+        if (isset($params['parentId']) && $params['parentId'] && static::$masterModel) {
+            $query->andWhere('master_table_id = '.intval($params['parentId']));
         }
 
         if (isset($params['limit'])) {
@@ -480,10 +489,14 @@ class ActiveRecord extends db\ActiveRecord
      * Сохраняет данные переданные в массиве $data
      * @param array $data
      * @param bool $add
+     * @param int $parentId
      * @return array|bool|\yii\db\ActiveRecord[]
      */
-    public function saveData($data, $add = false)
+    public function saveData($data, $add = false, $parentId = 0)
     {
+        if (static::$masterModel) {
+            $this->master_table_id = $parentId;
+        }
         $this->mapJson($data);
         if ($this->save()) {
             if ($add) {
@@ -510,7 +523,7 @@ class ActiveRecord extends db\ActiveRecord
      * @param bool $configOnly
      * @return string
      */
-    public static function getUserInterface($configOnly = false, $parentId = 0)
+    public static function getUserInterface($configOnly = false)
     {
         $modelStructure = static::getStructure();
         $fields = [];
@@ -555,11 +568,11 @@ class ActiveRecord extends db\ActiveRecord
 
         $modelName = static::getModelName();
 
-        if (Yii::$app->user->can('backend-delete-record', ['modelName' => static::className(), 'parentId' => $parentId])) {
+        if (Yii::$app->user->can('backend-delete-record', ['modelName' => static::className()])) {
             $userRights = 3;
-        } elseif (Yii::$app->user->can('backend-save-record', ['modelName' => static::className(), 'parentId' => $parentId])) {
+        } elseif (Yii::$app->user->can('backend-save-record', ['modelName' => static::className()])) {
             $userRights = 2;
-        } elseif (Yii::$app->user->can('backend-list', ['modelName' => static::className(), 'parentId' => $parentId])) {
+        } elseif (Yii::$app->user->can('backend-list', ['modelName' => static::className()])) {
             $userRights = 1;
         }
 
@@ -569,7 +582,9 @@ class ActiveRecord extends db\ActiveRecord
             'modelName' => $modelName,
             'userRights' => $userRights,
             'createInterfaceForExistingParentOnly' => static::$createInterfaceForExistingParentOnly,
-            'title' => static::getModelTitle()
+            'title' => static::getModelTitle(),
+            'recordTitle' => static::$recordTitle,
+            'accusativeRecordTitle' => static::$accusativeRecordTitle
         ];
 
         $tabs = [];

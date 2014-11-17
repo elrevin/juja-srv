@@ -9,12 +9,11 @@ class Pttp extends \app\base\db\ActiveRecord
     protected static $structure = [
         'title' => [
             'title' => 'Название',
-            'type' => 'string',
-            'identify' => true,
+            'type' => 'string'
         ],
         'count' => [
             'title' => 'Количество',
-            'type' => 'integer',
+            'type' => 'int',
             'settings' => [
                 "min" => 0,
                 "max" => 20000
@@ -30,6 +29,10 @@ class Pttp extends \app\base\db\ActiveRecord
     protected static $modelTitle = 'Детализация тестовая';
 
     protected static $masterModel = '\app\modules\backend\models\PointTestTable';
+
+    protected static $recordTitle = 'Штука такая';
+
+    protected static $accusativeRecordTitle = 'Штуку такую';
 
     /**
      * @inheritdoc

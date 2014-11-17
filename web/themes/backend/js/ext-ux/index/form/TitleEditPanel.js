@@ -14,7 +14,7 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
         if (me.field.type == Ext.data.Types.STRING) {
             formField = Ext.create('Ext.form.field.Text', {
                 hideLabel: true,
-                width: 300,
+                width: 400,
                 value: 'Новая запись',
                 id: form.id + '_field_' + field.name,
                 name: me.field.name,
@@ -31,7 +31,6 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
                 width: 150,
                 allowBlank: false,
                 value: 0,
-                allowBlank: me.field.required,
                 msgTarget: 'side',
                 modelField: me.field
             });
@@ -44,7 +43,6 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
                 width: 150,
                 allowBlank: false,
                 value: 0,
-                allowBlank: me.field.required,
                 msgTarget: 'side',
                 modelField: me.field
             });
@@ -58,7 +56,6 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
                 value: (new Date()),
                 format: 'd.m.Y',
                 submitFormat: 'Y-m-d',
-                allowBlank: me.field.required,
                 msgTarget: 'side',
                 modelField: me.field
             });
@@ -72,7 +69,6 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
                 value: (new Date()),
                 format: 'd.m.Y',
                 submitFormat: 'Y-m-d H:i:s',
-                allowBlank: me.field.required,
                 msgTarget: 'side',
                 modelField: me.field
             });
@@ -120,7 +116,7 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
             html;
         me.bodyCls = 'in2-form-title-container';
         me.layout = "card";
-        me.height = 62;
+        me.height = 35;
 
         if (me.field) {
             me.fieldPanel = Ext.create("Ext.Panel", {
@@ -164,6 +160,10 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
         var me = this;
 
         me.getLayout().setActiveItem(1);
+    },
+
+    setTitleText: function (text) {
+        Ext.get('in2-title-edit-text-' + me.id).dom.innerHTML = text;
     },
 
     afterRender: function (container, position) {
