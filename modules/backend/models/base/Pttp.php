@@ -9,7 +9,8 @@ class Pttp extends \app\base\db\ActiveRecord
     protected static $structure = [
         'title' => [
             'title' => 'Название',
-            'type' => 'string'
+            'type' => 'string',
+            'required' => true
         ],
         'count' => [
             'title' => 'Количество',
@@ -18,6 +19,17 @@ class Pttp extends \app\base\db\ActiveRecord
                 "min" => 0,
                 "max" => 20000
             ],
+            'required' => true
+        ],
+        'point' => [
+            'title' => 'Ссылка',
+            'type' => 'pointer',
+            'relativeModel' => '\app\modules\backend\models\TestTable',
+            'required' => true
+        ],
+        'cool' => [
+            'title' => 'Большой текст',
+            'type' => 'text',
             'required' => true
         ],
      ];
@@ -50,6 +62,8 @@ class Pttp extends \app\base\db\ActiveRecord
         return [
             [['title'], 'required', 'message' => 'Поле "'.static::$structure['title']['title'].'" обязательно для заполнения.'],
             [['count'], 'required', 'message' => 'Поле "'.static::$structure['count']['title'].'" обязательно для заполнения.'],
+            [['point'], 'required', 'message' => 'Поле "'.static::$structure['point']['title'].'" обязательно для заполнения.'],
+            [['cool'], 'required', 'message' => 'Поле "'.static::$structure['cool']['title'].'" обязательно для заполнения.'],
             [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "'.static::$structure['title']['title'].'" не может быть длинее 1024 символов.', ],
             [['count'], 'number', 'integerOnly' => true, 'min' => 0, "tooSmall" => 'Поле "'.static::$structure['count']['title'].'" не может принимать значения меньше 0'],
         ];

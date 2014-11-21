@@ -1,5 +1,5 @@
 Ext.define('Ext.ux.index.form.Form', {
-    extend: 'Ext.form.Panel',
+    extend: 'Ext.ux.index.form.SimpleForm',
     alias: ['widget.uxindexform'],
 
     model: null,
@@ -16,147 +16,6 @@ Ext.define('Ext.ux.index.form.Form', {
     accusativeRecordTitle: '',
     tabs: [],
     mode: 'insert', // По умолчанию режим добавления записи
-
-    _getField: function (field) {
-        var me = this;
-
-        if (field.type == Ext.data.Types.INTEGER) {
-            if (field.name == 'id') {
-                // если ID, то создаем скрытое поле
-                return Ext.create('Ext.form.field.Hidden', {
-                    name: 'id',
-                    id: me.id + '_field_' + field.name,
-                    modelField: field
-                });
-            }
-            // Обычное целочисленное поле
-            return Ext.create('Ext.form.field.Number', {
-                allowDecimals: false,
-                name: field.name,
-                id: me.id + '_field_' + field.name,
-                fieldLabel: field.title,
-                labelAlign: 'top',
-                width: 150,
-                allowBlank: !field.required,
-                msgTarget: 'side',
-                modelField: field
-            });
-        } else if (field.type == Ext.data.Types.FLOAT) {
-            // Число с точкой
-            return Ext.create('Ext.form.field.Number', {
-                allowDecimals: true,
-                name: field.name,
-                id: me.id + '_field_' + field.name,
-                fieldLabel: field.title,
-                labelAlign: 'top',
-                width: 150,
-                allowBlank: !field.required,
-                msgTarget: 'side',
-                modelField: field
-            });
-        } else if (field.type == Ext.data.Types.STRING) {
-            // Обычное строковое поле
-            return Ext.create('Ext.form.field.Text', {
-                name: field.name,
-                id: me.id + '_field_' + field.name,
-                fieldLabel: field.title,
-                labelAlign: 'top',
-                width: 400,
-                allowBlank: !field.required,
-                msgTarget: 'side',
-                modelField: field
-            });
-        } else if (field.type == Ext.data.Types.TEXT) {
-            // Многострочный текст
-            return Ext.create('Ext.form.field.TextArea', {
-                name: field.name,
-                id: me.id + '_field_' + field.name,
-                fieldLabel: field.title,
-                labelAlign: 'top',
-                width: 400,
-                height: 80,
-                allowBlank: !field.required,
-                msgTarget: 'side',
-                modelField: field
-            });
-        } else if (field.type == Ext.data.Types.DATE) {
-            // Дата
-            return Ext.create('Ext.form.field.Date', {
-                name: field.name,
-                id: me.id + '_field_' + field.name,
-                fieldLabel: field.title,
-                labelAlign: 'top',
-                width: 110,
-                allowBlank: !field.required,
-                format: 'd.m.Y',
-                submitFormat: 'Y-m-d',
-                msgTarget: 'side',
-                modelField: field
-            });
-        } else if (field.type == Ext.data.Types.DATETIME) {
-            // Дата и время
-            return Ext.create('Ext.ux.form.DateTimeField', {
-                name: field.name,
-                id: me.id + '_field_' + field.name,
-                fieldLabel: field.title,
-                labelAlign: 'top',
-                width: 160,
-                allowBlank: !field.required,
-                format: 'd.m.Y',
-                submitFormat: 'Y-m-d H:i:s',
-                msgTarget: 'side',
-                modelField: field
-            });
-        } else if (field.type == Ext.data.Types.BOOL) {
-            // Дата и время
-            var labelWidth = getFormFieldLabelsWidth(field.title);
-            labelWidth = Math.ceil(labelWidth + labelWidth * 0.2);
-            return Ext.create('Ext.form.field.Checkbox', {
-                checked: false,
-                name: field.name,
-                id: me.id + '_field_' + field.name,
-                fieldLabel: field.title,
-                labelAlign: 'left',
-                labelWidth: labelWidth,
-                modelField: field
-            });
-        } else if (field.type == Ext.data.Types.POINTER) {
-            // Справочник
-            var url = $url(field.relativeModel.moduleName, 'main', 'list', {modelName: field.relativeModel.name, identifyOnly: 1});
-            return Ext.create('Ext.ux.form.ClearableComboBox', {
-                name: field.name,
-                id: me.id+'_field_'+field.name,
-                fieldLabel: field.title,
-                labelAlign: 'top',
-                width: 400,
-                allowBlank: !field.required,
-                msgTarget: 'side',
-                displayField: field.relativeModel.identifyFieldName,
-                valueField: 'id',
-                editable: false,
-                isPointerField: true,
-                store: new Ext.data.JsonStore ({
-                    proxy: {
-                        type: 'ajax',
-                        url: url,
-                        actionMethods:  {read: "GET"},
-                        extraParams: {},
-                        reader: {
-                            type: 'json',
-                            root: 'data',
-                            idProperty: 'id'
-                        }
-                    },
-                    fields: [{name: 'id', type: 'integer'}, {name: field.relativeModel.identifyFieldName, type: field.relativeModel.identifyFieldType}],
-                    pageSize: 50,
-                    autoLoad: true
-                }),
-                modelField: field
-            });
-        }
-
-        return null;
-    },
 
     createFields: function () {
         var me = this,
@@ -287,7 +146,7 @@ Ext.define('Ext.ux.index.form.Form', {
         return me.bottomToolbar;
     },
 
-    initComponent: function () {
+    beforeInitComponent: function () {
         var me = this,
             editorPanelConfig,
             modelFieldsCount,
@@ -379,29 +238,12 @@ Ext.define('Ext.ux.index.form.Form', {
         } else {
             me.items[me.items.length] = me.editorPanel;
         }
-
-        me.callParent();
-        me.createFields();
     },
 
-    loadRecord: function (record) {
+    afterLoad: function (record) {
         var me = this,
-          tabClassName,
-          tab;
-
-        me.mode = 'update';
-
-        if (record == undefined || !record) {
-            record = me.model;
-        } else {
-            me.model = record;
-        }
-
-        me.fireEvent('beforeload', me, record);
-        me.callParent([record]);
-
-        // Создаем табы, которые помечены флагом createInterfaceForExistingParentOnly
-
+            tabClassName,
+            tab;
         for (var i = 0; i < me.tabs.length; i++) {
             if (me.tabs[i].createInterfaceForExistingParentOnly != undefined || me.tabs[i].createInterfaceForExistingParentOnly) {
                 tabClassName = 'Ext.ux.index.tab.DetailPanel';
@@ -416,40 +258,6 @@ Ext.define('Ext.ux.index.form.Form', {
                 me.tabPanel.add(tab);
             }
         }
-
-        me.fireEvent('afterload', me, record);
-    },
-
-    save: function () {
-        var me = this,
-            modelFieldsCount,
-            field,
-            input,
-            values = {};
-
-        if (me.isValid()) {
-            me.fireEvent((me.mode == 'update' ? 'beforeupdate' : 'beforeinsert'), me);
-
-            if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
-                for (var i = 0; i < modelFieldsCount; i++) {
-                    field = me.model.fields.getAt(i);
-                    input = Ext.getCmp(me.id + '_field_' + field.name);
-                    if (input) {
-                        if (input.modelField.type == Ext.data.Types.POINTER) {
-                            values[field.name] = Ext.JSON.encode(input.getValue());
-                        } else {
-                            values[field.name] = input.getValue();
-                        }
-                    }
-                }
-            }
-
-            me.model.set(values);
-
-            me.fireEvent((me.mode == 'update' ? 'afterupdate' : 'afterinsert'), me);
-
-            me.mode = (me.mode == 'insert' ? 'update' : 'update');
-        }
+        me.callParent([record]);
     }
-
 });

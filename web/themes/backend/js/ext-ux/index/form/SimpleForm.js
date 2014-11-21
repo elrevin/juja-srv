@@ -7,6 +7,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
     userRights: 0,
 
     identifyField: null,
+    width: 450,
     mode: 'insert', // По умолчанию режим добавления записи
 
     _getField: function (field) {
@@ -231,7 +232,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
         }
     },
 
-    initComponent: function () {
+    beforeInitComponent: function () {
         var me = this,
             modelFieldsCount;
 
@@ -248,8 +249,23 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 }
             }
         }
+    },
+
+    initComponent: function () {
+        var me = this;
+        me.beforeInitComponent();
         me.callParent();
         me.createFields();
+    },
+
+    beforeLoad: function (record) {
+        var me = this;
+        me.fireEvent('beforeload', me, record);
+    },
+
+    afterLoad: function (record) {
+        var me = this;
+        me.fireEvent('afterload', me, record);
     },
 
     loadRecord: function (record) {
@@ -263,9 +279,9 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             me.model = record;
         }
 
-        me.fireEvent('beforeload', me, record);
+        me.beforeLoad(record);
         me.callParent([record]);
-        me.fireEvent('afterload', me, record);
+        me.afterLoad(record);
     },
 
     save: function () {
@@ -297,6 +313,9 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             me.fireEvent((me.mode == 'update' ? 'afterupdate' : 'afterinsert'), me);
 
             me.mode = (me.mode == 'insert' ? 'update' : 'update');
+        } else {
+            IndexNextApp.getApplication().showErrorMessage(null, 'Некоторые поля заполнены не правильно или не заполнены совсем.<br>Поля содержащие ошибки отмечены иконкой <img src="'+$themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> и красной обводкой.<br/>'+
+                                                            'Наведя мышь на иконку <img src="'+$themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> рядом с полем, Вы увидите пояснение ошибки.');
         }
     }
 

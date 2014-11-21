@@ -256,4 +256,24 @@ class BackendController extends Controller
         $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName, 'Справочник не найден.');
         return null;
     }
+
+    public function actionDeleteRecord () {
+        $modelName = Yii::$app->request->get('modelName', '');
+        $data = \yii\helpers\Json::decode(Yii::$app->request->post('data', '[]'));
+        $parentId = intval(Yii::$app->request->post('parentId', 0));
+
+        if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
+            $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+            if (isset($data['id']) && $data['id']) {
+                if (call_user_func([$modelName, 'deleteRecords'], 'id = :id', [':id' => $data['id']])) {
+                    return [
+                        'success' => true
+                    ];
+                }
+            }
+            $this->ajaxError('\app\base\web\BackendController\actionDeleteRecord?modelName='.$modelName, 'Запись не найдена.');
+        }
+        $this->ajaxError('\app\base\web\BackendController\actionDeleteRecord?modelName='.$modelName, 'Справочник не найден.');
+        return null;
+    }
 }

@@ -43,6 +43,7 @@ Ext.define('App.core.SingleModelEditor', {
                 };
                 for (var i = 0; i < this.fields.length; i++) {
                     fieldIndex = modelClassDefinition.fields.length;
+                    debugger;
                     fieldConf = {
                         name: me.fields[i].name,
                         type: me.fields[i].type,

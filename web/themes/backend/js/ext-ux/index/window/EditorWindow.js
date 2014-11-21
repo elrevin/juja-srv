@@ -4,8 +4,8 @@ Ext.define('Ext.ux.index.window.EditorWindow', {
     model: null,
     form: null,
     mode: 'insert',
-    width: 200,
-    height: 300,
+    width: 100,
+    height: 100,
     recordTitle: '',
     accusativeRecordTitle: '',
     store: null,
@@ -15,27 +15,22 @@ Ext.define('Ext.ux.index.window.EditorWindow', {
             maxWidth, maxHeight,
             width, height;
 
-        maxWidth = IndexNextApp.getApplication().viewport.getWidth() - Math.floor(IndexNextApp.getApplication().viewport.getWidth() * 0.5);
-        maxHeight = IndexNextApp.getApplication().viewport.getHeight() - Math.floor(IndexNextApp.getApplication().viewport.getHeight() * 0.5);
+        maxWidth = IndexNextApp.getApplication().viewport.getWidth() - Math.floor(IndexNextApp.getApplication().viewport.getWidth() * 0.1);
+        maxHeight = IndexNextApp.getApplication().viewport.getHeight() - Math.floor(IndexNextApp.getApplication().viewport.getHeight() * 0.1);
 
         width = me.items.getAt(0).getWidth();
         height = me.items.getAt(0).getHeight();
-        if (width > maxWidth) {
-            me.setWidth(maxWidth);
-        } else {
-            me.setWidth(width+20);
-        }
         if (height > maxHeight) {
             me.setHeight(maxHeight);
         } else {
-            me.setHeight(height+70);
+            me.setHeight(height+75);
         }
 
-        me.center();
-    },
-
-    onRender: function (parentNode, containerIdx) {
-        this.callParent(arguments);
+        if (width > maxWidth) {
+            me.setWidth(maxWidth);
+        } else {
+            me.setWidth(width+30);
+        }
     },
 
     initComponent: function () {
@@ -88,11 +83,14 @@ Ext.define('Ext.ux.index.window.EditorWindow', {
         }
         me.callParent(arguments);
 
-        if (me.mode == 'update') {
-            me.setTitle('Изменить '+me.accusativeRecordTitle.toLowerCase());
-        } else {
-            me.setTitle('Добавить '+me.accusativeRecordTitle.toLowerCase());
-        }
+        me.on('show', function() {
+            if (me.mode == 'update') {
+                me.setTitle('Изменить '+me.accusativeRecordTitle.toLowerCase());
+            } else {
+                me.setTitle('Добавить '+me.accusativeRecordTitle.toLowerCase());
+            }
+            me.center();
+        });
     },
 
     setMode: function (mode) {

@@ -503,7 +503,7 @@ class ActiveRecord extends db\ActiveRecord
                 return static::getList([
                     "limit" => 1,
                     "sort" => [
-                        "`".static::tableName()."`.id" => SORT_DESC
+                        "id" => SORT_DESC
                     ]
                 ]);
             } else {
@@ -514,6 +514,24 @@ class ActiveRecord extends db\ActiveRecord
         } else {
             return false;
         }
+    }
+
+    /**
+     * Удаление записей удовлетворяющих условию $condition
+     * По сути аналог deleteAll, но учитывается флаг permanentlyDelete в свойствах модели
+     *
+     * @param string $condition
+     * @param array $params
+     * @return bool
+     */
+    public static function deleteRecords($condition = '', $params = [])
+    {
+        if (static::$permanentlyDelete) {
+            static::deleteAll($condition, $params);
+        } else {
+            static::updateAll(['del' => 1], $condition, $params);
+        }
+        return true;
     }
 
     /**

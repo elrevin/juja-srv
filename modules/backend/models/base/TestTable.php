@@ -14,7 +14,8 @@ class TestTable extends \app\base\db\ActiveRecord
         ],
         'text' => [
             'title' => 'Текст',
-            'type' => 'text'
+            'type' => 'text',
+            'group' => 'Группа 1'
         ],
         'price' => [
             'title' => 'Цена',
@@ -24,20 +25,24 @@ class TestTable extends \app\base\db\ActiveRecord
                 "min" => 0,
                 "max" => 20000
             ],
-            'required' => true
+            'required' => true,
+            'group' => 'Группа 1'
         ],
         'dt' => [
             'title' => 'Дата',
             'type' => 'date',
-            'required' => true
+            'required' => true,
+            'group' => 'Группа 2'
         ],
         'flag' => [
             'title' => 'Флаг',
-            'type' => 'bool'
+            'type' => 'bool',
+            'group' => 'Группа 1'
         ],
         'dtt' => [
             'title' => 'Дата и время',
-            'type' => 'datetime'
+            'type' => 'datetime',
+            'group' => 'Группа 2'
         ],
     ];
 

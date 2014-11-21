@@ -20,12 +20,14 @@ class PointTestTable extends \app\base\db\ActiveRecord
                 "min" => 0,
                 "max" => 20000
             ],
-            'required' => true
+            'required' => true,
+            'group' => 'Группа полей'
         ],
         'test_table_id' => [
             'title' => 'Указатель',
             'type' => 'pointer',
             'relativeModel' => '\app\modules\backend\models\TestTable',
+            'group' => 'Группа полей'
         ],
      ];
 

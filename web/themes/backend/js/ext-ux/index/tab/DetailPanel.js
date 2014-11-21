@@ -122,6 +122,7 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
                 saveAction: me.saveAction,
                 deleteAction: me.deleteAction,
                 store: me.store,
+                tbar: me.toolbar,
                 //selModel: Ext.create('Ext.selection.CheckboxModel', {
                 //    //mode: "MULTI"
                 //}),
@@ -139,7 +140,7 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
                 gridConfig['columns'] = [
                     {
                         xtype: 'actioncolumn',
-                        width: 30,
+                        width: 40,
                         sortable: false,
                         menuDisabled: true,
                         items: [{
@@ -147,7 +148,14 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
                             tooltip: 'Изменить',
                             scope: this,
                             handler: function (view, rowIndex, colIndex, item, e, record, row) {
-                                me.startEdit(record);
+                                me.editRecord(record);
+                            }
+                        }, {
+                            icon: $themeUrl('/images/buttons/del.png'),
+                            tooltip: 'Удалить',
+                            scope: this,
+                            handler: function (view, rowIndex, colIndex, item, e, record, row) {
+                                me.deleteRecord(record);
                             }
                         }]
                     }
@@ -199,10 +207,65 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
         });
     },
 
-    startEdit: function (record) {
+    editRecord: function (record) {
         var me = this;
+        me.model = record;
         me.editorWindow.loadRecord(record);
         me.editorWindow.show();
+    },
+
+    addRecord: function () {
+        var me = this;
+        me.model = Ext.create(me.modelClassName, {});
+        me.editorWindow.loadRecord(me.model);
+        me.editorWindow.setMode('insert');
+        me.editorWindow.show();
+    },
+
+    deleteRecord: function (record) {
+        var me = this,
+            rec = record;
+        Ext.Msg.show({
+            title: 'Удаление записи',
+            msg: 'Вы действительно хотите удалить '+me.accusativeRecordTitle.toLocaleLowerCase(),
+            width: 300,
+            buttons: Ext.Msg.YESNO,
+            icon: Ext.window.MessageBox.QUESTION,
+            fn: function (button) {
+                if (button == 'yes') {
+                    me.store.remove(rec);
+                    me.store.sync({
+                        failure: function () {
+                            me.store.reload();
+                        }
+                    });
+                }
+            }
+        });
+    },
+
+    createToolbar: function () {
+        var me = this;
+        if (!me.toolbar) {
+            if (me.userRights > 1) {
+                me.toolbar = Ext.create('Ext.toolbar.Toolbar', {
+                    height: 58,
+                    //cls: 'in2-editor-form-toolbar',
+                    defaults: {
+                        scale: 'medium'
+                    },
+                    items: [
+                        {
+                            text: 'Добавить',
+                            icon: $themeUrl('/images/buttons/plus.png'),
+                            handler: function () {
+                                me.addRecord();
+                            }
+                        }
+                    ]
+                });
+            }
+        }
     },
 
     initComponent: function () {
@@ -230,6 +293,8 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
                     me.model = Ext.create(me.modelClassName, {});
 
                     me.createStore();
+
+                    me.createToolbar();
 
                     me.createListGrid();
 
