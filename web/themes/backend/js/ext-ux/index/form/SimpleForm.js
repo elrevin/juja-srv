@@ -3,6 +3,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
     alias: ['widget.uxindextabform'],
 
     model: null,
+    modelClassName: '',
 
     userRights: 0,
 
@@ -240,6 +241,10 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
         me.bodyCls = 'in2-editor-form';
         me.layout = 'anchor';
 
+        if (!me.model) {
+            me.model = Ext.create(me.modelClassName, {});
+        }
+
         if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
             for (i = 0; i < modelFieldsCount; i++) {
                 field = me.model.fields.getAt(i);
@@ -292,7 +297,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             values = {};
 
         if (me.isValid()) {
-            me.fireEvent((me.mode == 'update' ? 'beforeupdate' : 'beforeinsert'), me);
+            me.fireEvent((me.mode == 'update' ? 'beforeupdate' : 'beforeinsert'), me, me.model);
 
             if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
                 for (var i = 0; i < modelFieldsCount; i++) {
@@ -310,7 +315,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
 
             me.model.set(values);
 
-            me.fireEvent((me.mode == 'update' ? 'afterupdate' : 'afterinsert'), me);
+            me.fireEvent((me.mode == 'update' ? 'afterupdate' : 'afterinsert'), me, me.model);
 
             me.mode = (me.mode == 'insert' ? 'update' : 'update');
         } else {

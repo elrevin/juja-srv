@@ -140,6 +140,10 @@
   border-top: 1px solid silver !important;
 }
 
+.x-btn-default-toolbar-medium-disabled {
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=20) !important;
+  opacity: 0.2 !important;
+}
 
 /* Forms */
 

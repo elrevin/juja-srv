@@ -2,8 +2,6 @@ Ext.define('Ext.ux.index.form.Form', {
     extend: 'Ext.ux.index.form.SimpleForm',
     alias: ['widget.uxindexform'],
 
-    model: null,
-
     userRights: 0,
 
     identifyField: null,
@@ -137,9 +135,9 @@ Ext.define('Ext.ux.index.form.Form', {
                         handler: function () {
                             me.save();
                         }
-                    }, '->', {
+                    }/*, '->', {
                         text: 'Сохранить и добавить'
-                    }
+                    }*/
                 ]
             });
         }
@@ -157,6 +155,10 @@ Ext.define('Ext.ux.index.form.Form', {
         me.addEvents('beforeload', 'afterload', 'beforeupdate', 'afterupdate', 'beforeinsert', 'afterinsert');
         me.bodyCls = 'in2-editor-form';
         me.layout = 'border';
+
+        if (!me.model) {
+            me.model = Ext.create(me.modelClassName, {});
+        }
 
         if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
             for (i = 0; i < modelFieldsCount; i++) {
@@ -221,13 +223,11 @@ Ext.define('Ext.ux.index.form.Form', {
                 createTabNow = false;
                 if (me.tabs[i].createInterfaceForExistingParentOnly == undefined || !me.tabs[i].createInterfaceForExistingParentOnly) {
                     createTabNow = true;
-                    delete me.tabs[i].createInterfaceForExistingParentOnly;
                 }
 
                 if (createTabNow) {
                     if (me.tabs[i].className != undefined && me.tabs[i].className) {
                         tabClassName = me.tabs[i].className;
-                        delete me.tabs[i].className;
                     }
                     me.tabs[i]['form'] = me;
                     tab = Ext.create(tabClassName, me.tabs[i]);
@@ -240,17 +240,105 @@ Ext.define('Ext.ux.index.form.Form', {
         }
     },
 
+    renew: function () {
+        var me = this,
+            i, tabClassName, createTabNow;
+        me.mode = 'insert';
+
+        // Удаление табов
+        if (me.tabs.length) {
+            for (i = 0; i < me.tabs.length; i++) {
+                if (me.tabs[i]['object']) {
+                    me.tabPanel.remove(me.tabs[i]['object']);
+                    delete me.tabs[i]['object'];
+                }
+            }
+        }
+
+        // Создание табов.
+        for (i = 0; i < me.tabs.length; i++) {
+            tabClassName = 'Ext.ux.index.tab.DetailPanel';
+            createTabNow = false;
+            if (!me.tabs[i].createInterfaceForExistingParentOnly) {
+                createTabNow = true;
+            }
+
+            if (createTabNow) {
+                if (me.tabs[i].className != undefined && me.tabs[i].className) {
+                    tabClassName = me.tabs[i].className;
+                }
+                me.tabs[i]['form'] = me;
+                tab = Ext.create(tabClassName, me.tabs[i]);
+                me.tabs[i]['object'] = tab;
+                me.tabPanel.add(tab);
+            }
+        }
+
+        me.titlePanel.renew();
+
+        me.model = Ext.create(me.modelClassName, {});
+        me.getForm().reset();
+    },
+
+    copy: function (record) {
+        var me = this,
+            i, tabClassName, createTabNow;
+
+        me.mode = 'insert';
+        // Удаление табов
+        if (me.tabs.length) {
+            for (i = 0; i < me.tabs.length; i++) {
+                if (me.tabs[i]['object']) {
+                    me.tabPanel.remove(me.tabs[i]['object']);
+                    delete me.tabs[i]['object'];
+                }
+            }
+        }
+
+        // Создание табов.
+        for (i = 0; i < me.tabs.length; i++) {
+            tabClassName = 'Ext.ux.index.tab.DetailPanel';
+            createTabNow = false;
+            if (!me.tabs[i].createInterfaceForExistingParentOnly) {
+                createTabNow = true;
+            }
+
+            if (createTabNow) {
+                if (me.tabs[i].className != undefined && me.tabs[i].className) {
+                    tabClassName = me.tabs[i].className;
+                }
+                me.tabs[i]['form'] = me;
+                tab = Ext.create(tabClassName, me.tabs[i]);
+                me.tabs[i]['object'] = tab;
+                me.tabPanel.add(tab);
+            }
+        }
+
+        me.model = Ext.create(me.modelClassName, {});
+
+        for (i = 0; i < record.fields.getCount(); i++) {
+            if (record.fields.getAt(i).name == 'id') {
+                me.model.set('id', 0);
+            } else {
+                me.model.set(record.fields.getAt(i).name, record.get(record.fields.getAt(i).name));
+            }
+        }
+
+        me.getForm().loadRecord(me.model);
+
+        me.mode = 'insert';
+    },
+
     afterLoad: function (record) {
         var me = this,
             tabClassName,
-            tab;
-        for (var i = 0; i < me.tabs.length; i++) {
-            if (me.tabs[i].createInterfaceForExistingParentOnly != undefined || me.tabs[i].createInterfaceForExistingParentOnly) {
+            tab, i;
+
+        for (i = 0; i < me.tabs.length; i++) {
+            if ((me.tabs[i].createInterfaceForExistingParentOnly != undefined || me.tabs[i].createInterfaceForExistingParentOnly) && !me.tabs[i].object) {
                 tabClassName = 'Ext.ux.index.tab.DetailPanel';
-                delete me.tabs[i].createInterfaceForExistingParentOnly;
                 if (me.tabs[i].className != undefined && me.tabs[i].className) {
                     tabClassName = me.tabs[i].className;
-                    delete me.tabs[i].className;
                 }
                 me.tabs[i]['form'] = me;
                 tab = Ext.create(tabClassName, me.tabs[i]);

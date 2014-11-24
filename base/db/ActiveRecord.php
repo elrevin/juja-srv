@@ -148,6 +148,13 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static $createInterfaceForExistingParentOnly = true;
 
+    /**
+     * Доступна ли ручная сортировка
+     *
+     * @var bool
+     */
+    public static $sortable = false;
+
     public static function find()
     {
         $cond = static::defaultWhere();
@@ -500,16 +507,26 @@ class ActiveRecord extends db\ActiveRecord
         $this->mapJson($data);
         if ($this->save()) {
             if ($add) {
-                return static::getList([
+                $result = static::getList([
                     "limit" => 1,
                     "sort" => [
                         "id" => SORT_DESC
                     ]
                 ]);
+                if ($result && is_array($result)) {
+                    return $result['data'][0];
+                } else {
+                    return false;
+                }
             } else {
-                return static::getList([
-                    "where" => "`".static::tableName()."`.id"
+                $result = static::getList([
+                    "where" => "`".static::tableName()."`.id = '{$data['id']}'"
                 ]);
+                if ($result && is_array($result)) {
+                    return $result['data'][0];
+                } else {
+                    return false;
+                }
             }
         } else {
             return false;

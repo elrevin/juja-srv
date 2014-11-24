@@ -3,7 +3,6 @@ Ext.define('App.core.SingleModelEditor', {
     form: null,
     modelName: '',
     modelClassName: '',
-    model: null,
     fields: [],
     grid: null,
     getDataAction: [],
@@ -43,7 +42,6 @@ Ext.define('App.core.SingleModelEditor', {
                 };
                 for (var i = 0; i < this.fields.length; i++) {
                     fieldIndex = modelClassDefinition.fields.length;
-                    debugger;
                     fieldConf = {
                         name: me.fields[i].name,
                         type: me.fields[i].type,
@@ -106,6 +104,23 @@ Ext.define('App.core.SingleModelEditor', {
         });
     },
 
+    addRecord: function () {
+        var me = this;
+
+        me.form.renew();
+    },
+
+    copyRecord: function () {
+        var me = this,
+            selectModel = me.grid.getSelectionModel(),
+            selections;
+
+        if (selectModel.getCount()) {
+            selections = selectModel.getSelection();
+            me.form.copy(selections[0]);
+        }
+    },
+
     createToolbar: function () {
         var me = this,
           buttons = [];
@@ -116,23 +131,32 @@ Ext.define('App.core.SingleModelEditor', {
                 text: 'Добавить',
                 icon: $themeUrl('/images/buttons/plus.png'),
                 scope: this,
+                itemId: 'add',
                 handler: function () {
+                    me.addRecord();
                 }
             };
-            buttons[buttons.length] = '-';
+            buttons[buttons.length] = { xtype: 'tbspacer' };
 
             if (me.userRights > 2) {
                 buttons[buttons.length] = {
                     xtype: 'button',
                     icon: $themeUrl('/images/buttons/del.png'),
                     scope: this,
+                    itemId: 'del',
+                    disabled: true,
                     handler: function () {
                     }
                 };
             }
 
             buttons[buttons.length] = {
-                icon: $themeUrl('/images/buttons/copy.png')
+                itemId: 'copy',
+                disabled: true,
+                icon: $themeUrl('/images/buttons/copy.png'),
+                handler: function () {
+                    me.copyRecord();
+                }
             };
 
             me.toolbar = Ext.create('Ext.toolbar.Toolbar', {
@@ -146,6 +170,32 @@ Ext.define('App.core.SingleModelEditor', {
         }
 
         return me.toolbar;
+    },
+
+    selectionChange: function (selected) {
+        var me = this;
+
+        if (selected.length == 1) {
+            me.form.loadRecord(selected[0]);
+
+            if (me.userRights > 1) {
+                me.toolbar.getComponent('copy').setDisabled(false);
+            }
+        } else {
+            if (me.userRights > 1) {
+                me.toolbar.getComponent('copy').setDisabled(true);
+            }
+        }
+
+        if (selected.length) {
+            if (me.userRights > 2) {
+                me.toolbar.getComponent('del').setDisabled(false);
+            }
+        } else {
+            if (me.userRights > 2) {
+                me.toolbar.getComponent('del').setDisabled(true);
+            }
+        }
     },
 
     createListGrid: function () {
@@ -165,9 +215,7 @@ Ext.define('App.core.SingleModelEditor', {
                 tbar: me.createToolbar(),
                 listeners: {
                     selectionchange: function (grid, selected, eOpts) {
-                        if (selected.length) {
-                            me.form.loadRecord(selected[0]);
-                        }
+                        me.selectionChange(selected);
                     }
                 }
             };
@@ -198,13 +246,12 @@ Ext.define('App.core.SingleModelEditor', {
 
                 me.createModelClass();
                 if (me.modelClassName) {
-                    me.model = Ext.create(me.modelClassName, {});
                     me.form = Ext.create('Ext.ux.index.form.Form', {
-                        model: me.model,
+                        modelClassName: me.modelClassName,
                         tabs: me.tabs,
                         listeners: {
-                            afterinsert: function () {
-                                me.store.add(me.model);
+                            afterinsert: function (form, record) {
+                                me.store.add(record);
                                 me.store.sync({
                                     failure: function () {
                                         me.store.reload();
@@ -213,7 +260,7 @@ Ext.define('App.core.SingleModelEditor', {
                                     }
                                 });
                             },
-                            afterupdate: function () {
+                            afterupdate: function (form, record) {
                                 me.store.sync({
                                     failure: function () {
                                         me.store.reload();

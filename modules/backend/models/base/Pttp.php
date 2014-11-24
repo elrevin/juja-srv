@@ -46,6 +46,8 @@ class Pttp extends \app\base\db\ActiveRecord
 
     protected static $accusativeRecordTitle = 'Штуку такую';
 
+    public static $sortable = true;
+
     /**
      * @inheritdoc
      */

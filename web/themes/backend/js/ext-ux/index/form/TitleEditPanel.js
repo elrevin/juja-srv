@@ -110,6 +110,26 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
         }
     },
 
+    renew: function () {
+        var me = this,
+            formField;
+
+        formField = me.fieldPanel.items.getAt(0);
+        if (me.field.type == Ext.data.Types.STRING) {
+            formField.setValue('Новая запись');
+        } else if (me.field.type == Ext.data.Types.INTEGER) {
+            formField.setValue(0);
+        } else if (me.field.type == Ext.data.Types.FLOAT) {
+            formField.setValue(0);
+        } else if (me.field.type == Ext.data.Types.DATE) {
+            formField.setValue((new Date()));
+        } else if (me.field.type == Ext.data.Types.DATETIME) {
+            formField.setValue((new Date()));
+        }
+
+        me.setTitleText(me.getValueByText());
+    },
+
     initComponent: function () {
         var me = this,
             formField,
@@ -163,6 +183,7 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
     },
 
     setTitleText: function (text) {
+        var me = this;
         Ext.get('in2-title-edit-text-' + me.id).dom.innerHTML = text;
     },
 
