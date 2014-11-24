@@ -264,7 +264,25 @@ class BackendController extends Controller
 
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
-            if (isset($data['id']) && $data['id']) {
+
+            if (is_array($data) && isset($data[0])) {
+                $conditions = [];
+                $params = [];
+
+                foreach ($data as $key => $item) {
+                    if (isset($item['id']) && $item['id']) {
+                        $conditions[] = 'id = :id'.($key+1);
+                        $params[':id'.($key+1)] = $item['id'];
+                    }
+                }
+                if ($conditions) {
+                    if (call_user_func([$modelName, 'deleteRecords'], $conditions, $params)) {
+                        return [
+                            'success' => true
+                        ];
+                    }
+                }
+            } elseif (isset($data['id']) && $data['id']) {
                 if (call_user_func([$modelName, 'deleteRecords'], 'id = :id', [':id' => $data['id']])) {
                     return [
                         'success' => true

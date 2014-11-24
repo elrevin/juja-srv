@@ -52,6 +52,10 @@ class TestTable extends \app\base\db\ActiveRecord
 
     protected static $modelTitle = 'Тестовый справочник';
 
+    protected static $recordTitle = 'Какая-то хрень';
+
+    protected static $accusativeRecordTitle = 'Какую-то хрень';
+
     /**
      * @inheritdoc
      */

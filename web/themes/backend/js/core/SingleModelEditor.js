@@ -121,6 +121,36 @@ Ext.define('App.core.SingleModelEditor', {
         }
     },
 
+    deleteRecord: function () {
+        var me = this,
+            selectModel = me.grid.getSelectionModel(),
+            selections,
+            i, count;
+
+        count = selectModel.getCount();
+
+        if (count) {
+            Ext.Msg.show({
+                title: 'Удаление записи',
+                msg: 'Вы действительно хотите удалить '+me.accusativeRecordTitle.toLocaleLowerCase(),
+                width: 300,
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.window.MessageBox.QUESTION,
+                fn: function (button) {
+                    if (button == 'yes') {
+                        selections = selectModel.getSelection();
+                        me.store.remove(selections);
+                        me.store.sync({
+                            failure: function () {
+                                me.store.reload();
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    },
+
     createToolbar: function () {
         var me = this,
           buttons = [];
@@ -146,6 +176,7 @@ Ext.define('App.core.SingleModelEditor', {
                     itemId: 'del',
                     disabled: true,
                     handler: function () {
+                        me.deleteRecord();
                     }
                 };
             }

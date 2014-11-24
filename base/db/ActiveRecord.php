@@ -535,18 +535,24 @@ class ActiveRecord extends db\ActiveRecord
 
     /**
      * Удаление записей удовлетворяющих условию $condition
-     * По сути аналог deleteAll, но учитывается флаг permanentlyDelete в свойствах модели
+     * По сути аналог deleteAll, но учитывается флаг permanentlyDelete в свойствах модели и в $condition можно передать
+     * массив условий
      *
-     * @param string $condition
+     * @param string|array $condition
      * @param array $params
      * @return bool
      */
     public static function deleteRecords($condition = '', $params = [])
     {
-        if (static::$permanentlyDelete) {
-            static::deleteAll($condition, $params);
-        } else {
-            static::updateAll(['del' => 1], $condition, $params);
+        if ($condition) {
+            if (is_array($condition)) {
+                $condition = implode(' OR ', $condition);
+            }
+            if (static::$permanentlyDelete) {
+                static::deleteAll($condition, $params);
+            } else {
+                static::updateAll(['del' => 1], $condition, $params);
+            }
         }
         return true;
     }

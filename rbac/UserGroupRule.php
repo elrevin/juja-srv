@@ -23,7 +23,7 @@ class UserGroupRule extends Rule
             if ($item->name === 'admin') {
                 return Yii::$app->user->identity->isSU;
             } elseif ($item->name === 'manager') {
-                return $group->cp_access == 1;
+                return $group->cp_access == 1 && !Yii::$app->user->identity->isSU;
             }
         } elseif ($item->name === 'guest') {
             return true;

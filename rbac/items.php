@@ -21,6 +21,7 @@ return [
         'children' => [
             'backend-list',
             'backend-save-record',
+            'backend-delete-record',
             'backend-cp-menu',
             'backend-get-interface',
         ],

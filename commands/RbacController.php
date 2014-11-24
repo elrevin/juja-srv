@@ -76,6 +76,7 @@ class RbacController extends Controller
 
         $authManager->addChild($admin, $backendList);
         $authManager->addChild($admin, $backendSaveRecord);
+        $authManager->addChild($admin, $backendDeleteRecord);
         $authManager->addChild($admin, $backendCpMenu);
         $authManager->addChild($admin, $backendGetInterface);
     }
