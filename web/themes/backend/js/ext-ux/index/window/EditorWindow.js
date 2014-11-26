@@ -43,6 +43,7 @@ Ext.define('Ext.ux.index.window.EditorWindow', {
             me.autoScroll = true;
             me.modal = true;
             me.form = Ext.create('Ext.ux.index.form.SimpleForm', {
+                FORM__: 'win '+me.model.$className,
                 model: me.model,
                 tabs: [],
                 listeners: {
