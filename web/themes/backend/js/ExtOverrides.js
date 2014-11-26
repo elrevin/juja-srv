@@ -47,6 +47,8 @@ function doOverride() {
         relativeModel: {
             name: '',
             moduleName: '',
+            modalSelect: false,
+            runAction: '',
             identifyFieldName: '',
             identifyFieldType: ''
         }

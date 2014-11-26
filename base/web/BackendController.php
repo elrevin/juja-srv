@@ -164,8 +164,9 @@ class BackendController extends Controller
         $moduleName = $this->module->id;
 
         $parentId = ($parentId ? $parentId : intval(Yii::$app->request->get('parentRecordId', 0)));
+        $modal = intval(Yii::$app->request->get('modal', 0));
 
-        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $parentId);
+        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $parentId, $modal);
 
     }
 

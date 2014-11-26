@@ -229,7 +229,7 @@ Ext.define('Ext.ux.index.form.Form', {
                     if (me.tabs[i].className != undefined && me.tabs[i].className) {
                         tabClassName = me.tabs[i].className;
                     }
-                    me.tabs[i]['form'] = me;
+                    me.tabs[i]['parentForm'] = me;
                     tab = Ext.create(tabClassName, me.tabs[i]);
                     me.tabs[i]['object'] = tab;
                     me.tabPanel.add(tab);
@@ -267,7 +267,7 @@ Ext.define('Ext.ux.index.form.Form', {
                 if (me.tabs[i].className != undefined && me.tabs[i].className) {
                     tabClassName = me.tabs[i].className;
                 }
-                me.tabs[i]['form'] = me;
+                me.tabs[i]['parentForm'] = me;
                 tab = Ext.create(tabClassName, me.tabs[i]);
                 me.tabs[i]['object'] = tab;
                 me.tabPanel.add(tab);
@@ -307,7 +307,7 @@ Ext.define('Ext.ux.index.form.Form', {
                 if (me.tabs[i].className != undefined && me.tabs[i].className) {
                     tabClassName = me.tabs[i].className;
                 }
-                me.tabs[i]['form'] = me;
+                me.tabs[i]['parentForm'] = me;
                 tab = Ext.create(tabClassName, me.tabs[i]);
                 me.tabs[i]['object'] = tab;
                 me.tabPanel.add(tab);
@@ -340,7 +340,7 @@ Ext.define('Ext.ux.index.form.Form', {
                 if (me.tabs[i].className != undefined && me.tabs[i].className) {
                     tabClassName = me.tabs[i].className;
                 }
-                me.tabs[i]['form'] = me;
+                me.tabs[i]['parentForm'] = me;
                 tab = Ext.create(tabClassName, me.tabs[i]);
                 me.tabs[i]['object'] = tab;
                 me.tabPanel.add(tab);
