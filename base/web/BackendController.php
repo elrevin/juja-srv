@@ -53,10 +53,10 @@ class BackendController extends Controller
             return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id'], 'parentId' => $parentId, 'strict' => true]);
         } elseif ($action == 'cp-menu') {
             return Yii::$app->user->can('backend-'.$action);
-        } elseif ($action == 'get-interface') {
+        } elseif ($action == 'get-interface' || $action == 'get-custom-interface-file') {
             $modelName .= Yii::$app->request->get('modelName', '');
             $recordId = Yii::$app->request->get('recordId', 0);
-            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $recordId, 'strict' => true]);
+            return Yii::$app->user->can('backend-get-interface', ['modelName' => $modelName, 'recordId' => $recordId, 'strict' => true]);
         }
         return false; // По умолчанию все запрещено
     }
@@ -164,9 +164,26 @@ class BackendController extends Controller
         $moduleName = $this->module->id;
 
         $parentId = ($parentId ? $parentId : intval(Yii::$app->request->get('parentRecordId', 0)));
+        $modal = intval(Yii::$app->request->get('modal', 0));
 
-        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $parentId);
+        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $parentId, $modal);
 
+    }
+
+    public function actionGetJsFile ()
+    {
+        $content = '';
+        $modelName = Yii::$app->request->get('modelName');
+        $file = Yii::$app->request->get('file');
+        if (preg_match("/^[a-zA-Z0-9_]+$/", $modelName) && preg_match("/^[a-zA-Z0-9_\\/]+\\.js$/", $file)) {
+            $path = '@app/modules/'.$this->module->id.'/js/'.$modelName.'/'.$file;
+            $path = Yii::getAlias($path);
+            if (file_exists($path)) {
+                $content = file_get_contents($path);
+            }
+        }
+
+        return $content;
     }
 
     public function beforeList($modelName, $params)

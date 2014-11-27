@@ -26,7 +26,11 @@ class PointTestTable extends \app\base\db\ActiveRecord
         'test_table_id' => [
             'title' => 'Указатель',
             'type' => 'pointer',
-            'relativeModel' => '\app\modules\backend\models\TestTable',
+            'relativeModel' => [
+                'moduleName' => 'backend',
+                'name' => 'TestTable',
+                'modalSelect' => true,
+            ],//'\app\modules\backend\models\TestTable',
             'group' => 'Группа полей'
         ],
      ];

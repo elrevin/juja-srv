@@ -11,30 +11,49 @@ Ext.application({
     getMainPanel: function () {
         return this._mainPanel;
     },
-    loadModule: function (runAction, modelName, idRecord) {
-        var can = true;
-        if (this._currentModule) {
-            if (!this._currentModule.canDestroy()) {
-                can = false;
+    loadModule: function (config) {
+        var can = true, runAction, params, listeners, me = this;
+
+        if (config['runAction']) runAction = config['runAction'];
+
+        if (config['listeners']) {
+            listeners = config['listeners'];
+        }
+
+        if (!runAction) {
+            me.showErrorMessage('', 'Действие не распознано');
+        }
+
+        if (!config['modal']) {
+            if (this._currentModule) {
+                if (!me._currentModule.canDestroy()) {
+                    can = false;
+                }
             }
         }
 
         if (can) {
             //var wait = Ext.Msg.wait('Пожалуйста подождите', 'Загрузка модуля');
 
-            if (this._currentModule) {
-                // Удаление всех элементов в панели приложения
-                this._mainPanel.removeAll(true);
+            if (!config['modal']) {
+                if (me._currentModule) {
+                    // Удаление всех элементов в панели приложения
+                    me._mainPanel.removeAll(true);
+                }
             }
+
+            params = {};
+
+            if (config['modelName']) params['modelName'] = config['modelName'];
+            if (config['idRecord']) params['idRecord'] = config['idRecord'];
+            if (config['modal']) params['modal'] = 1;
+
 
             // Получаем конфигурацию
             Ext.Ajax.request({
-                url: $url(runAction[0], runAction[1], runAction[2], {
-                    modelName: modelName,
-                    idRecord: idRecord
-                }, 'js'),
+                url: $url(runAction[0], runAction[1], runAction[2], params, 'js'),
                 success: function (response) {
-                    var code = response.responseText;
+                    var code = response.responseText, eventName;
                     eval(code);
                     if (module != undefined) {
                         module.on('ready', function () {
@@ -43,18 +62,36 @@ Ext.application({
                         module.on('initfail', function () {
                             //wait.close();
                         });
+
+                        if (listeners) {
+                            for (eventName in listeners) {
+                                if (listeners[eventName]['fn']) {
+                                    if (listeners[eventName]['scope']) {
+                                        module.on(eventName, listeners[eventName]['fn'], listeners[eventName]['scope']);
+                                    } else {
+                                        module.on(eventName, listeners[eventName]['fn']);
+                                    }
+                                } else if (listeners[eventName] instanceof Function) {
+                                    module.on(eventName, listeners[eventName]);
+                                }
+                            }
+                        }
+
                         module.init();
                     }
-                    this._currentModule = module;
-                },
-                scope: this
+                    if (!config['modal']) {
+                        me._currentModule = module;
+                    }
+                }
             });
         }
     },
+
     launch: function () {
         Ext.Loader.setConfig({enabled: true});
         Ext.Loader.setPath('Ext.ux', $themeUrl('/js/ext-ux'));
         Ext.Loader.setPath('App.core', $themeUrl('/js/core'));
+        Ext.Loader.setPath('App.modules', '/admin/getJS');
 
         doOverride();
 
@@ -125,7 +162,7 @@ Ext.application({
                             var modelName = record.get('modelName');
                             var idRecord = record.get('idRecord');
 
-                            this.loadModule(runAction, modelName, idRecord);
+                            this.loadModule({runAction: runAction, modelName: modelName, idRecord: idRecord});
                         }
                     },
                     scope: this

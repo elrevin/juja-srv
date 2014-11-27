@@ -35,7 +35,12 @@ class ActiveRecord extends db\ActiveRecord
      *
      *      'group' - Название группы полей,
      *
-     *      'relativeModel' - имя связанной модели (полное имя класса, включая namespace),
+     *      'relativeModel' - имя связанной модели (полное имя класса, включая namespace) или ассоциативный массив:
+     *          'classname' - полное имя класса,
+     *          'moduleName' - имя модуля,
+     *          'modalSelect' - выбирать запись в модальном окне,
+     *          'name' - имя модели,
+     *          'runAction' - массив: имя модуля, имя контроллера, имя действия; для получения пользовательского интерфейса,
      *
      *      'selectOptions' - Ассоциативный массив возможных значений,
      *
@@ -149,6 +154,12 @@ class ActiveRecord extends db\ActiveRecord
     public static $createInterfaceForExistingParentOnly = true;
 
     /**
+     * Выбор записей для полей Pointer в модальном окне
+     * @var bool
+     */
+    public static $modalSelect = false;
+
+    /**
      * Доступна ли ручная сортировка
      *
      * @var bool
@@ -195,6 +206,10 @@ class ActiveRecord extends db\ActiveRecord
     public static function getParentModel ()
     {
         return static::$parentModel;
+    }
+
+    public static function getModalSelect () {
+        return static::$modalSelect;
     }
 
     /**
@@ -339,9 +354,15 @@ class ActiveRecord extends db\ActiveRecord
             }
 
             if ($fieldConf['type'] == 'pointer') {
-                $relatedIdentifyFieldConf = call_user_func([$fieldConf['relativeModel'], 'getIdentifyFieldConf']);
+                $relatedModelClass = '';
+                if (is_array($fieldConf['relativeModel'])) {
+                    $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
+                } else {
+                    $relatedModelClass = $fieldConf['relativeModel'];
+                }
+                $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 if ($relatedIdentifyFieldConf) {
-                    $relatedTableName = call_user_func([$fieldConf['relativeModel'], 'tableName']);
+                    $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
                     $select[] = "`".static::tableName()."`.`".$fieldName."`";
                     $select[] = "`".$relatedTableName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
                     $pointers[$fieldName] = [
@@ -564,7 +585,7 @@ class ActiveRecord extends db\ActiveRecord
      * @param bool $configOnly
      * @return string
      */
-    public static function getUserInterface($configOnly = false)
+    public static function getUserInterface($configOnly = false, $parentId = 0, $modal = false)
     {
         $modelStructure = static::getStructure();
         $fields = [];
@@ -572,18 +593,49 @@ class ActiveRecord extends db\ActiveRecord
             $relativeModel = [];
             if ($config['type'] == 'pointer') {
                 // Для полей типа pointer получаем конфигурацию связанной модели
-                if (strncmp($config['relativeModel'], '\app\modules', 12) == 0) {
-                    $relativeModelFullName = $config['relativeModel'];
-                    $relativeModel = str_replace('\app\modules\\', '', str_replace('\models', '', $config['relativeModel']));
-                    $relativeModel = explode('\\', $relativeModel);
-                    $relativeModel[2] = call_user_func([$relativeModelFullName, 'getIdentifyFieldConf']);
-                    if (!$relativeModel[2]) {
-                        continue;
+
+                if (is_array($config['relativeModel'])) {
+                    $relativeModel = $config['relativeModel'];
+                    if (!isset($relativeModel['classname'])) {
+                        if (!isset($relativeModel['moduleName']) || !isset($relativeModel['name'])) {
+                            return false;
+                        } else {
+                            $relativeModel['classname'] = '\app\modules\\'.$relativeModel['moduleName'].'\models\\'.$relativeModel['name'];
+                        }
                     }
-                    $relativeModel[3] = $relativeModel[2]['type'];
-                    $relativeModel[2] = $relativeModel[2]['name'];
                 } else {
-                    continue;
+                    $relativeModel['classname'] = $config['relativeModel'];
+                }
+
+                if (!isset($relativeModel['moduleName']) || !isset($relativeModel['name'])) {
+                    $relativeModelFullName = $relativeModel['classname'];
+                    $relativeModelPath = str_replace('\app\modules\\', '', str_replace('\models', '', $relativeModelFullName));
+                    $relativeModelPath = explode('\\', $relativeModelPath);
+                }
+
+                if (!isset($relativeModel['moduleName'])) {
+                    $relativeModel['moduleName'] = $relativeModelPath[0];
+                }
+
+                if (!isset($relativeModel['name'])) {
+                    $relativeModel['name'] = $relativeModelPath[1];
+                }
+
+                $relativeModelIdentifyFieldConf = call_user_func([$relativeModel['classname'], 'getIdentifyFieldConf']);
+
+                $relativeModel['identifyFieldName'] = $relativeModelIdentifyFieldConf['name'];
+                $relativeModel['identifyFieldType'] = $relativeModelIdentifyFieldConf['type'];
+
+                if (!isset($relativeModel['runAction'])) {
+                    $relativeModel['runAction'] = [
+                        $relativeModel['moduleName'],
+                        'main',
+                        'get-interface'
+                    ];
+                }
+
+                if (!isset($relativeModel['modalSelect'])) {
+                    $relativeModel['modalSelect'] = call_user_func([$relativeModel['classname'], 'getModalSelect']);
                 }
             }
 
@@ -595,10 +647,12 @@ class ActiveRecord extends db\ActiveRecord
             if ($relativeModel) {
                 // есть связанная модель, добавляем ее конфигурацию в конфигурацию поля
                 $fields[$i]['relativeModel'] = [
-                    'moduleName' => $relativeModel[0],
-                    'name' => $relativeModel[1],
-                    'identifyFieldName' => $relativeModel[2],
-                    'identifyFieldType' => $relativeModel[3]
+                    'moduleName' => $relativeModel['moduleName'],
+                    'name' => $relativeModel['name'],
+                    'identifyFieldName' => $relativeModel['identifyFieldName'],
+                    'identifyFieldType' => $relativeModel['identifyFieldType'],
+                    'modalSelect' => $relativeModel['modalSelect'],
+                    'runAction' => $relativeModel['runAction']
                 ];
             }
         }
@@ -628,23 +682,49 @@ class ActiveRecord extends db\ActiveRecord
             'accusativeRecordTitle' => static::$accusativeRecordTitle
         ];
 
-        $tabs = [];
-        $detailModels = static::getDetailModels();
-        if ($detailModels) {
-            foreach ($detailModels as $item) {
-                // Получаем конфиг модели-детализации
-                $tabConfig = call_user_func([$item, 'getUserInterface'], true);
-                $tabConfig['modelName'] = str_replace('app\modules\\'.static::getModuleName().'\models\\', '', trim($item, '\\'));
-                $tabs[] = $tabConfig;
+        if (!$modal) {
+            $tabs = [];
+            $detailModels = static::getDetailModels();
+            if ($detailModels) {
+                foreach ($detailModels as $item) {
+                    // Проверяем, есть ли файл конфигурации модели-детализации
+
+                    $tabConfig = call_user_func([$item, 'getUserInterface'], true);
+                    $tabConfig['modelName'] = str_replace('app\modules\\'.static::getModuleName().'\models\\', '', trim($item, '\\'));
+
+                    $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/tabs/'.$tabConfig['modelName'].'.js';
+                    if (file_exists(Yii::getAlias($fileName))) {
+                        $tabConfig['className'] = 'App.modules.'.static::getModuleName().'.'.static::getModelName().'.tabs.'.$tabConfig['modelName'];
+                    }
+
+                    // Получаем конфиг модели-детализации
+                    $tabs[] = $tabConfig;
+                }
+            }
+
+            if ($tabs) {
+                $conf['tabs'] = $tabs;
+            }
+
+            if ($configOnly) {
+                return $conf;
             }
         }
 
-        if ($tabs) {
-            $conf['tabs'] = $tabs;
+        if ($modal) {
+            $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/ModalSelectWindow.js';
+            if (file_exists(Yii::getAlias($fileName))) {
+                return ("
+                  var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".ModalSelectWindow', ".\yii\helpers\Json::encode($conf).");
+                ");
+            }
         }
 
-        if ($configOnly) {
-            return $conf;
+        $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/Editor.js';
+        if (file_exists(Yii::getAlias($fileName))) {
+            return ("
+              var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".Editor', ".\yii\helpers\Json::encode($conf).");
+            ");
         }
 
         return ("

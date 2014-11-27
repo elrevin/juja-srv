@@ -85,6 +85,8 @@ $config = [
                 'admin/<controller:[\w-]+>/<action:[\w-\.]+>' => 'backend/<controller>/<action>',
                 'admin/<module:[\w-]+>/<controller:[\w-]+>/<action:[\w-\.]+>' => '<module>/adm<controller>/<action>',
 
+                'admin/getJS/<module:[\w-]+>/<modelName:[\w-]+>/<file:[\w-\./]+>' => '<module>/admmain/get-js-file.js',
+
                 'directrequest/<module:[\w-]+>/<controller:[\w-]+>/<action:[\w-\.]+>' => '<module>/dr<controller>/<action>',
             ],
         ],

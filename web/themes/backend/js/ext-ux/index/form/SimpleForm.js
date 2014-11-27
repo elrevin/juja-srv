@@ -11,6 +11,8 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
     width: 450,
     mode: 'insert', // По умолчанию режим добавления записи
 
+    groups: [],
+
     _getField: function (field) {
         var me = this;
 
@@ -114,7 +116,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 labelWidth: labelWidth,
                 modelField: field
             });
-        } else if (field.type == Ext.data.Types.POINTER) {
+        } else if (field.type == Ext.data.Types.POINTER && !field.relativeModel.modalSelect) {
             // Справочник
             var url = $url(field.relativeModel.moduleName, 'main', 'list', {modelName: field.relativeModel.name, identifyOnly: 1});
             return Ext.create('Ext.ux.form.ClearableComboBox', {
@@ -146,6 +148,22 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                     autoLoad: true
                 }),
                 modelField: field
+            });
+        } else if (field.type == Ext.data.Types.POINTER && field.relativeModel.modalSelect) {
+            // Справочник
+            return Ext.create('Ext.ux.form.field.ModalSelect', {
+                name: field.name,
+                id: me.id+'_field_'+field.name,
+                fieldLabel: field.title,
+                labelAlign: 'top',
+                width: 400,
+                allowBlank: !field.required,
+                msgTarget: 'side',
+                editable: false,
+                isPointerField: true,
+                modelField: field,
+                modelName: field.relativeModel.name,
+                runAction: field.relativeModel.runAction
             });
         }
 
@@ -229,6 +247,8 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                         me.add(groups[i].obj);
                     }
                 }
+
+                me.groups = groups;
             }
         }
     },
