@@ -44,7 +44,7 @@ class UrlManager extends \yii\web\UrlManager
         $route = parent::parseRequest($request);
 
         // Обрабатываем тип ответа AJAX запроса
-        if (\Yii::$app->request->isAjax) {
+        if (\Yii::$app->request->isAjax || 1==1) {
             $action = explode('/', $route[0]);
             $action = $action[2];
 

@@ -637,21 +637,6 @@ class ActiveRecord extends db\ActiveRecord
                 if (!isset($relativeModel['modalSelect'])) {
                     $relativeModel['modalSelect'] = call_user_func([$relativeModel['classname'], 'getModalSelect']);
                 }
-
-//                if (strncmp($config['relativeModel'], '\app\modules', 12) == 0) {
-//                    $relativeModelFullName = $config['relativeModel'];
-//                    $relativeModel = str_replace('\app\modules\\', '', str_replace('\models', '', $config['relativeModel']));
-//                    $relativeModel = explode('\\', $relativeModel);
-//                    $relativeModel[2] = call_user_func([$relativeModelFullName, 'getIdentifyFieldConf']);
-//                    if (!$relativeModel[2]) {
-//                        continue;
-//                    }
-//                    $relativeModel[3] = $relativeModel[2]['type'];
-//                    $relativeModel[2] = $relativeModel[2]['name'];
-//                    $relativeModel[4] = call_user_func([$relativeModelFullName, 'getModalSelect']);
-//                } else {
-//                    continue;
-//                }
             }
 
             $i = count($fields);
@@ -702,9 +687,17 @@ class ActiveRecord extends db\ActiveRecord
             $detailModels = static::getDetailModels();
             if ($detailModels) {
                 foreach ($detailModels as $item) {
-                    // Получаем конфиг модели-детализации
+                    // Проверяем, есть ли файл конфигурации модели-детализации
+
                     $tabConfig = call_user_func([$item, 'getUserInterface'], true);
                     $tabConfig['modelName'] = str_replace('app\modules\\'.static::getModuleName().'\models\\', '', trim($item, '\\'));
+
+                    $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/tabs/'.$tabConfig['modelName'].'.js';
+                    if (file_exists(Yii::getAlias($fileName))) {
+                        $tabConfig['className'] = 'App.modules.'.static::getModuleName().'.'.static::getModelName().'.tabs.'.$tabConfig['modelName'];
+                    }
+
+                    // Получаем конфиг модели-детализации
                     $tabs[] = $tabConfig;
                 }
             }
@@ -719,8 +712,18 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         if ($modal) {
+            $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/ModalSelectWindow.js';
+            if (file_exists(Yii::getAlias($fileName))) {
+                return ("
+                  var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".ModalSelectWindow', ".\yii\helpers\Json::encode($conf).");
+                ");
+            }
+        }
+
+        $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/Editor.js';
+        if (file_exists(Yii::getAlias($fileName))) {
             return ("
-                var module = Ext.create('App.core.ModalSelectWindow', ".\yii\helpers\Json::encode($conf).");
+              var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".Editor', ".\yii\helpers\Json::encode($conf).");
             ");
         }
 

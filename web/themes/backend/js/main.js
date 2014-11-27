@@ -91,6 +91,7 @@ Ext.application({
         Ext.Loader.setConfig({enabled: true});
         Ext.Loader.setPath('Ext.ux', $themeUrl('/js/ext-ux'));
         Ext.Loader.setPath('App.core', $themeUrl('/js/core'));
+        Ext.Loader.setPath('App.modules', '/admin/getJS');
 
         doOverride();
 

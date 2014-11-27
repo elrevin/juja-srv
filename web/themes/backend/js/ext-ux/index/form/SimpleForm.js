@@ -11,6 +11,8 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
     width: 450,
     mode: 'insert', // По умолчанию режим добавления записи
 
+    groups: [],
+
     _getField: function (field) {
         var me = this;
 
@@ -245,6 +247,8 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                         me.add(groups[i].obj);
                     }
                 }
+
+                me.groups = groups;
             }
         }
     },

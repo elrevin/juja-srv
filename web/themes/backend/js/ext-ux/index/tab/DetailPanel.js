@@ -31,14 +31,12 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
                 deleteAction: me.deleteAction,
                 store: me.store,
                 tbar: me.toolbar,
-                //selModel: Ext.create('Ext.selection.CheckboxModel', {
-                //    //mode: "MULTI"
-                //}),
+                selModel: Ext.create('Ext.selection.CheckboxModel', {
+                    mode: "SINGLE"
+                }),
                 listeners: {
                     selectionchange: function (grid, selected, eOpts) {
-                        //if (selected.length) {
-                        //    me.form.loadRecord(selected[0]);
-                        //}
+
                     }
                 }
             };
@@ -69,10 +67,6 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
                     }
                 ];
             }
-
-            //if (me.createToolbar()) {
-            //    gridConfig['tbar'] = me.toolbar;
-            //}
 
             me.grid = Ext.create('Ext.ux.index.grid.ListGrid', gridConfig);
         }

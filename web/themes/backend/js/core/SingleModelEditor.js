@@ -166,6 +166,35 @@ Ext.define('App.core.SingleModelEditor', {
         }
     },
 
+    createForm: function () {
+        var me = this;
+
+        me.form = Ext.create('Ext.ux.index.form.Form', {
+            modelClassName: me.modelClassName,
+            tabs: me.tabs,
+            listeners: {
+                afterinsert: function (form, record) {
+                    me.store.add(record);
+                    me.store.sync({
+                        failure: function () {
+                            me.store.reload();
+                            // Возвращяем режим записи
+                            me.form.mode = 'insert';
+                        }
+                    });
+                },
+                afterupdate: function (form, record) {
+                    me.store.sync({
+                        failure: function () {
+                            me.store.reload();
+                        }
+                    });
+                }
+            },
+            userRights: me.userRights
+        });
+    },
+
     init: function () {
         var me = this;
         if (me.userRights > 0) {
@@ -173,30 +202,8 @@ Ext.define('App.core.SingleModelEditor', {
                 me.createActions();
                 me.createModelClass();
                 if (me.modelClassName) {
-                    me.form = Ext.create('Ext.ux.index.form.Form', {
-                        modelClassName: me.modelClassName,
-                        tabs: me.tabs,
-                        listeners: {
-                            afterinsert: function (form, record) {
-                                me.store.add(record);
-                                me.store.sync({
-                                    failure: function () {
-                                        me.store.reload();
-                                        // Возвращяем режим записи
-                                        me.form.mode = 'insert';
-                                    }
-                                });
-                            },
-                            afterupdate: function (form, record) {
-                                me.store.sync({
-                                    failure: function () {
-                                        me.store.reload();
-                                    }
-                                });
-                            }
-                        },
-                        userRights: me.userRights
-                    });
+
+                    me.createForm();
 
                     me.createStore();
 
