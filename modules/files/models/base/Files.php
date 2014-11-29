@@ -1,0 +1,48 @@
+<?php
+
+namespace app\modules\files\models\base;
+
+use Yii;
+
+class Files extends \app\base\db\ActiveRecord
+{
+    protected static $structure = [
+        'title' => [
+            'title' => 'Название',
+            'type' => 'string',
+            'identify' => true,
+        ],
+        'original_name' => [
+            'title' => 'Имя файла',
+            'type' => 'string'
+        ]
+    ];
+
+    public static $permanentlyDelete = false;
+
+    protected static $hiddable = false;
+
+    protected static $modelTitle = 'Файлы и изображения';
+
+    protected static $recordTitle = 'Файл';
+
+    protected static $accusativeRecordTitle = 'Файл';
+
+    /**
+     * @inheritdoc
+     */
+    public static function tableName()
+    {
+        return 's_files';
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function rules()
+    {
+        return [
+            [['title'], 'required', 'message' => 'Поле "'.static::$structure['title']['title'].'" обязательно для заполнения.'],
+        ];
+    }
+}
