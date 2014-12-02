@@ -578,6 +578,10 @@ class ActiveRecord extends db\ActiveRecord
         return true;
     }
 
+    public static function beforeReturnUserInterface($config) {
+        return $config;
+    }
+
     /**
      * Возвращает настройки пользовательского интерфейса.
      * Если $configOnly == true, то возвращается только массив настроек, если false, то возвращается полностью javascript редактора.
@@ -707,9 +711,11 @@ class ActiveRecord extends db\ActiveRecord
             }
 
             if ($configOnly) {
-                return $conf;
+                return static::beforeReturnUserInterface($conf);
             }
         }
+
+        $conf = static::beforeReturnUserInterface($conf);
 
         if ($modal) {
             $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/ModalSelectWindow.js';
