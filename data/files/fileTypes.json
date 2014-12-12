@@ -1,0 +1,30 @@
+{
+    "jpg": {
+        "type": "img"
+    },
+    "jpeg": {
+        "type": "img"
+    },
+    "png": {
+        "type": "img"
+    },
+    "gif": {
+        "type": "img"
+    },
+    "doc": {
+        "type": "bin",
+        "icon": "word"
+    },
+    "docx": {
+        "type": "bin",
+        "icon": "word"
+    },
+    "xls": {
+        "type": "bin",
+        "icon": "excel"
+    },
+    "xlsx": {
+        "type": "bin",
+        "icon": "excel"
+    }
+}

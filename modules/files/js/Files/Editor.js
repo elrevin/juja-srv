@@ -8,9 +8,25 @@ Ext.define('App.modules.files.Files.Editor', {
     editWindow: null,
     id: Ext.id(),
     fileTypes: {},
+    getFields: function () {
+        var me = this,
+            fields;
+        fields = me.mixins.modelLoader.getFields.call(me);
+        fields[fields.length] = {
+            name: 'icon',
+            type: 'string',
+            title: '',
+            group: '',
+            identify: false,
+            required: true
+        };
+        return fields;
+    },
     createEditWindow: function () {
         var me = this;
-
+        if (me.editWindow) {
+            return;
+        }
         me.editWindow = Ext.create('Ext.Window', {
             title: '',
             width: 400,
@@ -26,19 +42,26 @@ Ext.define('App.modules.files.Files.Editor', {
                     border: false,
                     header: false,
                     items: [
+                        Ext.create('Ext.form.field.Hidden', {
+                            name: 'id',
+                            value: 0,
+                            id: me.id+'-window-fields-id'
+                        }),
                         Ext.create('Ext.form.field.Text', {
                             fieldLabel: 'Название',
                             labelAlign: 'top',
                             allowBlank: false,
                             msgTarget: 'side',
                             width: 388,
-                            id: me.id+'-window-fields-title'
+                            id: me.id+'-window-fields-title',
+                            name: 'title'
                         }),
                         Ext.create('Ext.form.field.File', {
                             fieldLabel: 'Файл',
                             labelAlign: 'top',
                             width: 388,
                             id: me.id+'-window-fields-file',
+                            name: 'file',
                             listeners: {
                                 change: function (field, value) {
                                     me.onSelectFile(field.fileInputEl.dom.files[0]);
@@ -68,8 +91,22 @@ Ext.define('App.modules.files.Files.Editor', {
     save: function () {
         var me = this,
             form = me.editWindow.items.getAt(0);
-        if (!form.isDirty()) {
-
+        if (form.isValid()) {
+            form.getForm().submit({
+                url: $url('files', 'main', 'save-record', [], 'tjson'),
+                success: function(form, action) {
+                    form.reset();
+                    Ext.get(me.id+'-window-fields-img-innerCt').dom.innerHTML = "";
+                    me.editWindow.hide();
+                    me.store.reload();
+                },
+                failure: function(form, action) {
+                    IndexNextApp.getApplication().showErrorMessage(null, action.result.message);
+                }
+            });
+        } else {
+            IndexNextApp.getApplication().showErrorMessage(null, 'Некоторые поля заполнены не правильно или не заполнены совсем.<br>Поля содержащие ошибки отмечены иконкой <img src="'+$themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> и красной обводкой.<br/>'+
+                'Наведя мышь на иконку <img src="'+$themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> рядом с полем, Вы увидите пояснение ошибки.');
         }
     },
     onSelectFile: function (file) {
@@ -95,17 +132,24 @@ Ext.define('App.modules.files.Files.Editor', {
     },
     addRecord: function () {
         var me = this;
-
         me.editWindow.setTitle('Загрузить файл');
         Ext.getCmp(me.id+'-window-fields-file').allowBlank = false;
+        Ext.getCmp(me.id+'-window-fields-img').getEl().innerHTML = "<img src='/cp-files/images/files/file-types/" + fileType.icon + ".png'/>";
         me.editWindow.show();
     },
     editRecord: function () {
-        var me = this;
+        var me = this,
+            sm = me.listView.getSelectionModel(),
+            selected;
 
-        me.editWindow.setTitle('Изменить файл');
-        Ext.getCmp(me.id+'-window-fields-file').allowBlank = true;
-        me.editWindow.show();
+        if (sm.getCount() == 1) {
+            selected = sm.getSelection();
+
+            me.editWindow.setTitle('Изменить файл');
+            me.editWindow.show();
+            Ext.getCmp(me.id+'-window-fields-file').allowBlank = false;
+            Ext.getCmp(me.id+'-window-fields-file')
+        }
     },
     createToolbar: function () {
         var me = this,
@@ -123,20 +167,18 @@ Ext.define('App.modules.files.Files.Editor', {
                 }
             };
             buttons[buttons.length] = { xtype: 'tbspacer' };
+            buttons[buttons.length] = {
+                xtype: 'button',
+                icon: $themeUrl('/images/buttons/edit.png'),
+                scope: this,
+                itemId: 'edit',
+                disabled: true,
+                handler: function () {
+                    me.editRecord();
+                }
+            };
 
             if (me.userRights > 2) {
-                buttons[buttons.length] = {
-                    xtype: 'button',
-                    icon: $themeUrl('/images/buttons/edit.png'),
-                    scope: this,
-                    itemId: 'edit',
-                    disabled: true,
-                    handler: function () {
-                        me.editRecord();
-                    }
-                };
-
-                buttons[buttons.length] = ' ';
 
                 buttons[buttons.length] = {
                     xtype: 'button',
@@ -169,7 +211,7 @@ Ext.define('App.modules.files.Files.Editor', {
             tpl: [
                 '<tpl for=".">',
                 '<div class="thumb-wrap" id="filesItems_{id}">',
-                '<div class="thumb"><img src="{icon}?nc=' + new Date().getTime() + '" title="{title:htmlEncode}" style="width: 80px; height: 60px;"></div>',
+                '<div class="thumb"><img src="{icon}&width=150&height=150&bgColor=EFEFEF" title="{title:htmlEncode}" style="width: 150px; height: 150px;"></div>',
                 '<span class="x-editable">{shortName:htmlEncode}</span>',
                 '</div>',
                 '</tpl>',
@@ -191,9 +233,10 @@ Ext.define('App.modules.files.Files.Editor', {
             },
             listeners: {
                 selectionchange: {
-                    fn: function(dv, nodes ){
-                    },
-                    scope: this
+                    fn: function(dv, selected ){
+                        me.toolbar.getComponent('edit').setDisabled(selected.length == 1 && me.userRights > 1);
+                        me.toolbar.getComponent('del').setDisabled(selected.length && me.userRights > 2);
+                    }
                 }
             }
         });
@@ -212,6 +255,7 @@ Ext.define('App.modules.files.Files.Editor', {
                     me._mainPanel = Ext.create('Ext.Panel', {
                         layout: 'fit',
                         tbar: me.createToolbar(),
+                        bodyCls: 'in-data-view',
                         items: [
                             me.listView
                         ]
@@ -223,5 +267,9 @@ Ext.define('App.modules.files.Files.Editor', {
         }
 
         me.fireEvent('initfail');
+    },
+    destroy: function () {
+        this.editWindow.closeAction = 'destroy';
+        this.editWindow.close();
     }
 });

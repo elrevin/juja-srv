@@ -12,6 +12,18 @@ class BackendController extends Controller
 {
     public $layout = false;
     protected $currentInterfaceType = 'manage';
+    protected $defaultAccessList = [
+        'list' => 'backend-read',
+        'save-record' => 'backend-save-record',
+        'delete-record' => 'backend-delete-record',
+        'cp-menu' => 'backend-cp-menu',
+        'get-interface' => 'backend-read',
+        'get-js-file' => 'backend-read',
+        'get-custom-interface-file' => 'backend-read'
+    ];
+
+    protected $accessList = [
+    ];
 
     public function init()
     {
@@ -30,35 +42,34 @@ class BackendController extends Controller
      * @return bool
      */
     public function checkAccess($action) {
-        $modelName = '\app\modules\\'.$this->module->id.'\models\\';
-        if ($action == 'list') {
-            $modelName .= Yii::$app->request->get('modelName', '');
-            $parentId = intval(Yii::$app->request->get('parentId', 0));
-            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'parentId' => $parentId]);
-        } elseif ($action == 'save-record') {
-            $modelName .= Yii::$app->request->get('modelName', '');
-            $data = Yii::$app->request->post('data', []);
-            $parentId = intval(Yii::$app->request->post('parentId', 0));
-            if (!isset($data['id'])) {
-                $data = ['id' => 0];
-            }
-            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id'], 'parentId' => $parentId, 'strict' => true]);
-        } elseif ($action == 'delete-record') {
-            $modelName .= Yii::$app->request->get('modelName', '');
-            $parentId = intval(Yii::$app->request->post('parentId', 0));
-            $data = Yii::$app->request->post('data', []);
-            if (!isset($data['id'])) {
-                $data = ['id' => 0];
-            }
-            return Yii::$app->user->can('backend-'.$action, ['modelName' => $modelName, 'recordId' => $data['id'], 'parentId' => $parentId, 'strict' => true]);
-        } elseif ($action == 'cp-menu') {
-            return Yii::$app->user->can('backend-'.$action);
-        } elseif ($action == 'get-interface' || $action == 'get-custom-interface-file') {
-            $modelName .= Yii::$app->request->get('modelName', '');
-            $recordId = Yii::$app->request->get('recordId', 0);
-            return Yii::$app->user->can('backend-get-interface', ['modelName' => $modelName, 'recordId' => $recordId, 'strict' => true]);
+        $this->accessList = array_merge($this->accessList, $this->defaultAccessList);
+
+        if (!isset($this->accessList[$action])) {
+            return false;
         }
-        return false; // По умолчанию все запрещено
+
+        $accessRule = $this->accessList[$action];
+
+        if (is_array($accessRule)) {
+            if (isset($accessRule['function']) && is_callable([$this, $accessRule['function']])) {
+                return call_user_func([$this, $accessRule['function']], $action);
+            } elseif (isset($accessRule['rule'])) {
+                $accessRule = $accessRule['rule'];
+            }
+        }
+
+        $modelName = Yii::$app->request->get('modelName', '');
+        $modelName = ($modelName ? '\app\modules\\'.$this->module->id.'\models\\'.$modelName : '');
+
+        $parentId = intval(Yii::$app->request->get('parentId', 0));
+
+        $recordId = 0;
+        $data = Yii::$app->request->post('data', []);
+        if (!isset($data['id'])) {
+            $recordId = ['id' => 0];
+        }
+
+        return Yii::$app->user->can($accessRule, ['modelName' => $modelName, 'recordId' => $recordId, 'parentId' => $parentId, 'strict' => true]);
     }
 
     public function beforeAction($action)
@@ -191,7 +202,7 @@ class BackendController extends Controller
         return $params;
     }
 
-    public function actionAfterList($modelName, $list)
+    public function afterList($modelName, $list)
     {
         return $list;
     }
@@ -211,7 +222,7 @@ class BackendController extends Controller
                 'parentId' => intval(Yii::$app->request->get('parentId', 0))
             ]);
 
-            $list = $this->actionAfterList($modelName, call_user_func([$modelName, 'getList'], $params));
+            $list = $this->afterList($modelName, call_user_func([$modelName, 'getList'], $params));
 
             return $list;
         }
@@ -237,7 +248,6 @@ class BackendController extends Controller
                  * @var \yii\db\ActiveRecord
                  */
                 $model = new $modelName();
-                $model->mapJson($data);
                 if ($result = $model->saveData($data, true, $parentId)) {
                     $data = [
                         'data' => $result,

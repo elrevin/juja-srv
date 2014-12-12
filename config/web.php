@@ -94,7 +94,10 @@ $config = [
             'formatters' => [
                 'js' => [
                     'class' => '\app\components\JsResponseFormatter'
-                ]
+                ],
+                'tjson' => [
+                    'class' => '\app\components\TjsonResponseFormatter'
+                ],
             ]
         ],
         'authManager' => [

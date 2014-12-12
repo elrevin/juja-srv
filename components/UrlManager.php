@@ -43,11 +43,14 @@ class UrlManager extends \yii\web\UrlManager
 
         $route = parent::parseRequest($request);
 
-        // Обрабатываем тип ответа AJAX запроса
-        if (\Yii::$app->request->isAjax || 1==1) {
-            $action = explode('/', $route[0]);
+        $action = explode('/', $route[0]);
+        $actionCount = count($action);
+        if ($actionCount == 2) {
+            $action = $action[1];
+        } elseif ($actionCount == 3) {
             $action = $action[2];
-
+        }
+        if ($actionCount > 1) {
             if (preg_match('/\.([a-zA-Z]+)$/', $action, $matches)) {
                 $type = strtolower($matches[1]);
                 if ($type == 'json') {
@@ -57,7 +60,7 @@ class UrlManager extends \yii\web\UrlManager
                 } elseif ($type == 'html') {
                     \Yii::$app->response->format = \yii\web\Response::FORMAT_HTML;
                 } elseif ($type == 'tjson') {
-                    \Yii::$app->response->format = \yii\web\Response::FORMAT_RAW;
+                    \Yii::$app->response->format = 'tjson';
                 } elseif ($type == 'js') {
                     \Yii::$app->response->format = 'js';
                 }
@@ -65,7 +68,6 @@ class UrlManager extends \yii\web\UrlManager
                 $route[0] = str_replace($matches[0], '', $route[0]);
             }
         }
-
         return $route;
     }
 }

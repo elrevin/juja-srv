@@ -13,7 +13,8 @@ use Yii;
  */
 class Files extends \app\modules\files\models\base\Files
 {
-    public static function beforeReturnUserInterface($config) {
+    public static function beforeReturnUserInterface($config)
+    {
         $config['fileTypes'] = [
             'jpg' => [
                 'type' => 'img'

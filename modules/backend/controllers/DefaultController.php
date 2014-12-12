@@ -1,5 +1,6 @@
 <?php
 namespace app\modules\backend\controllers;
+
 use app\models\SUsers;
 use app\models\UserIdentity;
 use Yii;
@@ -38,7 +39,8 @@ class DefaultController extends \app\base\web\BackendController
         }
     }
 
-    public function actionAuth() {
+    public function actionAuth()
+    {
         if (Yii::$app->user->isGuest) {
             // Пользователь не авторизован, пробуем авторизовать, вываливаем ошибку в случае неудачи
 
@@ -97,8 +99,8 @@ class DefaultController extends \app\base\web\BackendController
                 if (!$user) {
                     $errors['user'] = 'notFound';
                 } else {
-                    $restoreCode = Yii::$app->security->generatePasswordHash($user->email."-".$user->id."-".$user->username);
-                    $restoreCodeExpires = time()+3*24*60*60;
+                    $restoreCode = Yii::$app->security->generatePasswordHash($user->email . "-" . $user->id . "-" . $user->username);
+                    $restoreCodeExpires = time() + 3 * 24 * 60 * 60;
                     $user->restore_code = $restoreCode;
                     $user->restore_code_expires = date('Y-m-d H:i:s', $restoreCodeExpires);
                     $user->save();

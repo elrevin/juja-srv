@@ -37,6 +37,7 @@ Ext.application({
 
             if (!config['modal']) {
                 if (me._currentModule) {
+                    me._currentModule.destroy();
                     // Удаление всех элементов в панели приложения
                     me._mainPanel.removeAll(true);
                 }
@@ -96,7 +97,11 @@ Ext.application({
         doOverride();
 
         Ext.Ajax.on('requestcomplete', function (conn, response) {
-            if (/^application\/json/.test(response.getResponseHeader('content-type'))) {
+            var type = '';
+            if (response.getResponseHeader) {
+                type = response.getResponseHeader('content-type');
+            }
+            if (/^application\/json/.test(type)) {
                 var data = response.responseText;
 
                 data = Ext.JSON.decode(data);

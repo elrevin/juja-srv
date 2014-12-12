@@ -23,7 +23,7 @@ class AdmMainController extends \app\base\web\BackendController
                     // Указана модель, смотрим - нужно ли подгружать подменю
                     if (isset($item['moduleName'])) {
                         // Читаем свойства модели
-                        $modelName = '\app\modules\\'.$item['moduleName'].'\models\\'.$item['modelName'];
+                        $modelName = '\app\modules\\' . $item['moduleName'] . '\models\\' . $item['modelName'];
                         $recursive = call_user_func([$modelName, 'getRecursive']);
                         if ($recursive) {
                             $list[$key]['getSubTreeAction'] = [$item['moduleName'], "main", "cp-menu"];
@@ -59,7 +59,6 @@ class AdmMainController extends \app\base\web\BackendController
         $list = \yii\helpers\Json::decode($this->getDataFile('cpmenu.json'));
 
         // Обходим меню и вносим коррективы, там где требуется
-
 
 
         return ['list' => $this->processCpMenu($list[$interface])];

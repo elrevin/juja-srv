@@ -17,7 +17,7 @@ class FileSystem {
      * Возвращает полный путь файла по его имени (хэшу)
      * @param string $name
      * @param string $dir
-     * @return bool|string
+     * @return string
      */
     public static function getFilePath($name, $dir = 'sources') {
         $name = explode('.', $name);
@@ -31,10 +31,7 @@ class FileSystem {
 
         $fileName = \Yii::getAlias('@webroot/fs/'.$dir.'/'.$path)."/".$fileName;
 
-        if (file_exists($fileName)) {
-            return $fileName;
-        }
-        return false;
+        return $fileName;
     }
 
     /**
@@ -43,10 +40,11 @@ class FileSystem {
      * @param string $dir
      * @return string
      */
-    private static function getFilePathByOriginalName($originalName, $dir = 'sources') {
+    public static function getFilePathByOriginalName($originalName, $add ='', $dir = 'sources') {
         $pathInfo = pathinfo($originalName);
         $ext = strtolower($pathInfo['extension']);
-        $hash = md5($pathInfo['filename']."-".microtime(false).'-'.\Yii::$app->security->generateRandomString(32));
+        $add = ($add ? $add : "-".microtime(false).'-'.\Yii::$app->security->generateRandomString(32));
+        $hash = md5($pathInfo['filename'].$add);
         $chunks = static::getPathChunks($hash);
         $path = \Yii::getAlias('@webroot/fs/'.$dir.'/'.$chunks['path']);
         $fileName = $chunks['fileName'].".".$ext;
@@ -64,15 +62,22 @@ class FileSystem {
      * @param $sourceFileName
      * @param $originalFileName
      * @param string $dir
+     * @return bool|string
      */
     public static function copyFile($sourceFileName, $originalFileName, $dir = 'sources') {
-        $filePath = static::getFilePathByOriginalName($originalFileName, $dir);
+        $filePath = static::getFilePathByOriginalName($originalFileName, '', $dir);
         if (!file_exists($filePath['path'])) {
             // Папки нет, создаем
 
-            mkdir($filePath['path'], 0766, true);
+            if (!mkdir($filePath['path'], 0766, true)) {
+                \Yii::error('Не удается создать папку "'.$filePath['path'].'"');
+                return false;
+            }
         }
-        copy($sourceFileName, $filePath['path'].'/'.$filePath['fileName']);
+        if (!copy($sourceFileName, $filePath['path'].'/'.$filePath['fileName'])) {
+            \Yii::error('Не удается скопировать файл '.$sourceFileName.' в '.$filePath['path'].'/'.$filePath['fileName']);
+            return false;
+        }
         return $filePath['hash'];
     }
 
@@ -81,14 +86,35 @@ class FileSystem {
      * Возвращает хэш загруженного файла.
      *
      * @param $paramName
+     * @return bool
+     */
+    public static function upload($paramName) {
+        $file = \yii\web\UploadedFile::getInstancesByName($paramName);
+        $result = false;
+        if ($file) {
+            $result = static::copyFile($file[0]->tempName, $file[0]->name);
+        }
+        return $result ? ['hash' => $result, 'uploadedFile' => $file[0]] : false;
+    }
+
+    /**
+     * Проверяет существует ли файл с указанным хешем, если да - возвращает true, иначе false
+     * @param $fileHash
      * @param string $dir
      * @return bool
      */
-    public static function upload($paramName, $dir = 'source') {
-        $file = \yii\web\UploadedFile::getInstancesByName($paramName);
-        if ($file) {
-            return static::copyFile($file[0]->tempName, $file[0]->name);
+    public static function fileExists($fileHash, $dir = 'sources')
+    {
+        $path = static::getFilePath($fileHash, $dir);
+        return file_exists($path);
+    }
+
+    public static function createFolderForFile($fileHash, $dir = 'sources')
+    {
+        $path = dirname(static::getFilePath($fileHash, $dir));
+        if (!file_exists($path)) {
+            return mkdir($path, 0777, true);
         }
-        return false;
+        return true;
     }
 }

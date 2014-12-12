@@ -15,6 +15,10 @@ class Files extends \app\base\db\ActiveRecord
         'original_name' => [
             'title' => 'Имя файла',
             'type' => 'string'
+        ],
+        'name' => [
+            'title' => 'Хэш',
+            'type' => 'string'
         ]
     ];
 
@@ -42,7 +46,7 @@ class Files extends \app\base\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title'], 'required', 'message' => 'Поле "'.static::$structure['title']['title'].'" обязательно для заполнения.'],
+            [['title'], 'required', 'message' => 'Поле "' . static::$structure['title']['title'] . '" обязательно для заполнения.'],
         ];
     }
 }

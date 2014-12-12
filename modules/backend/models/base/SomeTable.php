@@ -21,7 +21,7 @@ class SomeTable extends \app\base\db\ActiveRecord
             ],
             'required' => true
         ]
-     ];
+    ];
 
     public static $permanentlyDelete = false;
 
@@ -51,10 +51,10 @@ class SomeTable extends \app\base\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title'], 'required', 'message' => 'Поле "'.static::$structure['title']['title'].'" обязательно для заполнения.'],
-            [['price'], 'required', 'message' => 'Поле "'.static::$structure['price']['title'].'" обязательно для заполнения.'],
-            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "'.static::$structure['title']['title'].'" не может быть длинее 1024 символов.', ],
-            [['price'], 'number', 'integerOnly' => true, 'min' => 0, "tooSmall" => 'Поле "'.static::$structure['price']['title'].'" не может принимать значения меньше 0'],
+            [['title'], 'required', 'message' => 'Поле "' . static::$structure['title']['title'] . '" обязательно для заполнения.'],
+            [['price'], 'required', 'message' => 'Поле "' . static::$structure['price']['title'] . '" обязательно для заполнения.'],
+            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "' . static::$structure['title']['title'] . '" не может быть длинее 1024 символов.',],
+            [['price'], 'number', 'integerOnly' => true, 'min' => 0, "tooSmall" => 'Поле "' . static::$structure['price']['title'] . '" не может принимать значения меньше 0'],
         ];
     }
 }

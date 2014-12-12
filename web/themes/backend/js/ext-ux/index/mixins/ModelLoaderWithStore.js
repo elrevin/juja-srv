@@ -17,6 +17,33 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
     recordTitle: '',
     accusativeRecordTitle: '',
 
+    getFields: function () {
+        var me = this,
+            fieldIndex,
+            fieldConf,
+            fields = [];
+
+        for (var i = 0; i < this.fields.length; i++) {
+            fieldIndex = fields.length;
+            fieldConf = {
+                name: me.fields[i].name,
+                type: me.fields[i].type,
+                title: me.fields[i].title,
+                group: me.fields[i].group,
+                identify: me.fields[i].identify,
+                required: me.fields[i].required
+            };
+
+            if (fieldConf.type == 'pointer' && me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {
+                fieldConf['relativeModel'] = me.fields[i].relativeModel;
+            }
+
+            fields[fieldIndex] = fieldConf;
+        }
+
+        return fields;
+    },
+
     /**
      * Функция создает базовый класс модели, по набору полей в свойстве fields
      */
@@ -38,23 +65,7 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                         defaultValue: 0
                     }]
                 };
-                for (var i = 0; i < this.fields.length; i++) {
-                    fieldIndex = modelClassDefinition.fields.length;
-                    fieldConf = {
-                        name: me.fields[i].name,
-                        type: me.fields[i].type,
-                        title: me.fields[i].title,
-                        group: me.fields[i].group,
-                        identify: me.fields[i].identify,
-                        required: me.fields[i].required
-                    };
-
-                    if (fieldConf.type == 'pointer' && me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {
-                        fieldConf['relativeModel'] = me.fields[i].relativeModel;
-                    }
-
-                    modelClassDefinition.fields[fieldIndex] = fieldConf;
-                }
+                modelClassDefinition['fields'] = me.getFields();
                 Ext.define(me.modelClassName, modelClassDefinition);
             }
         }

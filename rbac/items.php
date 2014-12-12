@@ -8,25 +8,23 @@ return [
         'type' => 1,
         'ruleName' => 'userGroupRule',
         'children' => [
-            'backend-list',
+            'backend-read',
             'backend-save-record',
             'backend-delete-record',
             'backend-cp-menu',
-            'backend-get-interface',
         ],
     ],
     'admin' => [
         'type' => 1,
         'ruleName' => 'userGroupRule',
         'children' => [
-            'backend-list',
+            'backend-read',
             'backend-save-record',
             'backend-delete-record',
             'backend-cp-menu',
-            'backend-get-interface',
         ],
     ],
-    'backend-list' => [
+    'backend-read' => [
         'type' => 2,
         'ruleName' => 'backendReadRule',
     ],
@@ -41,9 +39,5 @@ return [
     'backend-cp-menu' => [
         'type' => 2,
         'ruleName' => 'backendCpMenuRule',
-    ],
-    'backend-get-interface' => [
-        'type' => 2,
-        'ruleName' => 'backendGetInterfaceRule',
     ],
 ];

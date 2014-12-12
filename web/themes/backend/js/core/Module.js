@@ -18,5 +18,8 @@ Ext.define('App.core.Module', {
     init: function () {
         IndexNextApp.getApplication().getMainPanel().add(this._mainPanel);
         this.fireEvent('ready');
+    },
+    destroy: function () {
+
     }
 });

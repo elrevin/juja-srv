@@ -32,7 +32,7 @@ class Pttp extends \app\base\db\ActiveRecord
             'type' => 'text',
             'required' => true
         ],
-     ];
+    ];
 
     public static $permanentlyDelete = false;
 
@@ -62,12 +62,12 @@ class Pttp extends \app\base\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title'], 'required', 'message' => 'Поле "'.static::$structure['title']['title'].'" обязательно для заполнения.'],
-            [['count'], 'required', 'message' => 'Поле "'.static::$structure['count']['title'].'" обязательно для заполнения.'],
-            [['point'], 'required', 'message' => 'Поле "'.static::$structure['point']['title'].'" обязательно для заполнения.'],
-            [['cool'], 'required', 'message' => 'Поле "'.static::$structure['cool']['title'].'" обязательно для заполнения.'],
-            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "'.static::$structure['title']['title'].'" не может быть длинее 1024 символов.', ],
-            [['count'], 'number', 'integerOnly' => true, 'min' => 0, "tooSmall" => 'Поле "'.static::$structure['count']['title'].'" не может принимать значения меньше 0'],
+            [['title'], 'required', 'message' => 'Поле "' . static::$structure['title']['title'] . '" обязательно для заполнения.'],
+            [['count'], 'required', 'message' => 'Поле "' . static::$structure['count']['title'] . '" обязательно для заполнения.'],
+            [['point'], 'required', 'message' => 'Поле "' . static::$structure['point']['title'] . '" обязательно для заполнения.'],
+            [['cool'], 'required', 'message' => 'Поле "' . static::$structure['cool']['title'] . '" обязательно для заполнения.'],
+            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "' . static::$structure['title']['title'] . '" не может быть длинее 1024 символов.',],
+            [['count'], 'number', 'integerOnly' => true, 'min' => 0, "tooSmall" => 'Поле "' . static::$structure['count']['title'] . '" не может принимать значения меньше 0'],
         ];
     }
 }

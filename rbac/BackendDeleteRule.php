@@ -41,7 +41,7 @@ class BackendDeleteRule extends Rule
                         $strict = isset($params['strict']) && $params['strict'];
 
                         $rights = SRightsRules::findRights(trim($modelName, '\\'), $recordId, $strict);
-                        return $rights > ($masterModel ? SRightsRules::RIGHTS_WRITE : SRightsRules::RIGHTS_ALL);
+                        return $rights > ($masterModel ? SRightsRules::RIGHTS_READ : SRightsRules::RIGHTS_WRITE);
                     }
                 }
             } elseif (Yii::$app->user->can('admin')) {

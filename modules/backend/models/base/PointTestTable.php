@@ -33,7 +33,7 @@ class PointTestTable extends \app\base\db\ActiveRecord
             ],//'\app\modules\backend\models\TestTable',
             'group' => 'Группа полей'
         ],
-     ];
+    ];
 
     public static $permanentlyDelete = false;
 
@@ -55,9 +55,9 @@ class PointTestTable extends \app\base\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title'], 'required', 'message' => 'Поле "'.static::$structure['title']['title'].'" обязательно для заполнения.'],
-            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "'.static::$structure['title']['title'].'" не может быть длинее 1024 символов.', ],
-            [['price'], 'number', 'integerOnly' => false, 'min' => 0, 'max' => 20000, "tooBig" => 'Поле "'.static::$structure['price']['title'].'" не может принимать значения больше 20000', "tooSmall" => 'Поле "'.static::$structure['price']['title'].'" не может принимать значения меньше 0'],
+            [['title'], 'required', 'message' => 'Поле "' . static::$structure['title']['title'] . '" обязательно для заполнения.'],
+            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "' . static::$structure['title']['title'] . '" не может быть длинее 1024 символов.',],
+            [['price'], 'number', 'integerOnly' => false, 'min' => 0, 'max' => 20000, "tooBig" => 'Поле "' . static::$structure['price']['title'] . '" не может принимать значения больше 20000', "tooSmall" => 'Поле "' . static::$structure['price']['title'] . '" не может принимать значения меньше 0'],
         ];
     }
 }

@@ -671,7 +671,7 @@ class ActiveRecord extends db\ActiveRecord
             $userRights = 3;
         } elseif (Yii::$app->user->can('backend-save-record', ['modelName' => static::className()])) {
             $userRights = 2;
-        } elseif (Yii::$app->user->can('backend-list', ['modelName' => static::className()])) {
+        } elseif (Yii::$app->user->can('backend-read', ['modelName' => static::className()])) {
             $userRights = 1;
         }
 

@@ -12,7 +12,7 @@ class Goods extends \app\base\db\ActiveRecord
             'type' => 'string',
             'identify' => true,
         ],
-         'flag' => [
+        'flag' => [
             'title' => 'Флаг',
             'type' => 'bool',
             'group' => 'Группа 1'
@@ -43,7 +43,7 @@ class Goods extends \app\base\db\ActiveRecord
     public function rules()
     {
         return [
-            [['title'], 'required', 'message' => 'Поле "'.static::$structure['title']['title'].'" обязательно для заполнения.'],
+            [['title'], 'required', 'message' => 'Поле "' . static::$structure['title']['title'] . '" обязательно для заполнения.'],
         ];
     }
 }
