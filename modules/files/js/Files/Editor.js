@@ -126,7 +126,7 @@ Ext.define('App.modules.files.Files.Editor', {
                 };
                 reader.readAsDataURL(file);
             } else if (fileType.icon){
-                Ext.getCmp(me.id+'-window-fields-img').getEl().innerHTML = "<img src='/cp-files/images/files/file-types/" + fileType.icon + ".png'/>";
+                Ext.get(me.id+'-window-fields-img-innerCt').dom.innerHTML = "<img src='/cp-files/images/files/file-types/" + fileType.icon + ".png'/>";
             }
         }
     },
@@ -134,7 +134,9 @@ Ext.define('App.modules.files.Files.Editor', {
         var me = this;
         me.editWindow.setTitle('Загрузить файл');
         Ext.getCmp(me.id+'-window-fields-file').allowBlank = false;
-        Ext.getCmp(me.id+'-window-fields-img').getEl().innerHTML = "<img src='/cp-files/images/files/file-types/" + fileType.icon + ".png'/>";
+        if (Ext.getCmp(me.id+'-window-fields-img').getEl()) {
+            Ext.get(me.id+'-window-fields-img-innerCt').dom.innerHTML = "";
+        }
         me.editWindow.show();
     },
     editRecord: function () {
@@ -147,8 +149,37 @@ Ext.define('App.modules.files.Files.Editor', {
 
             me.editWindow.setTitle('Изменить файл');
             me.editWindow.show();
-            Ext.getCmp(me.id+'-window-fields-file').allowBlank = false;
-            Ext.getCmp(me.id+'-window-fields-file')
+            Ext.getCmp(me.id+'-window-fields-file').allowBlank = true;
+            Ext.getCmp(me.id+'-window-fields-title').setValue(selected[0].get('title'));
+            Ext.getCmp(me.id+'-window-fields-id').setValue(selected[0].get('id'));
+            Ext.get(me.id+'-window-fields-img-innerCt').dom.innerHTML = "<img style='max-width: 388px; max-height: 300px; background: #FFFFFF' src='"+selected[0].get('icon')+"&width=388&height=300&bgColor=EFEFEF'>";
+        }
+    },
+    deleteRecord: function () {
+        var me = this,
+            sm = me.listView.getSelectionModel(),
+            selected;
+
+        if (sm.getCount() > 0) {
+            selected = sm.getSelection();
+
+            Ext.Msg.show({
+                title: 'Удаление файла',
+                msg: 'Вы действительно хотите удалить '+me.accusativeRecordTitle.toLocaleLowerCase(),
+                width: 300,
+                buttons: Ext.Msg.YESNO,
+                icon: Ext.window.MessageBox.QUESTION,
+                fn: function (button) {
+                    if (button == 'yes') {
+                        me.store.remove(selected);
+                        me.store.sync({
+                            failure: function () {
+                                me.store.reload();
+                            }
+                        });
+                    }
+                }
+            });
         }
     },
     createToolbar: function () {
@@ -234,8 +265,8 @@ Ext.define('App.modules.files.Files.Editor', {
             listeners: {
                 selectionchange: {
                     fn: function(dv, selected ){
-                        me.toolbar.getComponent('edit').setDisabled(selected.length == 1 && me.userRights > 1);
-                        me.toolbar.getComponent('del').setDisabled(selected.length && me.userRights > 2);
+                        me.toolbar.getComponent('edit').setDisabled(!(selected.length == 1 && me.userRights > 1));
+                        me.toolbar.getComponent('del').setDisabled(!(selected.length && me.userRights > 2));
                     }
                 }
             }
@@ -243,7 +274,6 @@ Ext.define('App.modules.files.Files.Editor', {
     },
     init: function () {
         var me = this;
-
         if (me.userRights > 1) {
             if (me.getDataAction.length) {
                 me.createActions();

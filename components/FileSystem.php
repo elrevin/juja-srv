@@ -117,4 +117,44 @@ class FileSystem {
         }
         return true;
     }
+
+    /**
+     * Удаление файла с указанным хешем
+     * @param $fileHash
+     * @param string $dir
+     * @return bool
+     */
+    public static function deleteFile($fileHash, $dir = 'sources')
+    {
+        if (static::fileExists($fileHash, $dir)) {
+            $path = dirname(static::getFilePath($fileHash, $dir));
+            $fileName = static::getFilePath($fileHash, $dir);
+            $ret = unlink($fileName);
+            $files = scandir($path);
+            $del = true;
+            foreach ($files as $item) {
+                if ($item != '.' && $item != '..') {
+                    $del = false;
+                    break;
+                }
+            }
+            if ($del) {
+                $name = explode('.', $fileHash);
+                $hash = $name[0];
+                $chunks = static::getPathChunks($hash);
+                $path = explode('/', $chunks['path']);
+                $fsPath = \Yii::getAlias('@webroot/fs/'.$dir);
+                for ($i = 3; $i >= 0; $i--) {
+                    $toDel = implode('/', $path);
+                    if (file_exists($fsPath.'/'. $toDel)) {
+                        rmdir($fsPath.'/'. $toDel);
+                    }
+                    array_pop($path);
+                }
+            }
+            return $ret;
+        }
+        return false;
+    }
+
 }

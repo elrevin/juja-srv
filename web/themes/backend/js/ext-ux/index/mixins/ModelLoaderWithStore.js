@@ -34,7 +34,7 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                 required: me.fields[i].required
             };
 
-            if (fieldConf.type == 'pointer' && me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {
+            if (me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {
                 fieldConf['relativeModel'] = me.fields[i].relativeModel;
             }
 

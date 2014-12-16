@@ -33,32 +33,40 @@ class AdmMainController extends \app\base\web\BackendController
                     foreach ($model->errors as $error) {
                         $errors .= implode("<br/>", $error);
                     }
-                    $this->ajaxError('\app\base\web\BackendController\AdmMainController\actionSaveRecord', 'Ошибка сохранения данных:<br/>'.$errors);
+                    $this->ajaxError('\app\base\web\BackendController\actionSaveRecord', 'Ошибка сохранения данных:<br/>'.$errors);
                     return null;
                 }
             } else {
-                $this->ajaxError('\app\base\web\BackendController\AdmMainController\actionSaveRecord', 'Не удалось загрузить файл');
+                $this->ajaxError('\app\base\web\BackendController\actionSaveRecord', 'Не удалось загрузить файл');
+            }
+        } else {
+            $data = [
+                'id' => $id,
+                'title' => $title
+            ];
+            $model = models\Files::findOne($id);
+
+            if ($file = \app\components\FileSystem::upload('file')) {
+                $data['original_name'] = $file['uploadedFile']->name;
+                $data['name'] = $file['hash'];
+            }
+
+            if ($result = $model->saveData($data)) {
+                $data = [
+                    'data' => $result,
+                    'success' => true
+                ];
+                return $data;
+            } else {
+                $errors = "";
+                foreach ($model->errors as $error) {
+                    $errors .= implode("<br/>", $error);
+                }
+                $this->ajaxError('\app\base\web\BackendController\actionSave?&id='.$id, 'Ошибка сохранения данных:<br/>'.$errors);
+                return null;
             }
         }
         return null;
-    }
-
-    public function afterList($modelName, $list)
-    {
-        $data = $list['data'];
-        $fileTypes = \yii\helpers\Json::decode($this->getDataFile('fileTypes.json'));
-        foreach ($data as $key => $item) {
-            $ext = explode('.', $item['name'])[1];
-            if (isset($fileTypes[$ext])) {
-                if ($fileTypes[$ext]['type'] == 'img') {
-                    $data[$key]['icon'] = \yii\helpers\Url::to(['admmain/thumbnail.png', 'id' => $item['id']]);
-                } else {
-                    $data[$key]['icon'] = Yii::getAlias('@theme/cp-files/images/files/file-types/'.$fileTypes[$ext]['icon'].'.png');
-                }
-            }
-        }
-        $list['data'] = $data;
-        return $list;
     }
 
     public function actionThumbnail()

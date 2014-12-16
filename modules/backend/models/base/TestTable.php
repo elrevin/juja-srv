@@ -44,6 +44,11 @@ class TestTable extends \app\base\db\ActiveRecord
             'type' => 'datetime',
             'group' => 'Группа 2'
         ],
+        'img' => [
+            'title' => 'Изображение',
+            'type' => 'img',
+            'group' => 'Группа 2'
+        ],
     ];
 
     public static $permanentlyDelete = false;

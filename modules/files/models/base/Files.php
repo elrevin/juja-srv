@@ -22,7 +22,7 @@ class Files extends \app\base\db\ActiveRecord
         ]
     ];
 
-    public static $permanentlyDelete = false;
+    public static $permanentlyDelete = true;
 
     protected static $hiddable = false;
 
@@ -31,6 +31,8 @@ class Files extends \app\base\db\ActiveRecord
     protected static $recordTitle = 'Файл';
 
     protected static $accusativeRecordTitle = 'Файл';
+
+    public static $modalSelect = true;
 
     /**
      * @inheritdoc

@@ -92,8 +92,10 @@ class TinyImage
         $Y = round($heightProps/2 - $height*$K/2);
 
         return [
-            'width' => $width*$K,
-            'height' => $height*$K,
+            'width' => round($widthProps),
+            'height' => round($heightProps),
+            'resampledWidth' => round($width*$K),
+            'resampledHeight' => round($height*$K),
             'originalWidth' => $width,
             'originalHeight' => $height,
             'x' => $X,
@@ -157,12 +159,12 @@ class TinyImage
 
         $dim = static::getDimensions($image, $imageProps);
 
-        $resultImage=imagecreatetruecolor($widthProps, $heightProps);
+        $resultImage=imagecreatetruecolor($dim['width'], $dim['height']);
         $color=imagecolorallocate($resultImage, $bgColor[0], $bgColor[1], $bgColor[2]);
         imagefill($resultImage, 1, 1, $color);
 
         if (!imagecopyresampled($resultImage, $image, $dim['x'], $dim['y'], 0, 0,
-            $dim['width'], $dim['height'],
+            $dim['resampledWidth'], $dim['resampledHeight'],
             $dim['originalWidth'], $dim['originalHeight']))
         {
             return false;

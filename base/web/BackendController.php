@@ -156,7 +156,7 @@ class BackendController extends Controller
     protected function getDataFile($fileName)
     {
         $moduleName = $this->module->id;
-        return file_get_contents(Yii::getAlias("@app/data/{$moduleName}/{$fileName}"));
+        return \app\helpers\Utils::getDataFile($moduleName, $fileName);
     }
 
     /**
@@ -197,16 +197,6 @@ class BackendController extends Controller
         return $content;
     }
 
-    public function beforeList($modelName, $params)
-    {
-        return $params;
-    }
-
-    public function afterList($modelName, $list)
-    {
-        return $list;
-    }
-
     /**
      * Возвращает список записей для отображения в панели управления
      * @return mixed|null
@@ -217,12 +207,12 @@ class BackendController extends Controller
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
 
-            $params = $this->beforeList($modelName, [
+            $params = [
                 "identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false),
                 'parentId' => intval(Yii::$app->request->get('parentId', 0))
-            ]);
+            ];
 
-            $list = $this->afterList($modelName, call_user_func([$modelName, 'getList'], $params));
+            $list = call_user_func([$modelName, 'getList'], $params);
 
             return $list;
         }

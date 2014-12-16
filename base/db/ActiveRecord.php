@@ -322,6 +322,16 @@ class ActiveRecord extends db\ActiveRecord
         return null;
     }
 
+    protected static  function beforeList($params)
+    {
+        return $params;
+    }
+
+    protected static function afterList($list)
+    {
+        return $list;
+    }
+
     /**
      * Возвращает массив записей модели для отображения в панели управления.
      * В аргументе $params передается ассоциативный массив параметров списка
@@ -342,6 +352,7 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getList($params)
     {
+        $params = static::beforeList($params);
         $select = ["`".static::tableName()."`.`id`"];
         $join = [];
         $pointers = [];
@@ -446,7 +457,7 @@ class ActiveRecord extends db\ActiveRecord
                 }
             }
         }
-        return ['data' => $list];
+        return ['data' => static::afterList($list)];
     }
 
     /**
@@ -555,6 +566,18 @@ class ActiveRecord extends db\ActiveRecord
     }
 
     /**
+     * Обработка события - удаление группы записей, вызывается в методе deleteRecords непосредственно перед удалением
+     *
+     * @param string|array $condition
+     * @param array $params
+     * @return array
+     */
+    protected static function beforeDeleteRecords($condition = '', $params = [])
+    {
+        return [$condition, $params];
+    }
+
+    /**
      * Удаление записей удовлетворяющих условию $condition
      * По сути аналог deleteAll, но учитывается флаг permanentlyDelete в свойствах модели и в $condition можно передать
      * массив условий
@@ -569,6 +592,7 @@ class ActiveRecord extends db\ActiveRecord
             if (is_array($condition)) {
                 $condition = implode(' OR ', $condition);
             }
+            list($condition, $params) = static::beforeDeleteRecords($condition, $params);
             if (static::$permanentlyDelete) {
                 static::deleteAll($condition, $params);
             } else {
@@ -641,6 +665,19 @@ class ActiveRecord extends db\ActiveRecord
                 if (!isset($relativeModel['modalSelect'])) {
                     $relativeModel['modalSelect'] = call_user_func([$relativeModel['classname'], 'getModalSelect']);
                 }
+            } elseif ($config['type'] == 'img') {
+                $relativeModel['classname'] = '\app\modules\files\models\Files';
+                $relativeModel['moduleName'] = 'files';
+                $relativeModel['name'] = 'Files';
+                $relativeModelIdentifyFieldConf = call_user_func([$relativeModel['classname'], 'getIdentifyFieldConf']);
+                $relativeModel['identifyFieldName'] = $relativeModelIdentifyFieldConf['name'];
+                $relativeModel['identifyFieldType'] = $relativeModelIdentifyFieldConf['type'];
+                $relativeModel['runAction'] = [
+                    $relativeModel['moduleName'],
+                    'main',
+                    'get-interface'
+                ];
+                $relativeModel['modalSelect'] = call_user_func([$relativeModel['classname'], 'getModalSelect']);
             }
 
             $i = count($fields);
@@ -724,6 +761,9 @@ class ActiveRecord extends db\ActiveRecord
                   var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".ModalSelectWindow', ".\yii\helpers\Json::encode($conf).");
                 ");
             }
+            return ("
+                  var module = Ext.create('App.core.GridModalSelectWindow', ".\yii\helpers\Json::encode($conf).");
+                ");
         }
 
         $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/Editor.js';

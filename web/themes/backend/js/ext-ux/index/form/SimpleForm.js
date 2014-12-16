@@ -165,6 +165,21 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 modelName: field.relativeModel.name,
                 runAction: field.relativeModel.runAction
             });
+        } else if (field.type == Ext.data.Types.IMG) {
+            return Ext.create('Ext.ux.form.field.ModalSelect', {
+                name: field.name,
+                id: me.id+'_field_'+field.name,
+                fieldLabel: field.title,
+                labelAlign: 'top',
+                width: 400,
+                allowBlank: !field.required,
+                msgTarget: 'side',
+                editable: false,
+                isPointerField: true,
+                modelField: field,
+                modelName: field.relativeModel.name,
+                runAction: field.relativeModel.runAction
+            });
         }
 
         return null;
@@ -324,7 +339,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                     field = me.model.fields.getAt(i);
                     input = Ext.getCmp(me.id + '_field_' + field.name);
                     if (input) {
-                        if (input.modelField.type == Ext.data.Types.POINTER) {
+                        if (input.modelField.type == Ext.data.Types.POINTER || input.modelField.type == Ext.data.Types.IMG) {
                             values[field.name] = Ext.JSON.encode(input.getValue());
                         } else {
                             values[field.name] = input.getValue();
