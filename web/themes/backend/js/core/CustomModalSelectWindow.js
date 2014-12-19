@@ -8,11 +8,18 @@ Ext.define('App.core.CustomModalSelectWindow', {
 
     windowHeight: 500,
 
+    windowResizable: true,
+
     itemsPanel: null,
 
     createItemsPanel: function () {},
 
     selectButtonClick: function () {},
+    doSelect: function (rec) {
+        var me = this;
+        me.fireEvent('select', rec);
+        me._mainWindow.close();
+    },
 
     init: function () {
         var me = this;
@@ -26,8 +33,8 @@ Ext.define('App.core.CustomModalSelectWindow', {
                     me._mainWindow = Ext.create('Ext.Window', {
                         title: me.modelTitle,
                         modal: true,
-                        resizable: true,
-                        closeAction: 'hide',
+                        resizable: me.windowResizable,
+                        closeAction: 'destroy',
                         width: me.windowWidth,
                         height: me.windowHeight,
                         layout: 'fit',

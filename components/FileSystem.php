@@ -17,9 +17,10 @@ class FileSystem {
      * Возвращает полный путь файла по его имени (хэшу)
      * @param string $name
      * @param string $dir
+     * @param bool $absolute
      * @return string
      */
-    public static function getFilePath($name, $dir = 'sources') {
+    public static function getFilePath($name, $dir = 'sources', $absolute = true) {
         $name = explode('.', $name);
         $hash = $name[0];
         $ext = strtolower($name[1]);
@@ -29,7 +30,11 @@ class FileSystem {
 
         $fileName = $chunks['fileName'].'.'.$ext;
 
-        $fileName = \Yii::getAlias('@webroot/fs/'.$dir.'/'.$path)."/".$fileName;
+        if ($absolute) {
+            $fileName = \Yii::getAlias('@webroot/fs/'.$dir.'/'.$path)."/".$fileName;
+        } else {
+            $fileName = 'fs/'.$dir.'/'.$path."/".$fileName;
+        }
 
         return $fileName;
     }

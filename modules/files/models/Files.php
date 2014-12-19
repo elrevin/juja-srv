@@ -58,6 +58,7 @@ class Files extends \app\modules\files\models\base\Files
                 } else {
                     $data[$key]['icon'] = Yii::getAlias('@theme/cp-files/images/files/file-types/'.$fileTypes[$ext]['icon'].'.png');
                 }
+                $data[$key]['path'] = Yii::getAlias('@web/'.\app\components\FileSystem::getFilePath($data[$key]['name'], 'sources', false));
             }
         }
         return $data;

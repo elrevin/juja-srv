@@ -143,7 +143,7 @@ CREATE TABLE `s_files` (
   `original_name` varchar(1024) NOT NULL DEFAULT '',
   `title` varchar(1024) NOT NULL DEFAULT '',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -152,7 +152,7 @@ CREATE TABLE `s_files` (
 
 LOCK TABLES `s_files` WRITE;
 /*!40000 ALTER TABLE `s_files` DISABLE KEYS */;
-INSERT INTO `s_files` VALUES (1,0,'43b0c7402d50e18b0e13b503d52b9285.jpg','IMG_0540.jpg','dghjkhg'),(2,0,'7a9cb6ce258a5d1e368953a6932d1fcc.jpg','IMG_0484.jpg','fwefe'),(3,0,'beaaa898a5590b134512fefebaf2cfd7.jpg','IMG_0482.jpg','ghjklkjhg'),(4,0,'105789e06d7ce3b178a0caa687d614b0.jpg','IMG_0485.jpg','ikllljjj'),(5,0,'856dfe35c45cd6a26198ce2057514e5e.jpg','IMG_0510.jpg','sfgdth6bt'),(6,0,'e2d60edcc126a90f232973dc09d3d130.jpg','IMG_0567.jpg','yuyuyuy'),(7,0,'b055dafb794991c20ee4bf4bb6326557.jpg','IMG_0559.jpg','uhyuhununu999'),(8,0,'d56df54cded39c84a80588c61bbd730a.jpg','IMG_0546.jpg','sdfssfd433333'),(9,0,'23d3fd39da4ef73a7ee902db0ac4f7cb.jpg','IMG_0690.jpg','hjkmnhui'),(10,0,'a8b1599d9f636edf525b71d4ae543f0d.jpg','IMG_0651.jpg','hjhujhjhjh'),(11,0,'bbabf22b9dfa88406e5e570a1196343d.jpg','IMG_0518.jpg','jknjk'),(12,0,'ac2e650ca4c406fa2f8f760e3b9f295c.jpg','IMG_0724.jpg','yuyuyyu'),(13,0,'3d5f2da33c778c72a9fc85eea1931291.jpg','IMG_0518.jpg','5refdc'),(14,0,'daba2f95e8786bdc8c511d6cf6a21f04.jpg','IMG_0546.jpg','43435'),(15,0,'84e10d9313fb3543cd0fddb2e71a1268.jpg','IMG_0485.jpg','43435'),(16,0,'674176ac979e07529947a16a04bb3674.jpg','IMG_0518.jpg','43435');
+INSERT INTO `s_files` VALUES (9,0,'c27443fe23e478134875beac32b7a194.jpg','IMG_0577.jpg','окрпоапрьапь'),(12,0,'9212b20a58d8eac35fca88087673bb81.jpg','IMG_0623.jpg','оуьрпв им уноеноено'),(13,0,'da26a484aa127445c3de40befb9b16db.jpg','IMG_0521.jpg','fdvfv we'),(14,0,'305cad29365b647c8e5f2e438c80fa97.jpg','IMG_0560.jpg','3ew23ewd'),(15,0,'d946a067cd2ede2362fd46284373cf24.jpg','IMG_0567.jpg','wefvfdv23erf'),(16,0,'13c820af2720ecf2a0ddcca3c708ffae.jpg','IMG_0580.jpg','mjnhbgfvdc'),(17,0,'9aa0b2140e36a8de60a55701940218c4.jpg','IMG_0615.jpg','ferfwefqwefqwef'),(18,0,'560aa9417d52d76b3251430ae77ee61a.jpg','IMG_0714.jpg','wf343f3f3d3');
 /*!40000 ALTER TABLE `s_files` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -183,7 +183,7 @@ CREATE TABLE `s_rights_rules` (
 
 LOCK TABLES `s_rights_rules` WRITE;
 /*!40000 ALTER TABLE `s_rights_rules` DISABLE KEYS */;
-INSERT INTO `s_rights_rules` VALUES (1,'app\\modules\\backend\\models\\TestTable',1,NULL,1),(2,'app\\modules\\backend\\models\\TestTable',NULL,2,2),(3,'app\\modules\\backend\\models\\PointTestTable',NULL,2,2),(4,'app\\modules\\files\\models\\Files',1,NULL,3);
+INSERT INTO `s_rights_rules` VALUES (1,'app\\modules\\backend\\models\\TestTable',1,NULL,1),(2,'app\\modules\\backend\\models\\TestTable',NULL,2,3),(3,'app\\modules\\backend\\models\\PointTestTable',NULL,2,2),(4,'app\\modules\\files\\models\\Files',1,NULL,3);
 /*!40000 ALTER TABLE `s_rights_rules` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -219,7 +219,7 @@ CREATE TABLE `s_users` (
 
 LOCK TABLES `s_users` WRITE;
 /*!40000 ALTER TABLE `s_users` DISABLE KEYS */;
-INSERT INTO `s_users` VALUES (1,'root','$2y$13$LhvSE7yaoewHdL0.KNSgae7GPr56zdYrIzQlhPUUjorGUbz7MrXM2',1,'Админ Админыч',NULL,'user@test.ru',NULL,NULL,NULL,NULL,1),(2,'manager','$2y$13$LhvSE7yaoewHdL0.KNSgae7GPr56zdYrIzQlhPUUjorGUbz7MrXM2',1,'Манагер :)',NULL,'manager@test.ru',NULL,NULL,NULL,NULL,0);
+INSERT INTO `s_users` VALUES (1,'root','$2y$13$LhvSE7yaoewHdL0.KNSgae7GPr56zdYrIzQlhPUUjorGUbz7MrXM2',1,'Админ Админыч',NULL,'user@test.ru',NULL,NULL,'$2y$13$x2nemneXgiHHfdmUQzx/ReXxFRouw1pKnq4FSD44ssY93J6W/XvZi','2014-12-15 20:21:57',1),(2,'manager','$2y$13$LhvSE7yaoewHdL0.KNSgae7GPr56zdYrIzQlhPUUjorGUbz7MrXM2',1,'Манагер :)',NULL,'manager@test.ru',NULL,NULL,NULL,NULL,0);
 /*!40000 ALTER TABLE `s_users` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -293,7 +293,10 @@ CREATE TABLE `test_table` (
   `dt` date DEFAULT NULL,
   `flag` tinyint(1) NOT NULL DEFAULT '0',
   `dtt` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  `img` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `FK_test_table_s_files_id` (`img`),
+  CONSTRAINT `FK_test_table_s_files_id` FOREIGN KEY (`img`) REFERENCES `s_files` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -303,7 +306,7 @@ CREATE TABLE `test_table` (
 
 LOCK TABLES `test_table` WRITE;
 /*!40000 ALTER TABLE `test_table` DISABLE KEYS */;
-INSERT INTO `test_table` VALUES (17,0,0,'ку fghjk rtt','ыаываыва gdgfdg',34,'2014-11-14',0,'2014-11-30 10:30:33'),(18,0,0,'ertergwrtg','TEXT fdf',232,'2014-10-19',1,'2014-11-07 10:31:08'),(19,1,0,'Новая запись','eyrtye',56,'2014-11-25',0,NULL),(20,1,0,'test','ergwerge',234,'2014-11-05',0,NULL),(21,1,0,'test','кесввук',234,'2014-11-05',0,NULL),(22,1,0,'Ntcn','rgdfgd',3,'2014-11-19',0,NULL),(23,0,0,'qqqq','erferferf',34,'2014-11-30',0,NULL),(24,0,0,'ку fghjk ewwert','ыаываыва gdgfdg',34,'2014-11-14',0,'2014-11-30 10:30:33'),(25,1,0,'rrr','erferferf',34,'2014-11-30',0,NULL);
+INSERT INTO `test_table` VALUES (17,0,0,'ку fghjk rtt','ыаываыва gdgfdg',34,'2014-11-14',0,'2014-11-30 10:30:33',NULL),(18,0,0,'ertergwrtg','TEXT fdf',232,'2014-10-19',1,'2014-11-07 10:31:08',NULL),(19,1,0,'Новая запись','eyrtye',56,'2014-11-25',0,NULL,NULL),(20,1,0,'test','ergwerge',234,'2014-11-05',0,NULL,NULL),(21,1,0,'test','кесввук',234,'2014-11-05',0,NULL,NULL),(22,1,0,'Ntcn','rgdfgd',3,'2014-11-19',0,NULL,NULL),(23,0,0,'qqqq','erferferf',34,'2014-11-30',0,NULL,NULL),(24,0,0,'ку fghjk ewwert','ыаываыва gdgfdg',34,'2014-11-14',0,'2014-11-30 10:30:33',NULL),(25,1,0,'rrr','erferferf',34,'2014-11-30',0,NULL,NULL);
 /*!40000 ALTER TABLE `test_table` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -320,4 +323,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2014-12-12  9:52:04
+-- Dump completed on 2014-12-19 17:34:03
