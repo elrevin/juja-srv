@@ -14,6 +14,21 @@ class FileSystem {
     }
 
     /**
+     * Возвращает тип файла (расширение имени) по его хэшу
+     * @param $name
+     * @return string
+     */
+    public static function getFileType($name)
+    {
+        $name = explode('.', $name);
+        $ln = count($name);
+        if ($ln > 1) {
+            return $name[$ln-1];
+        }
+        return '';
+    }
+
+    /**
      * Возвращает полный путь файла по его имени (хэшу)
      * @param string $name
      * @param string $dir

@@ -91,12 +91,12 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             });
         } else if (field.type == Ext.data.Types.DATETIME) {
             // Дата и время
-            return Ext.create('Ext.ux.form.DateTimeField', {
+            return Ext.create('Ext.ux.form.field.DateTime', {
                 name: field.name,
                 id: me.id + '_field_' + field.name,
                 fieldLabel: field.title,
                 labelAlign: 'top',
-                width: 160,
+                width: 250,
                 allowBlank: !field.required,
                 format: 'd.m.Y',
                 submitFormat: 'Y-m-d H:i:s',
@@ -175,6 +175,20 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 allowBlank: !field.required,
                 msgTarget: 'side',
                 editable: false,
+                isPointerField: true,
+                modelField: field,
+                modelName: field.relativeModel.name,
+                runAction: field.relativeModel.runAction
+            });
+        } else if (field.type == Ext.data.Types.FILE) {
+            return Ext.create('Ext.ux.form.field.File', {
+                name: field.name,
+                id: me.id+'_field_'+field.name,
+                fieldLabel: field.title,
+                labelAlign: 'top',
+                width: 500,
+                allowBlank: !field.required,
+                msgTarget: 'side',
                 isPointerField: true,
                 modelField: field,
                 modelName: field.relativeModel.name,
@@ -339,7 +353,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                     field = me.model.fields.getAt(i);
                     input = Ext.getCmp(me.id + '_field_' + field.name);
                     if (input) {
-                        if (input.modelField.type == Ext.data.Types.POINTER || input.modelField.type == Ext.data.Types.IMG) {
+                        if (input.modelField.type == Ext.data.Types.POINTER || input.modelField.type == Ext.data.Types.IMG || input.modelField.type == Ext.data.Types.FILE) {
                             values[field.name] = Ext.JSON.encode(input.getValue());
                         } else {
                             values[field.name] = input.getValue();

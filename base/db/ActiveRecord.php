@@ -365,7 +365,6 @@ class ActiveRecord extends db\ActiveRecord
             }
 
             if ($fieldConf['type'] == 'pointer') {
-                $relatedModelClass = '';
                 if (is_array($fieldConf['relativeModel'])) {
                     $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
                 } else {
@@ -385,6 +384,22 @@ class ActiveRecord extends db\ActiveRecord
                         'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.id"
                     ];
                 }
+            } elseif ($fieldConf['type'] == 'img' || $fieldConf['type'] == 'file') {
+                $relatedModelClass = '\app\modules\files\models\Files';
+                $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
+                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
+                $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                $select[] = "`".$relatedTableName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $select[] = "`".$relatedTableName."`.`name` as `fileof_".$fieldName."`";
+                $pointers[$fieldName] = [
+                    "table" => $relatedTableName,
+                    "field" => $relatedIdentifyFieldConf['name'],
+                    "file_field" => 'name'
+                ];
+                $join[] = [
+                    'name' => $relatedTableName,
+                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.id"
+                ];
             } else {
                 // Простые типы данных
                 $select[] = "`".static::tableName()."`.`".$fieldName."`";
@@ -450,10 +465,19 @@ class ActiveRecord extends db\ActiveRecord
         if ($pointers) {
             foreach ($list as $key => $item) {
                 foreach ($pointers as $fieldName => $some) {
-                    $list[$key][$fieldName] = \yii\helpers\Json::encode([
-                        'id' => $item[$fieldName],
-                        'value' => $item['valof_'.$fieldName]
-                    ]);
+                    if (isset($some['file_field'])) {
+                        // Файл или изображение
+                        $list[$key][$fieldName] = \yii\helpers\Json::encode([
+                            'id' => $item[$fieldName],
+                            'value' => $item['valof_'.$fieldName],
+                            'fileName' => $item['fileof_'.$fieldName],
+                        ]);
+                    } else {
+                        $list[$key][$fieldName] = \yii\helpers\Json::encode([
+                            'id' => $item[$fieldName],
+                            'value' => $item['valof_'.$fieldName]
+                        ]);
+                    }
                 }
             }
         }
@@ -470,7 +494,7 @@ class ActiveRecord extends db\ActiveRecord
     {
         $type = static::$structure[$fieldName]['type'];
 
-        if ($type == 'int' || $type == 'file' || $type == 'img') {
+        if ($type == 'int') {
             return intval($value);
         } elseif ($type == 'float') {
             return floatval($value);
@@ -499,7 +523,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         } elseif ($type == 'bool') {
             return $value ? 1 : 0;
-        } elseif ($type == 'pointer') {
+        } elseif ($type == 'pointer' || $type == 'img' || $type == 'file') {
             return $value['id'];
         }
 
@@ -538,6 +562,17 @@ class ActiveRecord extends db\ActiveRecord
         }
         $this->mapJson($data);
         if ($this->save()) {
+
+            foreach (static::$structure as $fieldName => $fieldData) {
+                if ($fieldData['type'] == 'img' || $fieldData['type'] == 'file') {
+                    $file = \app\modules\files\models\Files::findOne(['id' => $data[$fieldName]]);
+                    if ($file) {
+                        $file->tmp = 0;
+                        $file->save(false);
+                    }
+                }
+            }
+
             if ($add) {
                 $result = static::getList([
                     "limit" => 1,
@@ -665,7 +700,7 @@ class ActiveRecord extends db\ActiveRecord
                 if (!isset($relativeModel['modalSelect'])) {
                     $relativeModel['modalSelect'] = call_user_func([$relativeModel['classname'], 'getModalSelect']);
                 }
-            } elseif ($config['type'] == 'img') {
+            } elseif ($config['type'] == 'img' || $config['type'] == 'file') {
                 $relativeModel['classname'] = '\app\modules\files\models\Files';
                 $relativeModel['moduleName'] = 'files';
                 $relativeModel['name'] = 'Files';

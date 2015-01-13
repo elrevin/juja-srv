@@ -8,6 +8,7 @@ Ext.application({
     _mainMenuTree: null,
     _mainPanel: null,
     _currentModule: null,
+    staticData: null,
     getMainPanel: function () {
         return this._mainPanel;
     },
@@ -115,6 +116,8 @@ Ext.application({
                 return false;
             }
         });
+
+        this.staticData = Ext.create('App.core.StaticData', {});
 
         this._mainMenuStore = Ext.create('Ext.data.TreeStore', {
             //autoLoad: true,

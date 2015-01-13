@@ -20,6 +20,14 @@ Ext.define('App.modules.files.Files.Editor', {
             identify: false,
             required: true
         };
+        fields[fields.length] = {
+            name: 'type',
+            type: 'string',
+            title: '',
+            group: '',
+            identify: false,
+            required: true
+        };
         return fields;
     },
     createEditWindow: function () {
@@ -241,10 +249,14 @@ Ext.define('App.modules.files.Files.Editor', {
             store: me.store,
             tpl: [
                 '<tpl for=".">',
-                '<div class="thumb-wrap" id="filesItems_{id}">',
-                '<div class="thumb"><img src="{icon}&width=150&height=150&bgColor=EFEFEF" title="{title:htmlEncode}" style="width: 150px; height: 150px;"></div>',
-                '<span class="x-editable">{shortName:htmlEncode}</span>',
-                '</div>',
+                    '<div class="thumb-wrap" id="filesItems_{id}">',
+                        '<tpl if="type == \'img\'">',
+                            '<div class="thumb"><img src="{icon}&width=150&height=150&bgColor=EFEFEF" title="{title:htmlEncode}" style="width: 150px; height: 150px;"></div>',
+                        '<tpl else>',
+                            '<div class="thumb"><img src="{icon}" title="{title:htmlEncode}" style="width: 150px; height: 150px; padding: 35px 20px; background-color: #EFEFEF"></div>',
+                        '</tpl>',
+                        '<span class="x-editable">{shortName:htmlEncode}</span>',
+                    '</div>',
                 '</tpl>',
                 '<div class="x-clear"></div>'
             ],

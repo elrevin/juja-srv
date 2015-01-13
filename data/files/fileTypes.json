@@ -1,30 +1,46 @@
 {
     "jpg": {
-        "type": "img"
+        "type": "img",
+        "name": "jpg",
+        "mime": "image/jpeg"
     },
     "jpeg": {
-        "type": "img"
+        "type": "img",
+        "name": "jpg",
+        "mime": "image/jpeg"
     },
     "png": {
-        "type": "img"
+        "type": "img",
+        "name": "png",
+        "mime": "image/png"
     },
     "gif": {
-        "type": "img"
+        "type": "img",
+        "name": "gif",
+        "mime": "image/gif"
     },
     "doc": {
         "type": "bin",
-        "icon": "word"
+        "name": "doc",
+        "icon": "word",
+        "mime": "application/msword"
     },
     "docx": {
         "type": "bin",
-        "icon": "word"
+        "name": "docx",
+        "icon": "word",
+        "mime": "application/msword"
     },
     "xls": {
         "type": "bin",
-        "icon": "excel"
+        "name": "xls",
+        "icon": "excel",
+        "mime": "application/vnd.ms-excel"
     },
     "xlsx": {
         "type": "bin",
-        "icon": "excel"
+        "name": "xlsx",
+        "icon": "excel",
+        "mime": "application/vnd.ms-excel"
     }
 }

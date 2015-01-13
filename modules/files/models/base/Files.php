@@ -4,6 +4,15 @@ namespace app\modules\files\models\base;
 
 use Yii;
 
+/**
+ * @property integer $id
+ * @property integer $del
+ * @property string $title
+ * @property string $original_name
+ * @property string $name
+ * @property string $tmp
+ * @property string $upload_time
+ */
 class Files extends \app\base\db\ActiveRecord
 {
     protected static $structure = [
@@ -19,7 +28,15 @@ class Files extends \app\base\db\ActiveRecord
         'name' => [
             'title' => 'Хэш',
             'type' => 'string'
-        ]
+        ],
+        'tmp' => [
+            'title' => 'Фременный файл',
+            'type' => 'bool'
+        ],
+        'upload_time' => [
+            'title' => 'Время загрузки',
+            'type' => 'int'
+        ],
     ];
 
     public static $permanentlyDelete = true;

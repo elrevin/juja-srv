@@ -98,7 +98,7 @@ function doOverride() {
                 return null
             }
             var obj = Ext.JSON.decode(v);
-            if (obj.id != undefined && obj.value != undefined) {
+            if (obj && obj.id != undefined && obj.value != undefined) {
                 return obj;
             }
             return null;
@@ -119,7 +119,7 @@ function doOverride() {
                 return null
             }
             var obj = Ext.JSON.decode(v);
-            if (obj.id != undefined && obj.value != undefined) {
+            if (obj && obj.id != undefined && obj.value != undefined) {
                 return obj;
             }
             return null;
@@ -128,5 +128,26 @@ function doOverride() {
             return v.value;
         },
         type: 'img'
+    };
+
+    Ext.data.Types.FILE = {
+        convert: function(v, data) {
+            var me=this;
+            if (v == undefined) {
+                return v;
+            }
+            if (!v.length) {
+                return null
+            }
+            var obj = Ext.JSON.decode(v);
+            if (obj && obj.id != undefined && obj.value != undefined) {
+                return obj;
+            }
+            return null;
+        },
+        sortType: function(v) {
+            return v.value;
+        },
+        type: 'file'
     };
 }

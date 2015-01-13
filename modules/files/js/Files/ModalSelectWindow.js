@@ -30,6 +30,14 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
             identify: false,
             required: true
         };
+        fields[fields.length] = {
+            name: 'type',
+            type: 'string',
+            title: '',
+            group: '',
+            identify: false,
+            required: true
+        };
         return fields;
     },
     createToolbar: function () {
@@ -123,7 +131,7 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
                     id: me.id+'-fields-file',
                     name: 'file',
                     listeners: {
-                        change: function (field, value) {
+                        change: function (field) {
                             me.onSelectFile(field.fileInputEl.dom.files[0]);
                         }
                     }
@@ -161,10 +169,14 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
             region: 'center',
             tpl: [
                 '<tpl for=".">',
-                '<div class="thumb-wrap" id="filesItems_{id}">',
-                '<div class="thumb"><img src="{icon}&width=150&height=150&bgColor=EFEFEF" title="{title:htmlEncode}" style="width: 150px; height: 150px;"></div>',
-                '<span class="x-editable">{shortName:htmlEncode}</span>',
-                '</div>',
+                    '<div class="thumb-wrap" id="filesItems_{id}">',
+                        '<tpl if="type == \'img\'">',
+                            '<div class="thumb"><img src="{icon}&width=150&height=150&bgColor=EFEFEF" title="{title:htmlEncode}" style="width: 150px; height: 150px;"></div>',
+                        '<tpl else>',
+                            '<div class="thumb"><img src="{icon}" title="{title:htmlEncode}" style="width: 150px; height: 150px; padding: 35px 20px; background-color: #EFEFEF"></div>',
+                        '</tpl>',
+                        '<span class="x-editable">{shortName:htmlEncode}</span>',
+                    '</div>',
                 '</tpl>',
                 '<div class="x-clear"></div>'
             ],

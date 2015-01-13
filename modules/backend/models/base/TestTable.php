@@ -42,11 +42,13 @@ class TestTable extends \app\base\db\ActiveRecord
         'dtt' => [
             'title' => 'Дата и время',
             'type' => 'datetime',
+            'required' => true,
             'group' => 'Группа 2'
         ],
-        'img' => [
-            'title' => 'Изображение',
-            'type' => 'img',
+        'file' => [
+            'title' => 'Файл',
+            'type' => 'file',
+            'required' => true,
             'group' => 'Группа 2'
         ],
     ];

@@ -64,4 +64,27 @@ class AdmMainController extends \app\base\web\BackendController
         return ['list' => $this->processCpMenu($list[$interface])];
     }
 
+    public function actionGetStaticData()
+    {
+        $data = [];
+
+        foreach (array_keys(Yii::$app->modules) as $moduleName) {
+            $listFileName = Yii::getAlias('@app/data/'.$moduleName.'/loadingData.json');
+            if (file_exists($listFileName)) {
+                $list = \yii\helpers\Json::decode(file_get_contents($listFileName));
+                if ($list) {
+                    $data[$moduleName] = [];
+                    foreach ($list as $fileName) {
+                        $soreName = $fileName;
+                        $fileName = Yii::getAlias('@app/data/'.$moduleName.'/'.$fileName.".json");
+                        if (file_exists($fileName)) {
+                            $data[$moduleName][$soreName] = \yii\helpers\Json::decode(file_get_contents($fileName));
+                        }
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
 }
