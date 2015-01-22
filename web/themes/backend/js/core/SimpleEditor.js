@@ -21,7 +21,8 @@ Ext.define('App.core.SimpleEditor', {
                     type: me.fields[i].type,
                     title: me.fields[i].title,
                     group: me.fields[i].group,
-                    identify: me.fields[i].identify
+                    identify: me.fields[i].identify,
+                    settings: me.fields[i].settings
                 };
 
                 if (fieldConf.type == 'pointer' && me.fields[i].relativeModel != undefined && relativeModel.name != undefined && relativeModel.moduleName != undefined) {

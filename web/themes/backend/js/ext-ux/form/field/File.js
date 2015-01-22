@@ -66,11 +66,44 @@ Ext.define('Ext.ux.form.field.File', {
             }
 
             if (el) {
-                el.setWidth(me.previewPanel.getWidth());
-                el.setHeight(me.previewPanel.getHeight());
+                el.setWidth(me.height - 15);
+                el.setHeight(Math.floor(me.width * 0.4));
             }
         }
         return ret;
+    },
+
+    checkType: function (type) {
+        var me = this,
+            i,
+            extensions = false,
+            img = false;
+
+        if (me.fieldSettings && me.fieldSettings.types && Array.isArray(me.fieldSettings.types)) {
+            for (i = 0; i < me.fieldSettings.types.length; i++) {
+                if (typeof me.fieldSettings.types[i] == 'string' && me.fieldSettings.types[i].length) {
+                    if (me.fieldSettings.types[i][0] == '.') {
+                        extensions = true;
+                    } else if (me.fieldSettings.types[i] == 'img') {
+                        img = true;
+                    }
+                }
+            }
+
+            if (img) {
+                if (type.type != 'img') {
+                    return false;
+                }
+            }
+
+            if (extensions) {
+                if (me.fieldSettings.types.indexOf("."+type.name) < 0) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     },
 
     onSelectFileToUpload: function (file) {
@@ -89,6 +122,38 @@ Ext.define('Ext.ux.form.field.File', {
         extension = file.name.split('.').pop();
         extension = extension.toLowerCase();
         fileType = fileTypes[extension];
+        if (!me.checkType(fileType)) {
+            IndexNextApp.getApplication().showErrorMessage(null, "Этот тип файлов не подходит, ожидается что вы выберите"+
+            (function () {
+                var res = '',
+                    extensions = [];
+
+                for (i = 0; i < me.fieldSettings.types.length; i++) {
+                    if (typeof me.fieldSettings.types[i] == 'string' && me.fieldSettings.types[i].length) {
+                        if (me.fieldSettings.types[i] == 'img') {
+                            res = " изображение";
+                        }
+                    }
+                }
+                for (i = 0; i < me.fieldSettings.types.length; i++) {
+                    if (typeof me.fieldSettings.types[i] == 'string' && me.fieldSettings.types[i].length) {
+                        if (me.fieldSettings.types[i][0] == '.') {
+                            extensions[extensions.length] = me.fieldSettings.types[i].substring(1);
+                        }
+                    }
+                }
+                if (extensions.length > 1) {
+                    res += " одного из типов: \""+extensions.join("\", \"")+"\"";
+                }
+                if (extensions.length == 1) {
+                    res += " типа \""+extensions[0]+"\"";
+                }
+
+                return res;
+            })() + ".");
+
+            return false;
+        }
         if (fileType) {
             if (fileType.type == 'img') {
                 reader = new FileReader();
@@ -106,6 +171,8 @@ Ext.define('Ext.ux.form.field.File', {
 
         me.titlePanel.el.setHTML(file.name);
         me.uploadForm.items.getAt(1).setValue(file.name);
+
+        return true;
     },
 
     uploadFile: function () {
@@ -153,7 +220,10 @@ Ext.define('Ext.ux.form.field.File', {
                         }
                     },
                     modal: true,
-                    modelName: me.modelName
+                    modelName: me.modelName,
+                    params: {
+                        types: (me.fieldSettings.types ? me.fieldSettings.types : '{}')
+                    }
                 });
             }
         });
@@ -186,8 +256,9 @@ Ext.define('Ext.ux.form.field.File', {
             name: 'file',
             listeners: {
                 change: function (field) {
-                    me.onSelectFileToUpload(field.fileInputEl.dom.files[0]);
-                    me.uploadFile();
+                    if (me.onSelectFileToUpload(field.fileInputEl.dom.files[0])) {
+                        me.uploadFile();
+                    }
                 }
             }
         });

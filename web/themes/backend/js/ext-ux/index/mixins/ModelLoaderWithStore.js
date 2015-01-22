@@ -31,7 +31,8 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                 title: me.fields[i].title,
                 group: me.fields[i].group,
                 identify: me.fields[i].identify,
-                required: me.fields[i].required
+                required: me.fields[i].required,
+                settings: me.fields[i].settings
             };
 
             if (me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {
@@ -90,7 +91,7 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                     dateFormat: 'Y-m-d',
                     dateTimeFormat: 'Y-m-d H:i:s'
                 },
-                actionMethods: {read: 'GET', update: 'POST'},
+                actionMethods: {read: 'POST', update: 'POST'},
                 api: {
                     create: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {
                         modelName: me.modelClassName.replace('Model', ''),
@@ -99,6 +100,9 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                     read: $url(me.getDataAction[0], me.getDataAction[1], me.getDataAction[2], {modelName: me.modelClassName.replace('Model', '')}),
                     update: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {modelName: me.modelClassName.replace('Model', '')}),
                     destroy: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('Model', '')})
+                },
+                extraParams: {
+                    params: Ext.JSON.encode(me.params)
                 }
             },
             pageSize: me.pageSize,

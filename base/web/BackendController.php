@@ -5,8 +5,9 @@
 
 namespace app\base\web;
 use Yii;
+use yii\helpers\Json;
 use yii\web\Controller;
-use yii\filters\AccessControl;
+
 
 class BackendController extends Controller
 {
@@ -127,6 +128,7 @@ class BackendController extends Controller
      * app\base\web\BackendController
      *
      * @param $type
+     * @param string $message
      * @throws \yii\base\ExitException
      */
     public function ajaxError($type, $message = "")
@@ -138,7 +140,7 @@ class BackendController extends Controller
         Yii::error('Error #'.$code.": ".$type);
         if (Yii::$app->response->format == \yii\web\Response::FORMAT_JSON || Yii::$app->response->format == \yii\web\Response::FORMAT_RAW) {
             header('content-type: application/json; charset=UTF-8');
-            echo \yii\helpers\Json::encode([
+            echo Json::encode([
                 'success' => false,
                 'error' => $code,
                 'message' => $message
@@ -177,10 +179,17 @@ class BackendController extends Controller
         $parentId = ($parentId ? $parentId : intval(Yii::$app->request->get('parentRecordId', 0)));
         $modal = intval(Yii::$app->request->get('modal', 0));
 
-        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $parentId, $modal);
+        $params = Json::decode(Yii::$app->request->post("params"), '[]');
+
+        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $parentId, $modal, $params);
 
     }
 
+    /**
+     * Действие, возвращает JS файл.
+     *
+     * @return string
+     */
     public function actionGetJsFile ()
     {
         $content = '';
@@ -228,7 +237,7 @@ class BackendController extends Controller
     {
         $modelName = Yii::$app->request->get('modelName', '');
         $add = intval(Yii::$app->request->get('add', 0));
-        $data = \yii\helpers\Json::decode(Yii::$app->request->post('data', '[]'));
+        $data = Json::decode(Yii::$app->request->post('data', '[]'));
         $parentId = intval(Yii::$app->request->post('parentId', 0));
 
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
@@ -274,9 +283,14 @@ class BackendController extends Controller
         return null;
     }
 
+    /**
+     * Удаление записи
+     *
+     * @return array|null
+     */
     public function actionDeleteRecord () {
         $modelName = Yii::$app->request->get('modelName', '');
-        $data = \yii\helpers\Json::decode(Yii::$app->request->post('data', '[]'));
+        $data = Json::decode(Yii::$app->request->post('data', '[]'));
         $parentId = intval(Yii::$app->request->post('parentId', 0));
 
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {

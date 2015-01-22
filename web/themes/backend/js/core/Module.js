@@ -3,6 +3,7 @@ Ext.define('App.core.Module', {
         observable: 'Ext.util.Observable'
     },
     _mainPanel: null,
+    params: {},
     getMainPanel: function () {
         return this._mainPanel;
     },

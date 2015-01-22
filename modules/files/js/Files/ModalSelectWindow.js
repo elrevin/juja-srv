@@ -10,6 +10,7 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
     addForm: null,
     addFormPreview: null,
 
+
     getFields: function () {
         var me = this,
             fields;
@@ -81,19 +82,19 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
         if (form.isValid()) {
             form.getForm().submit({
                 url: $url('files', 'main', 'save-record', [], 'tjson'),
-                success: function(form, action) {
+                success: function (form, action) {
                     form.reset();
-                    Ext.get(me.id+'-fields-preview-innerCt').dom.innerHTML = "";
+                    Ext.get(me.id + '-fields-preview-innerCt').dom.innerHTML = "";
                     me.toolbar.items.getAt(1).toggle(false);
                     me.store.reload();
                 },
-                failure: function(form, action) {
+                failure: function (form, action) {
                     IndexNextApp.getApplication().showErrorMessage(null, action.result.message);
                 }
             });
         } else {
-            IndexNextApp.getApplication().showErrorMessage(null, 'Некоторые поля заполнены не правильно или не заполнены совсем.<br>Поля содержащие ошибки отмечены иконкой <img src="'+$themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> и красной обводкой.<br/>'+
-            'Наведя мышь на иконку <img src="'+$themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> рядом с полем, Вы увидите пояснение ошибки.');
+            IndexNextApp.getApplication().showErrorMessage(null, 'Некоторые поля заполнены не правильно или не заполнены совсем.<br>Поля содержащие ошибки отмечены иконкой <img src="' + $themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png') + '" /> и красной обводкой.<br/>' +
+            'Наведя мышь на иконку <img src="' + $themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png') + '" /> рядом с полем, Вы увидите пояснение ошибки.');
         }
     },
     createAddForm: function () {
@@ -103,8 +104,8 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
             border: false,
             header: false,
             height: 255,
-            id: me.id+'-fields-preview',
-            bodyStyle: "display: table-cell; background-image: url('"+$themeUrl('/images/transparent.png')+"')"
+            id: me.id + '-fields-preview',
+            bodyStyle: "display: table-cell; background-image: url('" + $themeUrl('/images/transparent.png') + "')"
         });
 
         me.addForm = Ext.create('Ext.form.Panel', {
@@ -128,7 +129,7 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
                     msgTarget: 'side',
                     labelAlign: 'top',
                     width: 390,
-                    id: me.id+'-fields-file',
+                    id: me.id + '-fields-file',
                     name: 'file',
                     listeners: {
                         change: function (field) {
@@ -153,11 +154,11 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
                 reader = new FileReader();
                 reader.onload = function (e) {
                     // Используем URL изображения для заполнения фона
-                    Ext.get(me.id+'-fields-preview-innerCt').dom.innerHTML = "<img src='"+e.target.result + "' style='max-width: 388px; max-height: 300px; background: #FFFFFF'/>";
+                    Ext.get(me.id + '-fields-preview-innerCt').dom.innerHTML = "<img src='" + e.target.result + "' style='max-width: 388px; max-height: 300px; background: #FFFFFF'/>";
                 };
                 reader.readAsDataURL(file);
-            } else if (fileType.icon){
-                Ext.get(me.id+'-fields-preview-innerCt').dom.innerHTML = "<img src='/cp-files/images/files/file-types/" + fileType.icon + ".png'/>";
+            } else if (fileType.icon) {
+                Ext.get(me.id + '-fields-preview-innerCt').dom.innerHTML = "<img src='/cp-files/images/files/file-types/" + fileType.icon + ".png'/>";
             }
         }
     },
@@ -169,14 +170,14 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
             region: 'center',
             tpl: [
                 '<tpl for=".">',
-                    '<div class="thumb-wrap" id="filesItems_{id}">',
-                        '<tpl if="type == \'img\'">',
-                            '<div class="thumb"><img src="{icon}&width=150&height=150&bgColor=EFEFEF" title="{title:htmlEncode}" style="width: 150px; height: 150px;"></div>',
-                        '<tpl else>',
-                            '<div class="thumb"><img src="{icon}" title="{title:htmlEncode}" style="width: 150px; height: 150px; padding: 35px 20px; background-color: #EFEFEF"></div>',
-                        '</tpl>',
-                        '<span class="x-editable">{shortName:htmlEncode}</span>',
-                    '</div>',
+                '   <div class="thumb-wrap" id="filesItems_{id}">',
+                '       <tpl if="type == \'img\'">',
+                '           <div class="thumb"><img src="{icon}&width=150&height=150&bgColor=EFEFEF" title="{title:htmlEncode}" style="width: 150px; height: 150px;"></div>',
+                '       <tpl else>',
+                '           <div class="thumb"><img src="{icon}" title="{title:htmlEncode}" style="width: 150px; height: 150px; padding: 35px 20px; background-color: #EFEFEF"></div>',
+                '       </tpl>',
+                '       <span class="x-editable">{shortName:htmlEncode}</span>',
+                '   </div>',
                 '</tpl>',
                 '<div class="x-clear"></div>'
             ],
@@ -188,7 +189,7 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
             plugins: [
                 Ext.create('Ext.ux.DataView.DragSelector', {})
             ],
-            prepareData: function(data) {
+            prepareData: function (data) {
                 Ext.apply(data, {
                     shortName: Ext.util.Format.ellipsis(data.title, 45)
                 });

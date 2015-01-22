@@ -6,7 +6,7 @@
     },
     "jpeg": {
         "type": "img",
-        "name": "jpg",
+        "name": "jpeg",
         "mime": "image/jpeg"
     },
     "png": {

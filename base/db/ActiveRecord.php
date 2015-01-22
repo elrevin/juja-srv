@@ -1,6 +1,7 @@
 <?php
 namespace app\base\db;
 
+use app\modules\files\models\Files;
 use Yii;
 use yii\db;
 class ActiveRecord extends db\ActiveRecord
@@ -32,6 +33,7 @@ class ActiveRecord extends db\ActiveRecord
      *          'max' - максимальное значение,
      *          'round' - количество цифр после точки (при сохранении применяется округление),
      *          'width' - ширина столбца,
+     *          ...
      *
      *      'group' - Название группы полей,
      *
@@ -332,6 +334,54 @@ class ActiveRecord extends db\ActiveRecord
         return $list;
     }
 
+    protected static function getSimpleFilterCondition($type, $field, $comparison, $value)
+    {
+        $res = [];
+
+        if ($type == 'string') {
+            if ($comparison == 'end') {
+                $res = ['like', "`".static::tableName()."`.`".$field."`", "%".$value, false];
+            } elseif ($comparison == 'start') {
+                $res = ['like', "`".static::tableName()."`.`".$field."`", $value."%", false];
+            } else {
+                $res = ['like', "`".static::tableName()."`.`".$field."`", $value];
+            }
+        } elseif ($type == 'numeric') {
+            if ($comparison == 'lt') {
+                $res = ['<', "`".static::tableName()."`.`".$field."`", $value];
+            } elseif ($comparison == 'gt') {
+                $res = ['>', "`".static::tableName()."`.`".$field."`", $value];
+            } elseif ($comparison == 'eq') {
+                $res = ['=', "`".static::tableName()."`.`".$field."`", $value];
+            }
+        }
+        return $res;
+    }
+
+    protected static function getFilterCondition($filter)
+    {
+        $condition = [];
+        if (!is_array($filter['data']['value'])) {
+            $filter['data']['value'] = [$filter['data']['value']];
+        }
+
+        foreach ($filter['data']['value'] as $value) {
+            $condition[] = static::getSimpleFilterCondition(
+                $filter['data']['type'],
+                $filter['field'],
+                (isset($filter['data']['comparison']) ? $filter['data']['comparison'] : ''),
+                $value
+            );
+        }
+        $count = count($condition);
+        if ($count > 1) {
+            array_unshift($condition, 'or');
+        } elseif ($count == 1) {
+            $condition = $condition[0];
+        }
+        return $condition;
+    }
+
     /**
      * Возвращает массив записей модели для отображения в панели управления.
      * В аргументе $params передается ассоциативный массив параметров списка
@@ -410,17 +460,7 @@ class ActiveRecord extends db\ActiveRecord
 
         if (isset($params['filter'])) {
             foreach ($params['filter'] as $filter) {
-                if ($filter['type'] == 'string') {
-                    $query->andWhere(['like', "`".static::tableName()."`.`".$filter['field']."`", $filter['value']]);
-                } elseif ($filter['type'] == 'numeric') {
-                    if ($filter['comparison'] == 'lt') {
-                        $query->andWhere(['<', "`".static::tableName()."`.`".$filter['field']."`", $filter['value']]);
-                    } elseif ($filter['comparison'] == 'gt') {
-                        $query->andWhere(['>', "`".static::tableName()."`.`".$filter['field']."`", $filter['value']]);
-                    } elseif ($filter['comparison'] == 'eq') {
-                        $query->andWhere(["`".static::tableName()."`.`".$filter['field']."`" => $filter['value']]);
-                    }
-                }
+                $query->andWhere(static::getFilterCondition($filter));
             }
         }
 
@@ -565,7 +605,7 @@ class ActiveRecord extends db\ActiveRecord
 
             foreach (static::$structure as $fieldName => $fieldData) {
                 if ($fieldData['type'] == 'img' || $fieldData['type'] == 'file') {
-                    $file = \app\modules\files\models\Files::findOne(['id' => $data[$fieldName]]);
+                    $file = Files::findOne(['id' => $data[$fieldName]]);
                     if ($file) {
                         $file->tmp = 0;
                         $file->save(false);
@@ -643,12 +683,23 @@ class ActiveRecord extends db\ActiveRecord
 
     /**
      * Возвращает настройки пользовательского интерфейса.
-     * Если $configOnly == true, то возвращается только массив настроек, если false, то возвращается полностью javascript редактора.
+     *
+     * Если $configOnly == true, то возвращается только массив настроек,
+     *      если false, то возвращается полностью javascript редактора.
+     *
+     * В $parentId указывается ID записи предка
+     *
+     * Если $modal == true, то возвращается конфиг модульного окна.
+     *
+     * В $params передаются произвольные параметры, которые могут прийти в POST параметрах запроса.
      *
      * @param bool $configOnly
+     * @param int $parentId
+     * @param bool $modal
+     * @param array $params
      * @return string
      */
-    public static function getUserInterface($configOnly = false, $parentId = 0, $modal = false)
+    public static function getUserInterface($configOnly = false, $parentId = 0, $modal = false, $params = [])
     {
         $modelStructure = static::getStructure();
         $fields = [];
@@ -755,7 +806,9 @@ class ActiveRecord extends db\ActiveRecord
             'createInterfaceForExistingParentOnly' => static::$createInterfaceForExistingParentOnly,
             'title' => static::getModelTitle(),
             'recordTitle' => static::$recordTitle,
-            'accusativeRecordTitle' => static::$accusativeRecordTitle
+            'accusativeRecordTitle' => static::$accusativeRecordTitle,
+            'params' => $params,
+            'parentRecordId' => $parentId
         ];
 
         if (!$modal) {

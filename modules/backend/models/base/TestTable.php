@@ -49,7 +49,11 @@ class TestTable extends \app\base\db\ActiveRecord
             'title' => 'Файл',
             'type' => 'file',
             'required' => true,
-            'group' => 'Группа 2'
+            'group' => 'Группа 2',
+            'settings' => [
+                'types' => ['img', '.png', '.jpg']
+            ],
+
         ],
     ];
 

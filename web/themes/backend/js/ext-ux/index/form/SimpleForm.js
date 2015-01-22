@@ -165,21 +165,6 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 modelName: field.relativeModel.name,
                 runAction: field.relativeModel.runAction
             });
-        } else if (field.type == Ext.data.Types.IMG) {
-            return Ext.create('Ext.ux.form.field.ModalSelect', {
-                name: field.name,
-                id: me.id+'_field_'+field.name,
-                fieldLabel: field.title,
-                labelAlign: 'top',
-                width: 400,
-                allowBlank: !field.required,
-                msgTarget: 'side',
-                editable: false,
-                isPointerField: true,
-                modelField: field,
-                modelName: field.relativeModel.name,
-                runAction: field.relativeModel.runAction
-            });
         } else if (field.type == Ext.data.Types.FILE) {
             return Ext.create('Ext.ux.form.field.File', {
                 name: field.name,
@@ -192,7 +177,8 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 isPointerField: true,
                 modelField: field,
                 modelName: field.relativeModel.name,
-                runAction: field.relativeModel.runAction
+                runAction: field.relativeModel.runAction,
+                fieldSettings: field.settings
             });
         }
 

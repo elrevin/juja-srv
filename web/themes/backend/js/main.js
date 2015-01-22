@@ -45,15 +45,16 @@ Ext.application({
             }
 
             params = {};
-
             if (config['modelName']) params['modelName'] = config['modelName'];
             if (config['idRecord']) params['idRecord'] = config['idRecord'];
             if (config['modal']) params['modal'] = 1;
 
-
             // Получаем конфигурацию
             Ext.Ajax.request({
                 url: $url(runAction[0], runAction[1], runAction[2], params, 'js'),
+                params: {
+                    params: Ext.JSON.encode(config['params'] ? config['params'] : null)
+                },
                 success: function (response) {
                     var code = response.responseText, eventName;
                     eval(code);
