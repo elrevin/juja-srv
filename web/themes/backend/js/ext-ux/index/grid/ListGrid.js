@@ -21,6 +21,8 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
     header: false,
     listForSelect: false,
 
+    sortable: false,
+
     createColumn: function (field) {
         var me = this,
             column = null,
@@ -28,10 +30,14 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
 
         if (field.name == 'id') return;
 
+        column = {
+            dataIndex: field.name,
+            text: field.title,
+            sortable: !me.sortable // Если модель разрешает ручную сортировку (драг-н-дроп), то автоматическую запрещаем
+        };
+
         if (["string", "int", 'float'].indexOf(field.type.type) >= 0) {
-            column = {
-                dataIndex: field.name,
-                text: field.title,
+            column = Ext.apply(column, {
                 width: (field.settings && field.settings.width ? field.settings.width : (field.type.type == 'string' ? 200 : 80)),
                 renderer: function (val) {
                     if (isIdentify) {
@@ -39,11 +45,9 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
                     }
                     return val;
                 }
-            };
+            });
         } else if (field.type.type == 'text') {
-            column = {
-                dataIndex: field.name,
-                text: field.title,
+            column = Ext.apply(column, {
                 sortable: false,
                 width: (field.settings && field.settings.width ? field.settings.width : 250),
                 renderer: function (val) {
@@ -52,11 +56,9 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
                     }
                     return val.substring(0, 150) + ' ...'
                 }
-            };
+            });
         } else if (field.type.type == 'date') {
-            column = {
-                dataIndex: field.name,
-                text: field.title,
+            column = Ext.apply(column, {
                 width: (field.settings && field.settings.width ? field.settings.width : 100),
                 renderer: function (val, metaData, record, rowIndex, colIndex) {
                     if (val) {
@@ -67,11 +69,9 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
                     }
                     return '';
                 }
-            };
+            });
         } else if (field.type.type == 'datetime') {
-            column = {
-                dataIndex: field.name,
-                text: field.title,
+            column = Ext.apply(column, {
                 width: (field.settings && field.settings.width ? field.settings.width : 140),
                 renderer: function (val, metaData, record, rowIndex, colIndex) {
                     if (val) {
@@ -82,11 +82,9 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
                     }
                     return '';
                 }
-            };
+            });
         } else if (field.type.type == 'bool') {
-            column = {
-                dataIndex: field.name,
-                text: field.title,
+            column = Ext.apply(column, {
                 width: (field.settings && field.settings.width ? field.settings.width : 60),
                 renderer: function (val, metaData, record, rowIndex, colIndex) {
                     if (isIdentify) {
@@ -100,11 +98,9 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
                     }
                     return 'Нет';
                 }
-            };
+            });
         } else if (field.type.type == 'pointer') {
-            column = {
-                dataIndex: field.name,
-                text: field.title,
+            column = Ext.apply(column, {
                 width: (field.settings && field.settings.width ? field.settings.width : 60),
                 renderer: function (val, metaData, record, rowIndex, colIndex) {
                     if (val && val.id != undefined && val.value != undefined) {
@@ -116,7 +112,9 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
                     }
                     return '';
                 }
-            };
+            });
+        } else {
+            column = null;
         }
 
         if (column) {

@@ -147,6 +147,7 @@ Ext.define('App.core.SingleModelEditor', {
                 saveAction: me.saveAction,
                 deleteAction: me.deleteAction,
                 store: me.store,
+                sortable: me.sortable,
                 selModel: Ext.create('Ext.selection.CheckboxModel', {
                     //mode: "MULTI"
                 }),

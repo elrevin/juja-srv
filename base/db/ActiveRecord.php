@@ -482,15 +482,19 @@ class ActiveRecord extends db\ActiveRecord
 
         if (isset($params['sort'])) {
             $orderBy = [];
-            foreach ($params['sort'] as $key => $dir) {
-                if (is_string($dir)) {
-                    $dir = ($dir == 'DESC' ? SORT_DESC : SORT_ASC);
-                }
+            foreach ($params['sort'] as $sort) {
 
-                if (isset($pointers[$key])) {
-                    $orderBy["`".$pointers[$key]['table']."`.`".$pointers[$key]['field']."`"] = $dir;
-                } else {
-                    $orderBy["`".static::tableName()."`.`".$key."`"] = $dir;
+                if (isset($sort['property'])) {
+                    $dir = SORT_ASC;
+
+                    if (isset($sort['direction'])) {
+                        $dir = (strtolower($sort['direction']) == 'desc' ? SORT_DESC : SORT_ASC);
+                    }
+                    if (isset($pointers[$sort['property']])) {
+                        $orderBy["`".$pointers[$sort['property']]['table']."`.`".$pointers[$sort['property']]['field']."`"] = $dir;
+                    } else {
+                        $orderBy["`".static::tableName()."`.`".$sort['property']."`"] = $dir;
+                    }
                 }
             }
             $query->orderBy($orderBy);
@@ -617,7 +621,10 @@ class ActiveRecord extends db\ActiveRecord
                 $result = static::getList([
                     "limit" => 1,
                     "sort" => [
-                        "id" => SORT_DESC
+                        [
+                            "property" => 'id',
+                            "direction" => SORT_DESC
+                        ]
                     ]
                 ]);
                 if ($result && is_array($result)) {
@@ -808,7 +815,8 @@ class ActiveRecord extends db\ActiveRecord
             'recordTitle' => static::$recordTitle,
             'accusativeRecordTitle' => static::$accusativeRecordTitle,
             'params' => $params,
-            'parentRecordId' => $parentId
+            'parentRecordId' => $parentId,
+            'sortable' => static::$sortable
         ];
 
         if (!$modal) {

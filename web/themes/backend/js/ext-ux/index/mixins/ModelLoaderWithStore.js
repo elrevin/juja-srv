@@ -6,6 +6,7 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
     getDataAction: [],
     saveAction: [],
     deleteAction: [],
+    sortable: false,
     store: null,
     // Права общие пользователя на справочник:
     // 0 - нет прав вобще, просто валимся с ошибкой
@@ -106,7 +107,8 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                 }
             },
             pageSize: me.pageSize,
-            autoLoad: me.userRights >= 1
+            autoLoad: me.userRights >= 1,
+            remoteSort: true
         });
     },
 

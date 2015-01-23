@@ -218,7 +218,8 @@ class BackendController extends Controller
 
             $params = [
                 "identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false),
-                'parentId' => intval(Yii::$app->request->get('parentId', 0))
+                'parentId' => intval(Yii::$app->request->get('parentId', 0)),
+                "sort" => Json::decode(Yii::$app->request->post('sort', '[]')),
             ];
 
             $list = call_user_func([$modelName, 'getList'], $params);
