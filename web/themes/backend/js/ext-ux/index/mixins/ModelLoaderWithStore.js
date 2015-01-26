@@ -65,7 +65,9 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                         name: 'id',
                         type: 'int',
                         defaultValue: 0
-                    }]
+                    }],
+                    recordTitle: me.recordTitle,
+                    accusativeRecordTitle: me.accusativeRecordTitle
                 };
                 modelClassDefinition['fields'] = me.getFields();
                 Ext.define(me.modelClassName, modelClassDefinition);

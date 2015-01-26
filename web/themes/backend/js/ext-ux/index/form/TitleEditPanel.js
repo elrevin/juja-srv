@@ -2,99 +2,16 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
     extend: 'Ext.Panel',
     alias: ['widget.uxtitleeditpanel'],
     field: null,
-    fieldPanel: null,
     textPanel: null,
-    defaultText: 'Новая запись',
     form: null,
-
-    createField: function () {
-        var me = this,
-            formField = null,
-            form = me.form;
-        if (me.field.type == Ext.data.Types.STRING) {
-            formField = Ext.create('Ext.form.field.Text', {
-                hideLabel: true,
-                width: 400,
-                value: 'Новая запись',
-                id: form.id + '_field_' + field.name,
-                name: me.field.name,
-                allowBlank: false,
-                msgTarget: 'side',
-                modelField: me.field
-            });
-        } else if (me.field.type == Ext.data.Types.INTEGER) {
-            formField = Ext.create('Ext.form.field.Number', {
-                hideLabel: true,
-                allowDecimals: false,
-                name: me.field.name,
-                id: form.id + '_field_' + field.name,
-                width: 150,
-                allowBlank: false,
-                value: 0,
-                msgTarget: 'side',
-                modelField: me.field
-            });
-        } else if (me.field.type == Ext.data.Types.FLOAT) {
-            formField = Ext.create('Ext.form.field.Number', {
-                hideLabel: true,
-                allowDecimals: true,
-                name: me.field.name,
-                id: form.id + '_field_' + field.name,
-                width: 150,
-                allowBlank: false,
-                value: 0,
-                msgTarget: 'side',
-                modelField: me.field
-            });
-        } else if (me.field.type == Ext.data.Types.DATE) {
-            formField = Ext.create('Ext.form.field.Date', {
-                hideLabel: true,
-                name: me.field.name,
-                id: form.id + '_field_' + field.name,
-                width: 110,
-                allowBlank: false,
-                value: (new Date()),
-                format: 'd.m.Y',
-                submitFormat: 'Y-m-d',
-                msgTarget: 'side',
-                modelField: me.field
-            });
-        } else if (me.field.type == Ext.data.Types.DATETIME) {
-            formField = Ext.create('Ext.ux.form.DateTimeField', {
-                hideLabel: true,
-                name: me.field.name,
-                id: form.id + '_field_' + field.name,
-                width: 160,
-                allowBlank: false,
-                value: (new Date()),
-                format: 'd.m.Y',
-                submitFormat: 'Y-m-d H:i:s',
-                msgTarget: 'side',
-                modelField: me.field
-            });
-        } else if (me.field.type == Ext.data.Types.POINTER) {
-            //formField = Ext.create('Ext.ux.form.DateTimeField', {
-            //  hideLabel: true,
-            //  name: me.field.name,
-            //  id: me.id+'_field_'+field.name,
-            //  width: 110,
-            //  allowBlank: false,
-            //  value: (new Date()),
-            //  format: 'd.m.Y',
-            //  submitFormat: 'Y-m-d H:i:s'
-            //});
-        }
-
-        return formField;
-    },
 
     getValueByText: function () {
         var me = this,
             formField;
 
-        if (!me.field) return me.defaultText;
+        if (!me.field) return '';
 
-        formField = me.fieldPanel.items.getAt(0);
+        formField = Ext.getCmp(me.form.id + '_field_' + me.field.name);
         if (me.field.type == Ext.data.Types.STRING) {
             return formField.getValue();
         } else if (me.field.type == Ext.data.Types.INTEGER) {
@@ -111,23 +28,9 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
     },
 
     renew: function () {
-        var me = this,
-            formField;
+        var me = this;
 
-        formField = me.fieldPanel.items.getAt(0);
-        if (me.field.type == Ext.data.Types.STRING) {
-            formField.setValue('Новая запись');
-        } else if (me.field.type == Ext.data.Types.INTEGER) {
-            formField.setValue(0);
-        } else if (me.field.type == Ext.data.Types.FLOAT) {
-            formField.setValue(0);
-        } else if (me.field.type == Ext.data.Types.DATE) {
-            formField.setValue((new Date()));
-        } else if (me.field.type == Ext.data.Types.DATETIME) {
-            formField.setValue((new Date()));
-        }
-
-        me.setTitleText(me.getValueByText());
+        me.setTitleText('Добавить '+me.form.model.accusativeRecordTitle);
     },
 
     initComponent: function () {
@@ -135,24 +38,10 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
             formField,
             html;
         me.bodyCls = 'in2-form-title-container';
-        me.layout = "card";
-        me.height = 35;
+        me.layout = "fit";
+        me.height = 25;
 
-        if (me.field) {
-            me.fieldPanel = Ext.create("Ext.Panel", {
-                border: false,
-                header: false,
-                items: [
-                    me.createField()
-                ]
-            });
-        }
-
-        html = "<b id='in2-title-edit-text-" + me.id + "'>" + me.getValueByText() + "</b>&nbsp;&nbsp;";
-
-        if (me.field) {
-            html += "<a href='#' id='in2-title-edit-button-" + me.id + "'></a>";
-        }
+        html = "<b id='in2-title-edit-text-" + me.id + "'>" + 'Добавить '+me.form.model.accusativeRecordTitle + "</b>&nbsp;&nbsp;";
 
         me.textPanel = Ext.create("Ext.Panel", {
             border: false,
@@ -162,41 +51,18 @@ Ext.define('Ext.ux.index.form.TitleEditPanel', {
         });
 
         me.items = [
-            me.textPanel,
-            me.fieldPanel
+            me.textPanel
         ];
 
-        me.activeItem = 0;
-
         me.form.on('afterload', function (form, record) {
-            Ext.get('in2-title-edit-text-' + me.id).dom.innerHTML = me.getValueByText();
-            me.getLayout().setActiveItem(0);
+            Ext.get('in2-title-edit-text-' + me.id).dom.innerHTML = 'Изменить '+me.form.model.accusativeRecordTitle;
         });
 
         me.callParent();
     },
 
-    showEditor: function () {
-        var me = this;
-
-        me.getLayout().setActiveItem(1);
-    },
-
     setTitleText: function (text) {
         var me = this;
         Ext.get('in2-title-edit-text-' + me.id).dom.innerHTML = text;
-    },
-
-    afterRender: function (container, position) {
-        var me = this;
-
-        if (me.field) {
-            Ext.get('in2-title-edit-button-' + me.id).dom.onclick = function () {
-                me.showEditor();
-
-                return false;
-            };
-        }
-        me.callParent(arguments);
     }
 });

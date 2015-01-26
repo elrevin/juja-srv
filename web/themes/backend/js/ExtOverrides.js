@@ -34,6 +34,8 @@ function doOverride() {
 
     Ext.override(Ext.data.Model, {
         modelName: '', // Имя модели в PHP
+        recordTitle: '', // Название записи в едиственном чистел в именительном падеже, нпрмер "характеристика"
+        accusativeRecordTitle: '', // Название записи в единственном числе в винительном падеже, например "характеристику"
         createNew: function () {
             return Ext.create(this.$className, {});
         }

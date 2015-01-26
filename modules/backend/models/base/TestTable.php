@@ -65,7 +65,7 @@ class TestTable extends \app\base\db\ActiveRecord
 
     protected static $recordTitle = 'Какая-то хрень';
 
-    protected static $accusativeRecordTitle = 'Какую-то хрень';
+    protected static $accusativeRecordTitle = 'какую-то хрень asfd sdfa sdfa sfsdf asdf qwefadsf qewrfq fsdf aedf f qdf asd fasdf asdf asdf f df ';
 
     /**
      * @inheritdoc
