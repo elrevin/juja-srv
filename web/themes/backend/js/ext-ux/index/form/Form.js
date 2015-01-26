@@ -174,6 +174,11 @@ Ext.define('Ext.ux.index.form.Form', {
             autoScroll: true
         };
 
+        if (!me.tabs.length) {
+            editorPanelConfig['tbar'] = me.createTopToolbar();
+            editorPanelConfig['bbar'] = me.createBottomToolbar();
+        }
+
         me.editorPanel = Ext.create('Ext.Panel', editorPanelConfig);
 
         me.titlePanel = Ext.create('Ext.ux.index.form.TitleEditPanel', {
@@ -182,10 +187,6 @@ Ext.define('Ext.ux.index.form.Form', {
             field: me.identifyField
         });
 
-        if (!me.tabs.length) {
-            editorPanelConfig['tbar'] = me.createTopToolbar();
-            editorPanelConfig['bbar'] = me.createBottomToolbar();
-        }
         me.items = [
             me.titlePanel
         ];
