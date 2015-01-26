@@ -55,3 +55,23 @@ function $url(moduleName, controllerName, actionName, params, answerType) {
     return baseUrl + moduleName + '/' + controllerName + '/' + actionName + "/" + add;
 }
 
+var _localStorage = null;
+function localStorageGet (name, defaults) {
+    var value;
+    if (!_localStorage) {
+            _localStorage = new Ext.state.LocalStorageProvider();
+    }
+
+    value = _localStorage.get(name, defaults);
+    return value;
+}
+
+function localStorageSet (name, value) {
+    var value;
+    if (!_localStorage) {
+            _localStorage = new Ext.state.LocalStorageProvider();
+    }
+
+    _localStorage.set(name, value);
+}
+

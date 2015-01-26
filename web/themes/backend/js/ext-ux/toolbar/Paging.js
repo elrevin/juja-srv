@@ -104,14 +104,19 @@ Ext.define('Ext.ux.toolbar.Paging', {
             k = e.getKey(),
             pageData = me.getPageData(),
             increment = e.shiftKey ? 10 : 1,
-            pageNum;
+            pageNum,
+            pageSize;
 
         if (k == e.RETURN) {
             e.stopEvent();
             pageNum = 1;
             pageNum = Math.min(Math.max(1, pageNum), pageData.pageCount);
             if (me.fireEvent('beforechange', me, pageNum) !== false) {
-                me.store.pageSize = this.child('#inputPageSize').getValue();
+                pageSize = this.child('#inputPageSize').getValue();
+                me.store.pageSize = pageSize;
+                if (me.store.model && me.store.model.$className) {
+                    localStorageSet(me.store.model.$className+"_pageSize", pageSize);
+                }
                 me.store.loadPage(pageNum);
             }
         }

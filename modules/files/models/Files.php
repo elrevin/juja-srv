@@ -44,11 +44,9 @@ class Files extends \app\modules\files\models\base\Files
                 }
                 $params['filter'][] = [
                     'field' => 'name',
-                    'data' => [
-                        'type' => 'string',
-                        'value' => $imgFileTypes,
-                        'comparison' => 'end'
-                    ]
+                    'type' => 'string',
+                    'value' => $imgFileTypes,
+                    'comparison' => 'end'
                 ];
             }
 
@@ -63,11 +61,9 @@ class Files extends \app\modules\files\models\base\Files
             if ($extensions) {
                 $params['filter'][] = [
                     'field' => 'name',
-                    'data' => [
-                        'type' => 'string',
-                        'value' => $extensions,
-                        'comparison' => 'end'
-                    ]
+                    'type' => 'string',
+                    'value' => $extensions,
+                    'comparison' => 'end'
                 ];
             }
         }

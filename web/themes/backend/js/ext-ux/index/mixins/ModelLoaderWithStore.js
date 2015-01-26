@@ -74,7 +74,8 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
     },
 
     createStore: function () {
-        var me = this;
+        var me = this,
+          pageSize = localStorageGet(me.modelClassName+"_pageSize", 50);
         me.store = new Ext.data.JsonStore({
             model: me.modelClassName,
             proxy: {
@@ -106,7 +107,7 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                     params: Ext.JSON.encode(me.params)
                 }
             },
-            pageSize: me.pageSize,
+            pageSize: pageSize,
             autoLoad: me.userRights >= 1,
             remoteSort: true
         });

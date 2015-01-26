@@ -4,6 +4,8 @@ namespace app\base\db;
 use app\modules\files\models\Files;
 use Yii;
 use yii\db;
+use yii\helpers\Json;
+
 class ActiveRecord extends db\ActiveRecord
 {
     /**
@@ -361,15 +363,15 @@ class ActiveRecord extends db\ActiveRecord
     protected static function getFilterCondition($filter)
     {
         $condition = [];
-        if (!is_array($filter['data']['value'])) {
-            $filter['data']['value'] = [$filter['data']['value']];
+        if (!is_array($filter['value'])) {
+            $filter['value'] = [$filter['value']];
         }
 
-        foreach ($filter['data']['value'] as $value) {
+        foreach ($filter['value'] as $value) {
             $condition[] = static::getSimpleFilterCondition(
-                $filter['data']['type'],
+                $filter['type'],
                 $filter['field'],
-                (isset($filter['data']['comparison']) ? $filter['data']['comparison'] : ''),
+                (isset($filter['comparison']) ? $filter['comparison'] : ''),
                 $value
             );
         }
@@ -389,8 +391,9 @@ class ActiveRecord extends db\ActiveRecord
      *      'start' - начальная запись (первый параметр LIMIT)
      *      'limit' - количество записей
      *      'filter' - фильтр записей (массив, который отправляет стандартный фильтр grid библиотеки ExtJS)
-     *      'sort' - массив настроек сортировки, каждый элемент - ассоциативный массив, в котором ключ - имя поля, а
-     *          значение - направление сортировки (константы  SORT_DESC или SORT_ASC, так же можно указать строки: 'ASC' и 'DESC')
+     *      'sort' - массив настроек сортировки, каждый элемент - ассоциативный массив:
+     *              'property' - имя поля,
+     *              'direction' - Направление (ASC или DESC) по умолчанию ASC
      *          При обработке этого масиива учитывается тип поля, соответственно поля pointer и select обрабатываются
      *          особым образом
      *      'where' - условия, используется в качестве аргумента метода andWhere
@@ -480,6 +483,10 @@ class ActiveRecord extends db\ActiveRecord
             $query->offset($params['start']);
         }
 
+        if (!static::$sortable) {
+            $query->selectOption = 'SQL_CALC_FOUND_ROWS';
+        }
+
         if (isset($params['sort'])) {
             $orderBy = [];
             foreach ($params['sort'] as $sort) {
@@ -506,18 +513,24 @@ class ActiveRecord extends db\ActiveRecord
 
         $list = $query->asArray()->all();
 
+        $totalCount = false;
+        if (!static::$sortable) {
+            $command = Yii::$app->db->createCommand('SELECT FOUND_ROWS() as rowCount');
+            $totalCount = intval($command->queryScalar());
+        }
+
         if ($pointers) {
             foreach ($list as $key => $item) {
                 foreach ($pointers as $fieldName => $some) {
                     if (isset($some['file_field'])) {
                         // Файл или изображение
-                        $list[$key][$fieldName] = \yii\helpers\Json::encode([
+                        $list[$key][$fieldName] = Json::encode([
                             'id' => $item[$fieldName],
                             'value' => $item['valof_'.$fieldName],
                             'fileName' => $item['fileof_'.$fieldName],
                         ]);
                     } else {
-                        $list[$key][$fieldName] = \yii\helpers\Json::encode([
+                        $list[$key][$fieldName] = Json::encode([
                             'id' => $item[$fieldName],
                             'value' => $item['valof_'.$fieldName]
                         ]);
@@ -525,7 +538,11 @@ class ActiveRecord extends db\ActiveRecord
                 }
             }
         }
-        return ['data' => static::afterList($list)];
+        $res = ['data' => static::afterList($list)];
+        if ($totalCount !== false) {
+            $res['total'] = $totalCount;
+        }
+        return $res;
     }
 
     /**
@@ -581,7 +598,7 @@ class ActiveRecord extends db\ActiveRecord
     public function mapJson($data)
     {
         if (is_string($data)) {
-            $data = \yii\helpers\Json::decode($data);
+            $data = Json::decode($data);
         }
         if ($data) {
             foreach ($data as $key => $val) {
@@ -623,7 +640,7 @@ class ActiveRecord extends db\ActiveRecord
                     "sort" => [
                         [
                             "property" => 'id',
-                            "direction" => SORT_DESC
+                            "direction" => 'desc'
                         ]
                     ]
                 ]);
@@ -854,23 +871,23 @@ class ActiveRecord extends db\ActiveRecord
             $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/ModalSelectWindow.js';
             if (file_exists(Yii::getAlias($fileName))) {
                 return ("
-                  var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".ModalSelectWindow', ".\yii\helpers\Json::encode($conf).");
+                  var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".ModalSelectWindow', ". Json::encode($conf).");
                 ");
             }
             return ("
-                  var module = Ext.create('App.core.GridModalSelectWindow', ".\yii\helpers\Json::encode($conf).");
+                  var module = Ext.create('App.core.GridModalSelectWindow', ". Json::encode($conf).");
                 ");
         }
 
         $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/Editor.js';
         if (file_exists(Yii::getAlias($fileName))) {
             return ("
-              var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".Editor', ".\yii\helpers\Json::encode($conf).");
+              var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".Editor', ". Json::encode($conf).");
             ");
         }
 
         return ("
-          var module = Ext.create('App.core.SingleModelEditor', ".\yii\helpers\Json::encode($conf).");
+          var module = Ext.create('App.core.SingleModelEditor', ". Json::encode($conf).");
         ");
     }
 }

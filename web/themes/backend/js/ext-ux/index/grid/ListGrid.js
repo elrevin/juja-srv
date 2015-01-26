@@ -36,6 +36,53 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
             sortable: !me.sortable // Если модель разрешает ручную сортировку (драг-н-дроп), то автоматическую запрещаем
         };
 
+        if (!me.sortable) {
+            if (["string", "text", 'html'].indexOf(field.type.type) >= 0) {
+                column['filter'] = {
+                    type: 'string'
+                }
+            } else if (field.type.type == 'pointer') {
+                column['filter'] = {
+                    type: 'pointer'
+                }
+            } else if (field.type.type == 'date') {
+                column['filter'] = {
+                    type: 'date',
+                    dateFormat: 'Y-m-d',
+                    beforeText: 'До',
+                    afterText: 'После',
+                    onText: "Дата"
+                };
+            } else if (field.type.type == 'datetime') {
+                column['filter'] = {
+                    type: 'datetime',
+                    date: {
+                        format: 'Y-m-d'
+                    },
+
+                    time: {
+                        format: 'H:i:s',
+                        increment: 1
+                    },
+                    beforeText: 'До',
+                    afterText: 'После',
+                    onText: "Дата"
+                };
+            } else if (field.type.type == 'bool') {
+                column['filter'] = {
+                    type: 'boolean',
+                    yesText: 'Да',
+                    noText: 'Нет'
+                };
+            } else if (field.type.type == 'select') {
+
+            } else if (field.type.type == 'int' || field.type.type == 'float') {
+                column['filter'] = {
+                    type: 'numeric'
+                };
+            }
+        }
+
         if (["string", "int", 'float'].indexOf(field.type.type) >= 0) {
             column = Ext.apply(column, {
                 width: (field.settings && field.settings.width ? field.settings.width : (field.type.type == 'string' ? 200 : 80)),
@@ -139,6 +186,20 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
         var me = this;
 
         me.createColumns();
+
+        if (!me.sortable) {
+            me.dockedItems = Ext.create('Ext.ux.toolbar.Paging', {
+                dock: 'bottom',
+                store: me.store
+            });
+
+            var filters = {
+                ftype: 'filters',
+                encode: true,
+                local: false
+            };
+            me.features = [filters];
+        }
 
         this.callParent(arguments);
     }
