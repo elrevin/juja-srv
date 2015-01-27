@@ -21,6 +21,21 @@ class Pttp extends \app\base\db\ActiveRecord
             ],
             'required' => true,
         ],
+        'price' => [
+            'title' => 'Цена',
+            'type' => 'float',
+            'settings' => [
+                "min" => 0,
+                "max" => 20000
+            ],
+            'required' => true,
+        ],
+        'sum' => [
+            'title' => 'Сумма',
+            'type' => 'float',
+            'calc' => true,
+            'expression' => '`pttp`.`price` * `pttp`.`count`',
+        ],
         'point' => [
             'title' => 'Ссылка',
             'type' => 'pointer',

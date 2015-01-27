@@ -34,7 +34,8 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                 identify: me.fields[i].identify,
                 required: me.fields[i].required,
                 settings: me.fields[i].settings,
-                showCondition: me.fields[i].showCondition
+                showCondition: me.fields[i].showCondition,
+                calc: me.fields[i].calc
             };
 
             if (me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {
@@ -62,15 +63,15 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                 me.modelClassName = me.modelName + "Model";
                 modelClassDefinition = {
                     extend: 'Ext.data.Model',
-                    fields: [{
-                        name: 'id',
-                        type: 'int',
-                        defaultValue: 0
-                    }],
+                    fields: me.getFields(),
                     recordTitle: me.recordTitle,
                     accusativeRecordTitle: me.accusativeRecordTitle
                 };
-                modelClassDefinition['fields'] = me.getFields();
+                modelClassDefinition['fields'][modelClassDefinition['fields'].length] = {
+                    name: 'id',
+                    type: 'int',
+                    defaultValue: 0
+                };
                 Ext.define(me.modelClassName, modelClassDefinition);
             }
         }

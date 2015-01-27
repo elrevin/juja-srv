@@ -33,6 +33,12 @@ class PointTestTable extends \app\base\db\ActiveRecord
             ],//'\app\modules\backend\models\TestTable',
             'group' => 'Группа полей'
         ],
+        'calc_test' => [
+            'title' => 'НДС',
+            'type' => 'float',
+            'calc' => true,
+            'expression' => '`point_test_table`.`price` * 0.18',
+        ],
     ];
 
     public static $permanentlyDelete = false;

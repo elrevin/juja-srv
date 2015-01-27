@@ -113,6 +113,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 modelField: field,
                 enableKeyEvents: true,
                 _keypressTimeout: null,
+                readOnly: field.calc,
                 listeners: {
                     keypress: function (thisField) {
                         if (thisField._keypressTimeout) {
@@ -143,6 +144,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 msgTarget: 'side',
                 modelField: field,
                 enableKeyEvents: true,
+                readOnly: field.calc,
                 _keypressTimeout: null,
                 listeners: {
                     keypress: function (thisField) {
@@ -173,6 +175,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 msgTarget: 'side',
                 modelField: field,
                 enableKeyEvents: true,
+                readOnly: field.calc,
                 _keypressTimeout: null,
                 listeners: {
                     keypress: function (thisField) {
@@ -204,6 +207,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 msgTarget: 'side',
                 modelField: field,
                 enableKeyEvents: true,
+                readOnly: field.calc,
                 _keypressTimeout: null,
                 listeners: {
                     keypress: function (thisField) {
@@ -235,6 +239,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 submitFormat: 'Y-m-d',
                 msgTarget: 'side',
                 modelField: field,
+                readOnly: field.calc,
                 listeners: {
                     change: function (thisField) {
                         me._showConditionAnalytic(thisField.modelField, thisField);
@@ -254,6 +259,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 submitFormat: 'Y-m-d H:i:s',
                 msgTarget: 'side',
                 modelField: field,
+                readOnly: field.calc,
                 listeners: {
                     change: function (thisField) {
                         me._showConditionAnalytic(thisField.modelField, thisField);
@@ -272,6 +278,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 labelAlign: 'left',
                 labelWidth: labelWidth,
                 modelField: field,
+                readOnly: field.calc,
                 listeners: {
                     change: function (thisField) {
                         me._showConditionAnalytic(thisField.modelField, thisField);
@@ -519,12 +526,14 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
                 for (var i = 0; i < modelFieldsCount; i++) {
                     field = me.model.fields.getAt(i);
-                    input = Ext.getCmp(me.id + '_field_' + field.name);
-                    if (input) {
-                        if (input.modelField.type == Ext.data.Types.POINTER || input.modelField.type == Ext.data.Types.IMG || input.modelField.type == Ext.data.Types.FILE) {
-                            values[field.name] = Ext.JSON.encode(input.getValue());
-                        } else {
-                            values[field.name] = input.getValue();
+                    if (!field.calc) {
+                        input = Ext.getCmp(me.id + '_field_' + field.name);
+                        if (input) {
+                            if (input.modelField.type == Ext.data.Types.POINTER || input.modelField.type == Ext.data.Types.IMG || input.modelField.type == Ext.data.Types.FILE) {
+                                values[field.name] = Ext.JSON.encode(input.getValue());
+                            } else {
+                                values[field.name] = input.getValue();
+                            }
                         }
                     }
                 }

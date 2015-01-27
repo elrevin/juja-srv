@@ -14,6 +14,10 @@ class ActiveRecord extends db\ActiveRecord
      * каждый такой элемент - вложенный ассоциативный массив:
      *      'title' - Название поля,
      *
+     *       'calc' - Если true, то поле вычисляемое, для таих полей актуально значение formula,
+     *
+     *       'expression' - SQL выражение, для вычисляемого поля,
+     *
      *      'type' - тип поля:
      *          'int' - целое число,
      *          'float' - число с точкой,
@@ -345,31 +349,32 @@ class ActiveRecord extends db\ActiveRecord
         return $list;
     }
 
-    protected static function getSimpleFilterCondition($type, $field, $comparison, $value)
+    protected static function getSimpleFilterCondition($type, $field, $comparison, $value, $expression = '')
     {
         $res = [];
 
+        $condField = !$expression ? "`" . static::tableName() . "`.`" . $field . "`" : $expression;
         if ($type == 'string') {
             if ($comparison == 'end') {
-                $res = ['like', "`".static::tableName()."`.`".$field."`", "%".$value, false];
+                $res = ['like', $condField, "%".$value, false];
             } elseif ($comparison == 'start') {
-                $res = ['like', "`".static::tableName()."`.`".$field."`", $value."%", false];
+                $res = ['like', ($condField), $value."%", false];
             } else {
-                $res = ['like', "`".static::tableName()."`.`".$field."`", $value];
+                $res = ['like', ($condField), $value];
             }
         } elseif ($type == 'numeric') {
             if ($comparison == 'lt') {
-                $res = ['<', "`".static::tableName()."`.`".$field."`", $value];
+                $res = ['<', ($condField), $value];
             } elseif ($comparison == 'gt') {
-                $res = ['>', "`".static::tableName()."`.`".$field."`", $value];
+                $res = ['>', ($condField), $value];
             } elseif ($comparison == 'eq') {
-                $res = ['=', "`".static::tableName()."`.`".$field."`", $value];
+                $res = ['=', ($condField), $value];
             }
         }
         return $res;
     }
 
-    protected static function getFilterCondition($filter)
+    protected static function getFilterCondition($filter, $expression = '')
     {
         $condition = [];
         if (!is_array($filter['value'])) {
@@ -381,7 +386,8 @@ class ActiveRecord extends db\ActiveRecord
                 $filter['type'],
                 $filter['field'],
                 (isset($filter['comparison']) ? $filter['comparison'] : ''),
-                $value
+                $value,
+                $expression
             );
         }
         $count = count($condition);
@@ -418,15 +424,20 @@ class ActiveRecord extends db\ActiveRecord
         $select = ["`".static::tableName()."`.`id`"];
         $join = [];
         $pointers = [];
+        $calcFields = [];
 
         foreach (static::$structure as $fieldName => $fieldConf) {
+            if (!isset($fieldConf['calc'])) {
+                $fieldConf['calc'] = false;
+            }
+
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
                 if ((isset($fieldConf['identify']) && !$fieldConf['identify']) || (!isset($fieldConf['identify']))) {
                     continue;
                 }
             }
 
-            if ($fieldConf['type'] == 'pointer') {
+            if ($fieldConf['type'] == 'pointer' && !$fieldConf['calc']) {
                 if (is_array($fieldConf['relativeModel'])) {
                     $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
                 } else {
@@ -446,7 +457,7 @@ class ActiveRecord extends db\ActiveRecord
                         'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.id"
                     ];
                 }
-            } elseif ($fieldConf['type'] == 'img' || $fieldConf['type'] == 'file') {
+            } elseif ($fieldConf['type'] == 'file' && $fieldConf['calc']) {
                 $relatedModelClass = '\app\modules\files\models\Files';
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
@@ -462,17 +473,29 @@ class ActiveRecord extends db\ActiveRecord
                     'name' => $relatedTableName,
                     'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.id"
                 ];
-            } else {
+            } elseif ($fieldConf['type'] != 'file' && $fieldConf['type'] != 'pointer') {
                 // Простые типы данных
-                $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                if ($fieldConf['calc'] && isset($fieldConf['expression']) && $fieldConf['expression']) {
+                    $select[] = "(".$fieldConf['expression'].")"." AS `".$fieldName."`";
+                    $calcFields[$fieldName] = "(".$fieldConf['expression'].")";
+                } else {
+                    $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                }
             }
         }
 
-        $query = static::find()->select($select);
+        $query = static::find();
+
+        $filteredFields = [];
 
         if (isset($params['filter'])) {
             foreach ($params['filter'] as $filter) {
-                $query->andWhere(static::getFilterCondition($filter));
+                $filteredFields[] = $filter['field'];
+                if (isset($calcFields[$filter['field']])) {
+                    $query->andWhere(static::getFilterCondition($filter, $calcFields[$filter['field']]));
+                } else {
+                    $query->andWhere(static::getFilterCondition($filter));
+                }
             }
         }
 
@@ -482,26 +505,6 @@ class ActiveRecord extends db\ActiveRecord
 
         if (isset($params['parentId']) && $params['parentId'] && static::$masterModel) {
             $query->andWhere('master_table_id = '.intval($params['parentId']));
-        }
-
-        if (isset($params['sort'])) {
-            $orderBy = [];
-            foreach ($params['sort'] as $sort) {
-
-                if (isset($sort['property'])) {
-                    $dir = SORT_ASC;
-
-                    if (isset($sort['direction'])) {
-                        $dir = (strtolower($sort['direction']) == 'desc' ? SORT_DESC : SORT_ASC);
-                    }
-                    if (isset($pointers[$sort['property']])) {
-                        $orderBy["`".$pointers[$sort['property']]['table']."`.`".$pointers[$sort['property']]['field']."`"] = $dir;
-                    } else {
-                        $orderBy["`".static::tableName()."`.`".$sort['property']."`"] = $dir;
-                    }
-                }
-            }
-            $query->orderBy($orderBy);
         }
 
         foreach ($join as $item) {
@@ -515,6 +518,30 @@ class ActiveRecord extends db\ActiveRecord
             $totalCount = intval($tmpQuery->count());
         }
         // Конец говнокода, который надо будет извести
+
+        $query->select($select);
+
+        if (isset($params['sort'])) {
+            $orderBy = [];
+            foreach ($params['sort'] as $sort) {
+
+                if (isset($sort['property'])) {
+                    $dir = SORT_ASC;
+
+                    if (isset($sort['direction'])) {
+                        $dir = (strtolower($sort['direction']) == 'desc' ? SORT_DESC : SORT_ASC);
+                    }
+                    if (isset($pointers[$sort['property']])) {
+                        $orderBy["`".$pointers[$sort['property']]['table']."`.`".$pointers[$sort['property']]['field']."`"] = $dir;
+                    } elseif (isset($calcFields[$sort['property']])) {
+                        $orderBy["`".$sort['property']."`"] = $dir;
+                    } else {
+                        $orderBy["`".static::tableName()."`.`".$sort['property']."`"] = $dir;
+                    }
+                }
+            }
+            $query->orderBy($orderBy);
+        }
 
         if (isset($params['limit']) && $params['limit']) {
             $query->limit($params['limit']);
@@ -620,7 +647,9 @@ class ActiveRecord extends db\ActiveRecord
         if ($data) {
             foreach ($data as $key => $val) {
                 if (isset(static::$structure[$key])) {
-                    $this->$key = static::setType($key, $val);
+                    if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
+                        $this->$key = static::setType($key, $val);
+                    }
                 }
             }
         }

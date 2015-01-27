@@ -55,7 +55,8 @@ function doOverride() {
             identifyFieldType: ''
         },
         settings: {},
-        showCondition: {}
+        showCondition: {},
+        calc: false
     });
 
     Ext.data.Types.TEXT = {
