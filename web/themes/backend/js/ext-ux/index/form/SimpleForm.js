@@ -13,6 +13,74 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
 
     groups: [],
 
+    _showConditionAnalytic: function (field, formField) {
+        var me = this,
+          fieldName,
+          fieldItem,
+          i, fieldsCount = me.model.fields.getCount(),
+          show, process, value;
+
+        for (i = 0; i < fieldsCount; i++) {
+            fieldItem = me.model.fields.get(i);
+            show = true;
+            process = false;
+            if (fieldItem.showCondition && fieldItem.showCondition[field.name]) {
+                process = true;
+                if (field.type == Ext.data.Types.INTEGER || field.type == Ext.data.Types.FLOAT ||
+                    field.type == Ext.data.Types.STRING || field.type == Ext.data.Types.TEXT ||
+                    field.type == Ext.data.Types.DATE || field.type == Ext.data.Types.DATETIME
+                ) {
+                    if (fieldItem.showCondition[field.name].operation == 'set') {
+                        show = (show && formField.getValue() ? true : false);
+                    } else if (fieldItem.showCondition[field.name].operation == 'notset') {
+                        show = (show && !formField.getValue() ? true : false);
+                    } else {
+                        if (field.type == Ext.data.Types.DATE) {
+                            value = Ext.Date.format(formField.getValue(), 'Y-m-d');
+                        } else if (field.type == Ext.data.Types.DATETIME) {
+                            debugger;
+                            value = Ext.Date.format(formField.getValue(), 'Y-m-d H:i:s');
+                        } else {
+                            value = formField.getValue();
+                        }
+
+                        if (fieldItem.showCondition[field.name].operation == 'eq') {
+                            show = (show && value == fieldItem.showCondition[field.name].value);
+                        } else if (fieldItem.showCondition[field.name].operation == 'noteq') {
+                            show = (show && value != fieldItem.showCondition[field.name].value);
+                        } else if (fieldItem.showCondition[field.name].operation == 'gt') {
+                            show = (show && value > fieldItem.showCondition[field.name].value);
+                        } else if (fieldItem.showCondition[field.name].operation == 'lt') {
+                            show = (show && value < fieldItem.showCondition[field.name].value);
+                        } else if (fieldItem.showCondition[field.name].operation == 'gteq') {
+                            show = (show && value >= fieldItem.showCondition[field.name].value);
+                        } else if (fieldItem.showCondition[field.name].operation == 'lteq') {
+                            show = (show && value <= fieldItem.showCondition[field.name].value);
+                        }
+                    }
+                } else if (field.type == Ext.data.Types.BOOL) {
+                    show = (show && (fieldItem.showCondition[field.name].operation == 'set' && formField.getValue()) ||
+                                    (fieldItem.showCondition[field.name].operation == 'notset' && !formField.getValue()));
+                } else if (field.type == Ext.data.Types.POINTER) {
+
+                    if (fieldItem.showCondition[field.name].operation == 'eq') {
+                        show = (show && formField.getValue().value == fieldItem.showCondition[field.name].value);
+                    } else if (fieldItem.showCondition[field.name].operation == 'noteq') {
+                        show = (show && formField.getValue().value != fieldItem.showCondition[field.name].value);
+                    } else if (fieldItem.showCondition[field.name].operation == 'set') {
+                        show = (show && formField.getValue() ? true : false);
+                    } else if (fieldItem.showCondition[field.name].operation == 'notset') {
+                        show = (show && !formField.getValue() ? true : false);
+                    }
+                }
+            }
+
+            if (process) {
+                Ext.getCmp(me.id + '_field_' + fieldItem.name).setVisible(show);
+            }
+        }
+    },
+
     _getField: function (field) {
         var me = this;
 
@@ -22,7 +90,8 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 return Ext.create('Ext.form.field.Hidden', {
                     name: 'id',
                     id: me.id + '_field_' + field.name,
-                    modelField: field
+                    modelField: field,
+                    enableKeyEvents: true
                 });
             }
             // Обычное целочисленное поле
@@ -35,7 +104,22 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 width: 150,
                 allowBlank: !field.required,
                 msgTarget: 'side',
-                modelField: field
+                modelField: field,
+                enableKeyEvents: true,
+                _keypressTimeout: null,
+                listeners: {
+                    keypress: function (thisField) {
+                        if (thisField._keypressTimeout) {
+                            clearTimeout(thisField._keypressTimeout);
+                            thisField._keypressTimeout = null;
+                        }
+
+                        thisField._keypressTimeout = setTimeout(function () {
+                            me._showConditionAnalytic(thisField.modelField, thisField);
+                            thisField._keypressTimeout = null;
+                        }, 500);
+                    }
+                }
             });
         } else if (field.type == Ext.data.Types.FLOAT) {
             // Число с точкой
@@ -48,7 +132,22 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 width: 150,
                 allowBlank: !field.required,
                 msgTarget: 'side',
-                modelField: field
+                modelField: field,
+                enableKeyEvents: true,
+                _keypressTimeout: null,
+                listeners: {
+                    keypress: function (thisField) {
+                        if (thisField._keypressTimeout) {
+                            clearTimeout(thisField._keypressTimeout);
+                            thisField._keypressTimeout = null;
+                        }
+
+                        thisField._keypressTimeout = setTimeout(function () {
+                            me._showConditionAnalytic(thisField.modelField, thisField);
+                            thisField._keypressTimeout = null;
+                        }, 500);
+                    }
+                }
             });
         } else if (field.type == Ext.data.Types.STRING) {
             // Обычное строковое поле
@@ -60,7 +159,22 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 width: 400,
                 allowBlank: !field.required,
                 msgTarget: 'side',
-                modelField: field
+                modelField: field,
+                enableKeyEvents: true,
+                _keypressTimeout: null,
+                listeners: {
+                    keypress: function (thisField) {
+                        if (thisField._keypressTimeout) {
+                            clearTimeout(thisField._keypressTimeout);
+                            thisField._keypressTimeout = null;
+                        }
+
+                        thisField._keypressTimeout = setTimeout(function () {
+                            me._showConditionAnalytic(thisField.modelField, thisField);
+                            thisField._keypressTimeout = null;
+                        }, 500);
+                    }
+                }
             });
         } else if (field.type == Ext.data.Types.TEXT) {
             // Многострочный текст
@@ -73,7 +187,22 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 height: 80,
                 allowBlank: !field.required,
                 msgTarget: 'side',
-                modelField: field
+                modelField: field,
+                enableKeyEvents: true,
+                _keypressTimeout: null,
+                listeners: {
+                    keypress: function (thisField) {
+                        if (thisField._keypressTimeout) {
+                            clearTimeout(thisField._keypressTimeout);
+                            thisField._keypressTimeout = null;
+                        }
+
+                        thisField._keypressTimeout = setTimeout(function () {
+                            me._showConditionAnalytic(thisField.modelField, thisField);
+                            thisField._keypressTimeout = null;
+                        }, 500);
+                    }
+                }
             });
         } else if (field.type == Ext.data.Types.DATE) {
             // Дата
@@ -87,7 +216,12 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 format: 'd.m.Y',
                 submitFormat: 'Y-m-d',
                 msgTarget: 'side',
-                modelField: field
+                modelField: field,
+                listeners: {
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
+                    }
+                }
             });
         } else if (field.type == Ext.data.Types.DATETIME) {
             // Дата и время
@@ -101,7 +235,12 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 format: 'd.m.Y',
                 submitFormat: 'Y-m-d H:i:s',
                 msgTarget: 'side',
-                modelField: field
+                modelField: field,
+                listeners: {
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
+                    }
+                }
             });
         } else if (field.type == Ext.data.Types.BOOL) {
             // Дата и время
@@ -114,7 +253,12 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 fieldLabel: field.title,
                 labelAlign: 'left',
                 labelWidth: labelWidth,
-                modelField: field
+                modelField: field,
+                listeners: {
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
+                    }
+                }
             });
         } else if (field.type == Ext.data.Types.POINTER && !field.relativeModel.modalSelect) {
             // Справочник
@@ -147,7 +291,12 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                     pageSize: 50,
                     autoLoad: true
                 }),
-                modelField: field
+                modelField: field,
+                listeners: {
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
+                    }
+                }
             });
         } else if (field.type == Ext.data.Types.POINTER && field.relativeModel.modalSelect) {
             // Справочник
@@ -163,7 +312,12 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 isPointerField: true,
                 modelField: field,
                 modelName: field.relativeModel.name,
-                runAction: field.relativeModel.runAction
+                runAction: field.relativeModel.runAction,
+                listeners: {
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
+                    }
+                }
             });
         } else if (field.type == Ext.data.Types.FILE) {
             return Ext.create('Ext.ux.form.field.File', {
@@ -194,7 +348,6 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             filtered = [],
             currentField = null,
             field;
-
         if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
             for (i = 0; i < modelFieldsCount; i++) {
                 field = me.model.fields.getAt(i);
@@ -265,6 +418,11 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
 
                 me.groups = groups;
             }
+
+            for (i =0; i < modelFieldsCount; i++) {
+                field = me.model.fields.get(i);
+                me._showConditionAnalytic(field, Ext.getCmp(me.id + '_field_' + field.name));
+            }
         }
     },
 
@@ -309,7 +467,8 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
     },
 
     loadRecord: function (record) {
-        var me = this;
+        var me = this,
+          i, fieldsCount = me.model.fields.getCount(), field;
 
         me.mode = 'update';
 
@@ -322,6 +481,11 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
         me.beforeLoad(record);
         me.callParent([record]);
         me.afterLoad(record);
+
+        for (i =0; i < fieldsCount; i++) {
+            field = me.model.fields.get(i);
+            me._showConditionAnalytic(field, Ext.getCmp(me.id + '_field_' + field.name));
+        }
     },
 
     save: function () {

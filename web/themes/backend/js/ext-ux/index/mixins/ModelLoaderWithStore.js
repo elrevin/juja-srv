@@ -33,7 +33,8 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                 group: me.fields[i].group,
                 identify: me.fields[i].identify,
                 required: me.fields[i].required,
-                settings: me.fields[i].settings
+                settings: me.fields[i].settings,
+                showCondition: me.fields[i].showCondition
             };
 
             if (me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {

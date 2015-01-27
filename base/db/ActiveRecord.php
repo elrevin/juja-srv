@@ -55,6 +55,8 @@ class ActiveRecord extends db\ActiveRecord
      *                  'noteq' - не равно
      *                  'gt' - больше
      *                  'lt' - меньше
+     *                  'gteq' - больше
+     *                  'lteq' - меньше
      *                  'set' - установленно
      *                  'notset' - не установленно
      *             'value' - значение

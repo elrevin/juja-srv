@@ -90,6 +90,10 @@ Ext.define('Ext.ux.index.form.Form', {
                     }
                 }
             }
+            for (i =0; i < modelFieldsCount; i++) {
+                field = me.model.fields.get(i);
+                me._showConditionAnalytic(field, Ext.getCmp(me.id + '_field_' + field.name));
+            }
         }
     },
 

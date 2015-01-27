@@ -11,10 +11,16 @@ class TestTable extends \app\base\db\ActiveRecord
             'title' => 'Название',
             'type' => 'string',
             'identify' => true,
+            'required' => true,
         ],
         'text' => [
             'title' => 'Текст',
             'type' => 'text',
+            'group' => 'Группа 1'
+        ],
+        'flag' => [
+            'title' => 'Флаг',
+            'type' => 'bool',
             'group' => 'Группа 1'
         ],
         'price' => [
@@ -25,35 +31,52 @@ class TestTable extends \app\base\db\ActiveRecord
                 "min" => 0,
                 "max" => 20000
             ],
-            'required' => true,
-            'group' => 'Группа 1'
+            'group' => 'Группа 1',
+            'showCondition' => [
+                'flag' => [
+                    'operation' => 'set'
+                ]
+            ],
         ],
         'dt' => [
             'title' => 'Дата',
             'type' => 'date',
-            'required' => true,
-            'group' => 'Группа 2'
-        ],
-        'flag' => [
-            'title' => 'Флаг',
-            'type' => 'bool',
-            'group' => 'Группа 1'
+            'group' => 'Группа 2',
+            'showCondition' => [
+                'price' => [
+                    'operation' => 'gt',
+                    'value' => 300
+                ]
+            ],
         ],
         'dtt' => [
             'title' => 'Дата и время',
             'type' => 'datetime',
-            'required' => true,
-            'group' => 'Группа 2'
+            'group' => 'Группа 2',
+            'showCondition' => [
+                'dt' => [
+                    'operation' => 'lt',
+                    'value' => '2015-01-31'
+                ],'dt' => [
+                    'operation' => 'set'
+                ],
+            ],
         ],
         'file' => [
             'title' => 'Файл',
             'type' => 'file',
-            'required' => true,
             'group' => 'Группа 2',
             'settings' => [
                 'types' => ['img', '.png', '.jpg']
             ],
-
+            'showCondition' => [
+                'dtt' => [
+                    'operation' => 'lt',
+                    'value' => '2015-01-31 10:00:00'
+                ],'dtt' => [
+                    'operation' => 'set'
+                ],
+            ],
         ],
     ];
 
@@ -65,7 +88,7 @@ class TestTable extends \app\base\db\ActiveRecord
 
     protected static $recordTitle = 'Какая-то хрень';
 
-    protected static $accusativeRecordTitle = 'какую-то хрень asfd sdfa sdfa sfsdf asdf qwefadsf qewrfq fsdf aedf f qdf asd fasdf asdf asdf f df ';
+    protected static $accusativeRecordTitle = 'какую-то хрень';
 
     /**
      * @inheritdoc

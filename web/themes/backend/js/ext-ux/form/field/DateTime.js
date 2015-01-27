@@ -21,8 +21,8 @@ Ext.define('Ext.ux.form.field.DateTime', {
         if (!me.timeCfg) me.timeCfg = {};
         me.buildField();
         me.callParent();
-        me.dateField = me.down('datefield')
-        me.timeField = me.down('timefield')
+        me.dateField = me.down('datefield');
+        me.timeField = me.down('timefield');
 
         me.initField();
     },
@@ -38,7 +38,12 @@ Ext.define('Ext.ux.form.field.DateTime', {
                 width: 100,
                 flex: 2,
                 allowBlank: me.allowBlank,
-                disabled: me.disabled
+                disabled: me.disabled,
+                listeners: {
+                    change: function () {
+                        me.fireEvent('change', me, me.getValue());
+                    }
+                }
             }, me.dateCfg),
             Ext.apply({
                 xtype: 'timefield',
@@ -47,7 +52,12 @@ Ext.define('Ext.ux.form.field.DateTime', {
                 width: 80,
                 flex: 1,
                 allowBlank: me.allowBlank,
-                disabled: me.disabled
+                disabled: me.disabled,
+                listeners: {
+                    change: function () {
+                        me.fireEvent('change', me, me.getValue());
+                    }
+                }
             }, me.timeCfg)]
     },
 
