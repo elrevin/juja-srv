@@ -218,7 +218,7 @@ class BackendController extends Controller
 
             $params = [
                 "identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false),
-                'parentId' => intval(Yii::$app->request->get('parentId', 0)),
+                'parentId' => intval(Yii::$app->request->post('parentId', 0)),
                 "sort" => Json::decode(Yii::$app->request->post('sort', '[]')),
                 "start" => intval(Yii::$app->request->post('start', 0)),
                 "limit" => intval(Yii::$app->request->post('limit', 0)),

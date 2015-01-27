@@ -31,6 +31,7 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
                 deleteAction: me.deleteAction,
                 store: me.store,
                 tbar: me.toolbar,
+                sortable: me.sortable,
                 selModel: Ext.create('Ext.selection.CheckboxModel', {
                     mode: "SINGLE"
                 }),

@@ -26,8 +26,8 @@ Ext.define('App.core.GridModalSelectWindow', {
 
     selectButtonClick: function () {
         var me = this;
-        if (me.grid.getSelectionModel().getCount()) {
-            me.doSelect(me.grid.getSelectionModel().getSelection()[0]);
+        if (me.itemsPanel.getSelectionModel().getCount()) {
+            me.doSelect(me.itemsPanel.getSelectionModel().getSelection()[0]);
         } else {
             IndexNextApp.getApplication().showErrorMessage('', 'Вы не выбрали запись');
         }

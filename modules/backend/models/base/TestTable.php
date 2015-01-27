@@ -44,7 +44,7 @@ class TestTable extends \app\base\db\ActiveRecord
             'group' => 'Группа 2',
             'showCondition' => [
                 'price' => [
-                    'operation' => 'gt',
+                    'operation' => '>',
                     'value' => 300
                 ]
             ],
@@ -55,10 +55,12 @@ class TestTable extends \app\base\db\ActiveRecord
             'group' => 'Группа 2',
             'showCondition' => [
                 'dt' => [
-                    'operation' => 'lt',
-                    'value' => '2015-01-31'
-                ],'dt' => [
-                    'operation' => 'set'
+                    [
+                        'operation' => '>',
+                        'value' => '2015-01-31'
+                    ], [
+                        'operation' => 'set'
+                    ]
                 ],
             ],
         ],
@@ -71,10 +73,12 @@ class TestTable extends \app\base\db\ActiveRecord
             ],
             'showCondition' => [
                 'dtt' => [
-                    'operation' => 'lt',
-                    'value' => '2015-01-31 10:00:00'
-                ],'dtt' => [
-                    'operation' => 'set'
+                    [
+                        'operation' => '>',
+                        'value' => '2015-01-31 10:00:00'
+                    ], [
+                        'operation' => 'set'
+                    ]
                 ],
             ],
         ],
@@ -106,7 +110,7 @@ class TestTable extends \app\base\db\ActiveRecord
         return [
             [['title'], 'required', 'message' => 'Поле "' . static::$structure['title']['title'] . '" обязательно для заполнения.'],
             [['price'], 'required', 'message' => 'Поле "' . static::$structure['price']['title'] . '" обязательно для заполнения.'],
-            [['dt'], 'required', 'message' => 'Поле "' . static::$structure['dt']['title'] . '" обязательно для заполнения.'],
+//            [['dt'], 'required', 'message' => 'Поле "' . static::$structure['dt']['title'] . '" обязательно для заполнения.'],
             [['text'], 'string', 'message' => 'В поле "' . static::$structure['text']['title'] . '" ожидается строка.'],
             [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "' . static::$structure['title']['title'] . '" не может быть длинее 1024 символов.',],
             [['dt'], 'date', 'format' => 'php:Y-m-d', 'message' => 'Неверный формат даты в поле "' . static::$structure['dt']['title'] . '"'],

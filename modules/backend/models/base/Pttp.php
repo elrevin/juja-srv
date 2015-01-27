@@ -19,18 +19,34 @@ class Pttp extends \app\base\db\ActiveRecord
                 "min" => 0,
                 "max" => 20000
             ],
-            'required' => true
+            'required' => true,
         ],
         'point' => [
             'title' => 'Ссылка',
             'type' => 'pointer',
             'relativeModel' => '\app\modules\backend\models\TestTable',
-            'required' => true
+            'required' => false,
+            'showCondition' => [
+                'count' => [
+                    'operation' => '>',
+                    'value' => 5
+                ]
+            ],
         ],
         'cool' => [
             'title' => 'Большой текст',
             'type' => 'text',
-            'required' => true
+            'required' => false,
+            'showCondition' => [
+                'point' => [
+                    [
+                        'operation' => 'set'
+                    ], [
+                        'operation' => '==',
+                        'value' => 'Супертест'
+                    ]
+                ]
+            ],
         ],
     ];
 
@@ -46,7 +62,7 @@ class Pttp extends \app\base\db\ActiveRecord
 
     protected static $accusativeRecordTitle = 'Штуку такую';
 
-    public static $sortable = true;
+    public static $sortable = false;
 
     /**
      * @inheritdoc

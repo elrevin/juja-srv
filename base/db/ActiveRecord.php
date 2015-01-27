@@ -49,14 +49,15 @@ class ActiveRecord extends db\ActiveRecord
      *      'selectOptions' - Ассоциативный массив возможных значений,
      *
      *      'showCondition' - Условия отображения поля - ассоциативный массив, в котором ключи - это имена других полей,
-     *        а значения это ассоциативный массив условий:
+     *        а значения это условие или массив условий, каждое из которых - ассоциативный массив (все условия в итоге
+     *        объединяются оператором AND):
      *            'operation' - операция:
-     *                  'eq' - равно,
-     *                  'noteq' - не равно
-     *                  'gt' - больше
-     *                  'lt' - меньше
-     *                  'gteq' - больше
-     *                  'lteq' - меньше
+     *                  '==' - равно,
+     *                  '!=' - не равно
+     *                  '>' - больше
+     *                  '<' - меньше
+     *                  '>=' - больше или равно
+     *                  '<=' - меньше или равно
      *                  'set' - установленно
      *                  'notset' - не установленно
      *             'value' - значение
@@ -74,11 +75,17 @@ class ActiveRecord extends db\ActiveRecord
      *                  'operation' => 'set'
      *              ],
      *              'sum' => [
-     *                  'operation' => 'gt',
-     *                  'value' => '5000'
+     *                  [
+     *                      'operation' => '>',
+     *                      'value' => '5000'
+     *                  ], [
+     *                      'operation' => '<',
+     *                      'value' => '8000'
+     *                  ]
      *              ]
      *          ]
-     *          При таких условиях данное поле будет отображаться если установлен флаг-поле payd и значение поля sum > 5000
+     *          При таких условиях данное поле будет отображаться если установлен флаг-поле payd и значение поля
+     *          sum > 5000 AND sum < 8000
      *
      *      'identify' - если true, то поле однозначно идентифицирует запись, например поле 'title' - название
      *
@@ -477,18 +484,6 @@ class ActiveRecord extends db\ActiveRecord
             $query->andWhere('master_table_id = '.intval($params['parentId']));
         }
 
-        if (isset($params['limit'])) {
-            $query->limit($params['limit']);
-        }
-
-        if (isset($params['start'])) {
-            $query->offset($params['start']);
-        }
-
-        if (!static::$sortable) {
-            $query->selectOption = 'SQL_CALC_FOUND_ROWS';
-        }
-
         if (isset($params['sort'])) {
             $orderBy = [];
             foreach ($params['sort'] as $sort) {
@@ -513,13 +508,33 @@ class ActiveRecord extends db\ActiveRecord
             $query->leftJoin($item['name'], $item['on']);
         }
 
-        $list = $query->asArray()->all();
-
+        // Начало говнокода, который надо будет извести
         $totalCount = false;
         if (!static::$sortable) {
-            $command = Yii::$app->db->createCommand('SELECT FOUND_ROWS() as rowCount');
-            $totalCount = intval($command->queryScalar());
+            $tmpQuery = clone $query;
+            $totalCount = intval($tmpQuery->count());
         }
+        // Конец говнокода, который надо будет извести
+
+        if (isset($params['limit']) && $params['limit']) {
+            $query->limit($params['limit']);
+        }
+
+        if (isset($params['start']) && $params['limit']) {
+            $query->offset($params['start']);
+        }
+
+//        if (!static::$sortable) {
+//            $query->selectOption = 'SQL_CALC_FOUND_ROWS';
+//        }
+
+        $list = $query->asArray()->all();
+
+//        $totalCount = false;
+//        if (!static::$sortable) {
+//            $command = Yii::$app->db->createCommand('SELECT FOUND_ROWS() as rowCount');
+//            $totalCount = intval($command->queryScalar());
+//        }
 
         if ($pointers) {
             foreach ($list as $key => $item) {

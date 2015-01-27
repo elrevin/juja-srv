@@ -17,7 +17,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
         var me = this,
           fieldName,
           fieldItem,
-          i, fieldsCount = me.model.fields.getCount(),
+            i, j, fieldsCount = me.model.fields.getCount(),
           show, process, value;
 
         for (i = 0; i < fieldsCount; i++) {
@@ -25,52 +25,58 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             show = true;
             process = false;
             if (fieldItem.showCondition && fieldItem.showCondition[field.name]) {
+                var showConditionArr = fieldItem.showCondition[field.name];
+                if (!(showConditionArr instanceof Array)) {
+                    showConditionArr = [showConditionArr];
+                }
                 process = true;
-                if (field.type == Ext.data.Types.INTEGER || field.type == Ext.data.Types.FLOAT ||
-                    field.type == Ext.data.Types.STRING || field.type == Ext.data.Types.TEXT ||
-                    field.type == Ext.data.Types.DATE || field.type == Ext.data.Types.DATETIME
-                ) {
-                    if (fieldItem.showCondition[field.name].operation == 'set') {
-                        show = (show && formField.getValue() ? true : false);
-                    } else if (fieldItem.showCondition[field.name].operation == 'notset') {
-                        show = (show && !formField.getValue() ? true : false);
-                    } else {
-                        if (field.type == Ext.data.Types.DATE) {
-                            value = Ext.Date.format(formField.getValue(), 'Y-m-d');
-                        } else if (field.type == Ext.data.Types.DATETIME) {
-                            debugger;
-                            value = Ext.Date.format(formField.getValue(), 'Y-m-d H:i:s');
+                for (j = 0; j < showConditionArr.length; j++) {
+                    showCondition = showConditionArr[j];
+                    if (field.type == Ext.data.Types.INTEGER || field.type == Ext.data.Types.FLOAT ||
+                        field.type == Ext.data.Types.STRING || field.type == Ext.data.Types.TEXT ||
+                        field.type == Ext.data.Types.DATE || field.type == Ext.data.Types.DATETIME
+                    ) {
+                        if (showCondition.operation == 'set') {
+                            show = (show && formField.getValue() ? true : false);
+                        } else if (showCondition.operation == 'notset') {
+                            show = (show && !formField.getValue() ? true : false);
                         } else {
-                            value = formField.getValue();
-                        }
+                            if (field.type == Ext.data.Types.DATE) {
+                                value = Ext.Date.format(formField.getValue(), 'Y-m-d');
+                            } else if (field.type == Ext.data.Types.DATETIME) {
+                                value = Ext.Date.format(formField.getValue(), 'Y-m-d H:i:s');
+                            } else {
+                                value = formField.getValue();
+                            }
 
-                        if (fieldItem.showCondition[field.name].operation == 'eq') {
-                            show = (show && value == fieldItem.showCondition[field.name].value);
-                        } else if (fieldItem.showCondition[field.name].operation == 'noteq') {
-                            show = (show && value != fieldItem.showCondition[field.name].value);
-                        } else if (fieldItem.showCondition[field.name].operation == 'gt') {
-                            show = (show && value > fieldItem.showCondition[field.name].value);
-                        } else if (fieldItem.showCondition[field.name].operation == 'lt') {
-                            show = (show && value < fieldItem.showCondition[field.name].value);
-                        } else if (fieldItem.showCondition[field.name].operation == 'gteq') {
-                            show = (show && value >= fieldItem.showCondition[field.name].value);
-                        } else if (fieldItem.showCondition[field.name].operation == 'lteq') {
-                            show = (show && value <= fieldItem.showCondition[field.name].value);
+                            if (showCondition.operation == '==') {
+                                show = (show && value == showCondition.value);
+                            } else if (showCondition.operation == '!=') {
+                                show = (show && value != showCondition.value);
+                            } else if (showCondition.operation == '>') {
+                                show = (show && value > showCondition.value);
+                            } else if (showCondition.operation == '<') {
+                                show = (show && value < showCondition.value);
+                            } else if (showCondition.operation == '>=') {
+                                show = (show && value >= showCondition.value);
+                            } else if (showCondition.operation == '<=') {
+                                show = (show && value <= showCondition.value);
+                            }
                         }
-                    }
-                } else if (field.type == Ext.data.Types.BOOL) {
-                    show = (show && (fieldItem.showCondition[field.name].operation == 'set' && formField.getValue()) ||
-                                    (fieldItem.showCondition[field.name].operation == 'notset' && !formField.getValue()));
-                } else if (field.type == Ext.data.Types.POINTER) {
+                    } else if (field.type == Ext.data.Types.BOOL) {
+                        show = (show && (showCondition.operation == 'set' && formField.getValue()) ||
+                        (showCondition.operation == 'notset' && !formField.getValue()));
+                    } else if (field.type == Ext.data.Types.POINTER) {
 
-                    if (fieldItem.showCondition[field.name].operation == 'eq') {
-                        show = (show && formField.getValue().value == fieldItem.showCondition[field.name].value);
-                    } else if (fieldItem.showCondition[field.name].operation == 'noteq') {
-                        show = (show && formField.getValue().value != fieldItem.showCondition[field.name].value);
-                    } else if (fieldItem.showCondition[field.name].operation == 'set') {
-                        show = (show && formField.getValue() ? true : false);
-                    } else if (fieldItem.showCondition[field.name].operation == 'notset') {
-                        show = (show && !formField.getValue() ? true : false);
+                        if (showCondition.operation == '==') {
+                            show = (show && formField.getValue().value == showCondition.value);
+                        } else if (showCondition.operation == '!=') {
+                            show = (show && formField.getValue().value != showCondition.value);
+                        } else if (showCondition.operation == 'set') {
+                            show = (show && formField.getValue() ? true : false);
+                        } else if (showCondition.operation == 'notset') {
+                            show = (show && !formField.getValue() ? true : false);
+                        }
                     }
                 }
             }
@@ -118,6 +124,9 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                             me._showConditionAnalytic(thisField.modelField, thisField);
                             thisField._keypressTimeout = null;
                         }, 500);
+                    },
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
                     }
                 }
             });
@@ -146,6 +155,9 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                             me._showConditionAnalytic(thisField.modelField, thisField);
                             thisField._keypressTimeout = null;
                         }, 500);
+                    },
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
                     }
                 }
             });
@@ -173,6 +185,9 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                             me._showConditionAnalytic(thisField.modelField, thisField);
                             thisField._keypressTimeout = null;
                         }, 500);
+                    },
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
                     }
                 }
             });
@@ -201,6 +216,9 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                             me._showConditionAnalytic(thisField.modelField, thisField);
                             thisField._keypressTimeout = null;
                         }, 500);
+                    },
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
                     }
                 }
             });
