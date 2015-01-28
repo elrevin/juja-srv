@@ -370,6 +370,8 @@ class ActiveRecord extends db\ActiveRecord
             } elseif ($comparison == 'eq') {
                 $res = ['=', ($condField), $value];
             }
+        } elseif ($type == 'list') {
+            $res = ['=', ($condField), $value];
         }
         return $res;
     }

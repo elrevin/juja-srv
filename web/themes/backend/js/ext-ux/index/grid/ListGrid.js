@@ -25,7 +25,7 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
 
     createColumn: function (field) {
         var me = this,
-            column = null,
+            column,
             isIdentify = field.identify;
 
         if (field.name == 'id') return;
@@ -75,7 +75,19 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
                     noText: 'Нет'
                 };
             } else if (field.type.type == 'select') {
-
+                if (field.selectOptions) {
+                    var opt = [], key;
+                    for (key in field.selectOptions) {
+                        opt[opt.length] = {
+                            id: key,
+                            text: field.selectOptions[key]
+                        }
+                    }
+                    column['filter'] = {
+                        type: 'list',
+                        options: opt
+                    };
+                }
             } else if (field.type.type == 'int' || field.type.type == 'float') {
                 column['filter'] = {
                     type: 'numeric'
@@ -156,6 +168,16 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
                         } else {
                             return val.value;
                         }
+                    }
+                    return '';
+                }
+            });
+        } else if (field.type.type == 'select') {
+            column = Ext.apply(column, {
+                width: (field.settings && field.settings.width ? field.settings.width : 60),
+                renderer: function (val) {
+                    if (field.selectOptions && field.selectOptions[val.id]) {
+                        return field.selectOptions[val.id];
                     }
                     return '';
                 }

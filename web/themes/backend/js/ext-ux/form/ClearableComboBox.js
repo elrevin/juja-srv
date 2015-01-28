@@ -62,7 +62,7 @@ Ext.define('Ext.ux.form.ClearableComboBox', {
     setValue: function(value, doSelect) {
         var me = this;
         if (value && value.id != undefined) {
-            return me.callParent([parseInt(value.id), doSelect]);
+            return me.callParent([value.id, doSelect]);
         }
         return me.callParent([value, doSelect]);
     },
