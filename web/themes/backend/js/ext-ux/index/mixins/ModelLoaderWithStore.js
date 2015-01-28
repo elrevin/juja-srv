@@ -35,7 +35,8 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                 required: me.fields[i].required,
                 settings: me.fields[i].settings,
                 showCondition: me.fields[i].showCondition,
-                calc: me.fields[i].calc
+                calc: me.fields[i].calc,
+                selectOptions: me.fields[i].selectOptions
             };
 
             if (me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {

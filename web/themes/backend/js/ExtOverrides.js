@@ -56,7 +56,8 @@ function doOverride() {
         },
         settings: {},
         showCondition: {},
-        calc: false
+        calc: false,
+        selectOptions: {}
     });
 
     Ext.data.Types.TEXT = {
@@ -102,6 +103,27 @@ function doOverride() {
         },
         sortType: Ext.data.SortTypes.asDate,
         type: 'datetime'
+    };
+
+    Ext.data.Types.SELECT = {
+        convert: function(v, data) {
+            var me=this;
+            if (v == undefined) {
+                return v;
+            }
+            if (!v.length) {
+                return null
+            }
+            var obj = Ext.JSON.decode(v);
+            if (obj && obj.id != undefined && obj.value != undefined) {
+                return obj;
+            }
+            return null;
+        },
+        sortType: function(v) {
+            return v.value;
+        },
+        type: 'select'
     };
 
     Ext.data.Types.POINTER = {

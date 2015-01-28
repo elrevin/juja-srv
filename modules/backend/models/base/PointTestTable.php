@@ -43,6 +43,15 @@ class PointTestTable extends \app\base\db\ActiveRecord
             'title' => 'Какой-то текст HTML',
             'type' => 'html',
         ],
+        'select_field' => [
+            'title' => 'Тестовое поле Select',
+            'type' => 'select',
+            'selectOptions' => [
+                'option1' => 'Опция первая',
+                'option2' => 'Опция вторая',
+                'option3' => 'Опция третья',
+            ]
+        ],
     ];
 
     public static $permanentlyDelete = false;

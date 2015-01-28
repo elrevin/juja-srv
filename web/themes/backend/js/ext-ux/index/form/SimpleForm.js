@@ -345,6 +345,38 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                     }
                 }
             });
+        } else if (field.type == Ext.data.Types.SELECT) {
+            // фиксированный список
+            var data = [], key;
+            for (key in field.selectOptions) {
+                data[data.length] = {
+                    id: key,
+                    value: field.selectOptions[key]
+                }
+            }
+            return Ext.create('Ext.ux.form.ClearableComboBox', {
+                name: field.name,
+                id: me.id+'_field_'+field.name,
+                fieldLabel: field.title,
+                labelAlign: 'top',
+                width: 400,
+                allowBlank: !field.required,
+                msgTarget: 'side',
+                displayField: 'value',
+                valueField: 'id',
+                editable: false,
+                isPointerField: true,
+                store: Ext.create('Ext.data.Store', {
+                    fields: [{name: 'id', type: 'string'}, 'value'],
+                    data: data
+                }),
+                modelField: field,
+                listeners: {
+                    change: function (thisField) {
+                        me._showConditionAnalytic(thisField.modelField, thisField);
+                    }
+                }
+            });
         } else if (field.type == Ext.data.Types.POINTER && !field.relativeModel.modalSelect) {
             // Справочник
             var url = $url(field.relativeModel.moduleName, 'main', 'list', {modelName: field.relativeModel.name, identifyOnly: 1});
@@ -589,7 +621,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                     if (!field.calc) {
                         input = Ext.getCmp(me.id + '_field_' + field.name);
                         if (input) {
-                            if (input.modelField.type == Ext.data.Types.POINTER || input.modelField.type == Ext.data.Types.IMG || input.modelField.type == Ext.data.Types.FILE) {
+                            if (input.modelField.type == Ext.data.Types.POINTER || input.modelField.type == Ext.data.Types.SELECT || input.modelField.type == Ext.data.Types.FILE) {
                                 values[field.name] = Ext.JSON.encode(input.getValue());
                             } else {
                                 values[field.name] = input.getValue();

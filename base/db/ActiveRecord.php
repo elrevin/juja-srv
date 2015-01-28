@@ -422,8 +422,10 @@ class ActiveRecord extends db\ActiveRecord
     {
         $params = static::beforeList($params);
         $select = ["`".static::tableName()."`.`id`"];
+        $selectParams = [];
         $join = [];
         $pointers = [];
+        $selectFields = [];
         $calcFields = [];
 
         foreach (static::$structure as $fieldName => $fieldConf) {
@@ -457,7 +459,21 @@ class ActiveRecord extends db\ActiveRecord
                         'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.id"
                     ];
                 }
-            } elseif ($fieldConf['type'] == 'file' && $fieldConf['calc']) {
+            } elseif ($fieldConf['type'] == 'select' && !$fieldConf['calc']) {
+                $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                $options = [];
+                $keyIndex = 1;
+                foreach ($fieldConf['selectOptions'] as $key => $value) {
+                    $options[] = "WHEN :option".$keyIndex."key THEN :option".$keyIndex."value";
+                    $selectParams[":option".$keyIndex."key"] = $key;
+                    $selectParams[":option".$keyIndex."value"] = $value;
+                    $keyIndex++;
+                }
+                $select[] = "(CASE `".static::tableName()."`.`".$fieldName."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
+                $selectFields[$fieldName] = [
+                    "valField" => "valof_".$fieldName
+                ];
+            } elseif ($fieldConf['type'] == 'file' && !$fieldConf['calc']) {
                 $relatedModelClass = '\app\modules\files\models\Files';
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
@@ -520,6 +536,9 @@ class ActiveRecord extends db\ActiveRecord
         // Конец говнокода, который надо будет извести
 
         $query->select($select);
+        if ($selectParams) {
+            $query->addParams($selectParams);
+        }
 
         if (isset($params['sort'])) {
             $orderBy = [];
@@ -582,6 +601,18 @@ class ActiveRecord extends db\ActiveRecord
                 }
             }
         }
+
+        if ($selectFields) {
+            foreach ($list as $key => $item) {
+                foreach ($selectFields as $fieldName => $some) {
+                    $list[$key][$fieldName] = Json::encode([
+                        'id' => $item[$fieldName],
+                        'value' => $item['valof_'.$fieldName]
+                    ]);
+                }
+            }
+        }
+
         $res = ['data' => static::afterList($list)];
         if ($totalCount !== false) {
             $res['total'] = $totalCount;
@@ -620,7 +651,7 @@ class ActiveRecord extends db\ActiveRecord
                 return null;
             }
         } elseif ($type == 'select') {
-            $value = strval($value);
+            $value = strval($value['id']);
             if (isset(static::$structure[$fieldName]['selectOptions']) && isset(static::$structure[$fieldName]['selectOptions'][$value])) {
                 return $value;
             } else {
