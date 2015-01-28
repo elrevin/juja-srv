@@ -226,6 +226,66 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                     }
                 }
             });
+        } else if (field.type == Ext.data.Types.HTML) {
+            // Многострочный текст HTML
+
+            return Ext.create("Ext.ux.form.TinyMCETextArea", {
+                fieldLabel: field.title,
+                labelAlign: 'top',
+                msgTarget: 'side',
+                modelField: field,
+                width: 400,
+                height: 400,
+                name: field.name,
+                fieldStyle: 'font-family: Courier New; font-size: 12px;',
+                id: me.id + '_field_' + field.name,
+                noWysiwyg: false,
+                tinyMCEConfig: {
+                    language: 'ru',
+                    theme: "advanced",
+                    //skin: "extjs",
+                    inlinepopups_skin: "extjs",
+                    template_external_list_url: "example_template_list.js",
+                    theme_advanced_row_height: 27,
+                    delta_height: 1,
+                    //schema: "html5",
+                    plugins: "autolink,lists,style,table,advimage,advlink,inlinepopups,preview,media,searchreplace,contextmenu,paste,directionality,fullscreen,noneditable,visualchars,nonbreaking,xhtmlxtras,template,wordcount,advlist",
+                    theme_advanced_buttons1: "bold,italic,underline,|,justifyleft,justifycenter,justifyright,justifyfull,|,bullist,numlist,|,outdent,indent,|,styleselect,formatselect",
+                    theme_advanced_buttons2: "undo,redo,|,cut,copy,paste,pastetext,pasteword,|,search,replace,|,link,unlink,anchor,image,|,cleanup,code",
+                    theme_advanced_buttons3: "tablecontrols,|,sub,sup,|,charmap",
+                    theme_advanced_toolbar_location: "top",
+                    theme_advanced_toolbar_align: "left",
+                    theme_advanced_statusbar_location: "bottom",
+                    relative_urls: false,
+                    remove_script_host: true,
+                    document_base_url: "/",
+                    convert_urls: false,
+                    //content_css: "/themes/frontend/css/style.css",
+                    file_browser_callback: function (field_name, url, type, win) {
+                        var _type = type;
+                        var _field_name = field_name;
+                        var _win = win;
+
+                        IndexNextApp.getApplication().loadModule({
+                            runAction: ['files', 'main', 'get-interface'],
+                            listeners: {
+                                select: function (record) {
+                                    _win.document.getElementById(_field_name).value = record.get('path');
+                                    if (_win.ImageDialog && _win.ImageDialog.showPreviewImage) {
+                                        _win.ImageDialog.showPreviewImage(record.get('path'));
+                                    }
+                                }
+                            },
+                            modal: true,
+                            modelName: 'files',
+                            params: {
+                                types: (_type == 'image' ? ['img'] : [])
+                            }
+                        });
+                    },
+                    resize: true
+                }
+            });
         } else if (field.type == Ext.data.Types.DATE) {
             // Дата
             return Ext.create('Ext.form.field.Date', {

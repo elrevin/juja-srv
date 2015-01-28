@@ -204,6 +204,7 @@ Ext.define('Ext.ux.index.form.Form', {
                         title: 'Основные свойства',
                         border: false,
                         header: false,
+                        layout: 'fit',
                         items: [
                             me.editorPanel
                         ]

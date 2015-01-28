@@ -70,6 +70,17 @@ function doOverride() {
         type: 'text'
     };
 
+    Ext.data.Types.HTML = {
+        convert: function (v) {
+            var defaultValue = this.useNull ? null : '';
+            return (v === undefined || v === null) ? defaultValue : String(v);
+        },
+        sortType: function (v) {
+            return '';
+        },
+        type: 'html'
+    };
+
     Ext.data.Types.DATETIME = {
         convert: function (v) {
             var df = this.dateReadFormat || this.dateFormat,

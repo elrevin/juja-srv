@@ -82,7 +82,7 @@ class Files extends \app\modules\files\models\base\Files
                 if ($fileTypes[$ext]['type'] == 'img') {
                     $data[$key]['icon'] = \yii\helpers\Url::to(['admmain/thumbnail.png', 'name' => $item['name']]);
                 } else {
-                    $data[$key]['icon'] = Yii::getAlias('@theme/cp-files/images/files/file-types/'.$fileTypes[$ext]['icon'].'.png?');
+                    $data[$key]['icon'] = Yii::getAlias('@web/cp-files/images/files/file-types/'.$fileTypes[$ext]['icon'].'.png?');
                 }
                 $data[$key]['path'] = Yii::getAlias('@web/'.\app\components\FileSystem::getFilePath($data[$key]['name'], 'sources', false));
             }

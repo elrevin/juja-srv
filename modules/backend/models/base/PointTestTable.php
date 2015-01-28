@@ -39,6 +39,10 @@ class PointTestTable extends \app\base\db\ActiveRecord
             'calc' => true,
             'expression' => '`point_test_table`.`price` * 0.18',
         ],
+        'html_text' => [
+            'title' => 'Какой-то текст HTML',
+            'type' => 'html',
+        ],
     ];
 
     public static $permanentlyDelete = false;
