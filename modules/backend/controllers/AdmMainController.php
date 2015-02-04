@@ -52,16 +52,19 @@ class AdmMainController extends \app\base\web\BackendController
         return $list;
     }
 
-    public function actionCpMenu()
+    public function actionCpMenu($modelName = null, $recordId = null)
     {
-        $interface = $this->getCurrentInterfaceType();
+        $modelName = Yii::$app->request->get('modelName', '');
+        $recordId = intval(Yii::$app->request->get('id', 0));
 
-        $list = \yii\helpers\Json::decode($this->getDataFile('cpmenu.json'));
-
-        // Обходим меню и вносим коррективы, там где требуется
-
-
-        return ['list' => $this->processCpMenu($list[$interface])];
+        if ($modelName) {
+            return parent::actionCPMenu($modelName, $recordId);
+        } else {
+            $interface = $this->getCurrentInterfaceType();
+            $list = \yii\helpers\Json::decode($this->getDataFile('cpmenu.json'));
+            // Обходим меню и вносим коррективы, там где требуется
+            return ['list' => $this->processCpMenu($list[$interface])];
+        }
     }
 
     public function actionGetStaticData()

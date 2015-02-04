@@ -18,6 +18,39 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
     recordTitle: '',
     accusativeRecordTitle: '',
 
+    getProxyConfig: function () {
+        var me = this;
+        return {
+            type: 'ajax',
+              reader: {
+            type: 'json',
+              root: 'data',
+              idProperty: 'id',
+              successProperty: 'success'
+        },
+            writer: {
+                type: 'json',
+                  encode: true,
+                  root: 'data',
+                  dateFormat: 'Y-m-d',
+                  dateTimeFormat: 'Y-m-d H:i:s'
+            },
+            actionMethods: {read: 'POST', update: 'POST'},
+            api: {
+                create: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {
+                    modelName: me.modelClassName.replace('Model', ''),
+                    add: 1
+                }),
+                  read: $url(me.getDataAction[0], me.getDataAction[1], me.getDataAction[2], {modelName: me.modelClassName.replace('Model', '')}),
+                  update: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {modelName: me.modelClassName.replace('Model', '')}),
+                  destroy: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('Model', '')})
+            },
+            extraParams: {
+                params: Ext.JSON.encode(me.params)
+            }
+        };
+    },
+
     getFields: function () {
         var me = this,
             fieldIndex,
@@ -52,11 +85,12 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
     /**
      * Функция создает базовый класс модели, по набору полей в свойстве fields
      */
-    createModelClass: function () {
+    createModelClass: function (withProxy) {
         var me = this,
             fieldIndex,
             modelClassDefinition,
             fieldConf;
+
         me.modelClassName = me.modelName + "Model";
 
         if (!Ext.ClassManager.isCreated(me.modelClassName)) {
@@ -73,6 +107,11 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                     type: 'int',
                     defaultValue: 0
                 };
+
+                if (withProxy) {
+                    modelClassDefinition['proxy'] = me.getProxyConfig();
+                }
+
                 Ext.define(me.modelClassName, modelClassDefinition);
             }
         }
@@ -83,35 +122,7 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
           pageSize = localStorageGet(me.modelClassName+"_pageSize", 50);
         me.store = new Ext.data.JsonStore({
             model: me.modelClassName,
-            proxy: {
-                type: 'ajax',
-                reader: {
-                    type: 'json',
-                    root: 'data',
-                    idProperty: 'id',
-                    successProperty: 'success'
-                },
-                writer: {
-                    type: 'json',
-                    encode: true,
-                    root: 'data',
-                    dateFormat: 'Y-m-d',
-                    dateTimeFormat: 'Y-m-d H:i:s'
-                },
-                actionMethods: {read: 'POST', update: 'POST'},
-                api: {
-                    create: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {
-                        modelName: me.modelClassName.replace('Model', ''),
-                        add: 1
-                    }),
-                    read: $url(me.getDataAction[0], me.getDataAction[1], me.getDataAction[2], {modelName: me.modelClassName.replace('Model', '')}),
-                    update: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {modelName: me.modelClassName.replace('Model', '')}),
-                    destroy: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('Model', '')})
-                },
-                extraParams: {
-                    params: Ext.JSON.encode(me.params)
-                }
-            },
+            proxy: me.getProxyConfig(),
             pageSize: pageSize,
             autoLoad: me.userRights >= 1,
             remoteSort: true

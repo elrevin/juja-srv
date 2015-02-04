@@ -60,6 +60,11 @@ class BackendController extends Controller
         }
 
         $modelName = Yii::$app->request->get('modelName', '');
+        if (!preg_match("/^[a-zA-Z0-9_]+$/", $modelName)) {
+            static::ajaxError('app\base\web\BackendController\checkAccess',
+                "Неверно указана модель! Передайте это в программистам, поддерживающим сайт, они знают что с этим делать.");
+        }
+
         $modelName = ($modelName ? '\app\modules\\'.$this->module->id.'\models\\'.$modelName : '');
 
         $parentId = intval(Yii::$app->request->get('parentId', 0));
@@ -113,9 +118,69 @@ class BackendController extends Controller
         return $interface;
     }
 
-    function actionCPMenu()
+    protected function getCPMenuData($recursive, $shortModelName, $modelName, $parentId, $identifyFieldName)
     {
+        $list = call_user_func([$modelName, 'getList'], [
+            'identifyOnly' => true,
+            'where' => ['parent_id' => $parentId],
+            "dataKey" => 'list'
+        ])['list'];
 
+        $res = [];
+
+        foreach ($list as $item) {
+            $node = [
+                "modelName" => $shortModelName,
+                "moduleName" => $this->module->id,
+                "leaf" => true,
+                "title" => $item[$identifyFieldName],
+                "recordId" => $item['id'],
+                "runAction" => [$this->module->id, "main", "get-interface"]
+            ];
+
+            if ($recursive) {
+                // Есть ли дочерние элементы
+                $query = call_user_func([$modelName, 'find']);
+                $haveChildren = $query->where(['parent_id' => $item['id']])->select(['id'])->limit(1)->exists();
+                $node['leaf'] = !$haveChildren;
+                $node['getSubTreeAction'] = ($haveChildren ? [$this->module->id, "main", "cp-menu"] : null);
+                $node['list'] = $this->getCPMenuData($recursive, $shortModelName, $modelName, $item['id'], $identifyFieldName);
+            }
+            $res[] = $node;
+        }
+        return $res;
+    }
+
+    function actionCPMenu($modelName = null, $recordId = null)
+    {
+        if ($modelName === null) {
+            $modelName = Yii::$app->request->get('modelName', '');
+        }
+        if ($recordId === null) {
+            $recordId = intval(Yii::$app->request->get('recordId', 0));
+        }
+        if (!$recordId) {
+            $recordId = null;
+        }
+
+        if (!preg_match("/^[a-zA-Z0-9_]+$/", $modelName)) {
+            static::ajaxError('app\base\web\BackendController\actionCPMenu',
+                "Неверно указана модель! Передайте это в программистам, поддерживающим сайт, они знают что с этим делать.");
+        }
+
+        // Получаем данные о модули и выбираем как выводить ее в меню:
+        //  * Если модель рекурсивная, то выводяться ее записи и для каждой проверяется если у нее подчиненные, если есть,
+        //      то узлу добаляется атрибут "getSubTreeAction"
+        //  * Если модель просто имеет подчиненную модель, то выводим записи текущей модели, и для каждой записи указывам
+        //      толдько атрибут "runAction", а "getSubTreeAction" не требуется.
+
+        $shortModelName = $modelName;
+        $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+
+        $identifyFieldName = call_user_func([$modelName, 'getIdentifyFieldConf'])['name'];
+        $recursive = call_user_func([$modelName, 'getRecursive']);
+        $res = $this->getCPMenuData($recursive, $shortModelName, $modelName, $recordId, $identifyFieldName);
+        return ['list' => $res];
     }
 
     /**
@@ -177,9 +242,11 @@ class BackendController extends Controller
         $moduleName = $this->module->id;
 
         $parentId = ($parentId ? $parentId : intval(Yii::$app->request->get('parentRecordId', 0)));
+        $recordId = intval(Yii::$app->request->get('id', 0));
         $modal = intval(Yii::$app->request->get('modal', 0));
 
         $params = Json::decode(Yii::$app->request->post("params"), '[]');
+        $params['recordId'] = $recordId;
 
         return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $parentId, $modal, $params);
 
@@ -223,6 +290,7 @@ class BackendController extends Controller
                 "start" => intval(Yii::$app->request->post('start', 0)),
                 "limit" => intval(Yii::$app->request->post('limit', 0)),
                 "filter" => Json::decode(Yii::$app->request->post('colFilter', '[]')),
+                "all" => (Yii::$app->request->get('all', 0) ? true : false),
             ];
 
             $list = call_user_func([$modelName, 'getList'], $params);

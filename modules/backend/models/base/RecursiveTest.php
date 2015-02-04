@@ -4,15 +4,7 @@ namespace app\modules\backend\models\base;
 
 use Yii;
 
-/**
- * Модель для таблицы "test_table", справочник .
- *
- * @property integer $id
- * @property integer $del
- * @property string $title
- * @property int $flag
- */
-class Goods extends \app\base\db\ActiveRecord
+class RecursiveTest extends \app\base\db\ActiveRecord
 {
     protected static $structure = [
         'title' => [
@@ -20,29 +12,30 @@ class Goods extends \app\base\db\ActiveRecord
             'type' => 'string',
             'identify' => true,
         ],
-        'flag' => [
-            'title' => 'Флаг',
-            'type' => 'bool',
-            'group' => 'Группа 1'
-        ]
+        'dt' => [
+            'title' => 'Дата',
+            'type' => 'date',
+        ],
     ];
 
     public static $permanentlyDelete = false;
 
     protected static $hiddable = false;
 
-    protected static $modelTitle = 'Товары';
+    protected static $recursive = true;
 
-    protected static $recordTitle = 'Товар';
+    protected static $modelTitle = 'Рекурсивный справочник';
 
-    protected static $accusativeRecordTitle = 'Товар';
+    protected static $recordTitle = 'Какая-то запись';
+
+    protected static $accusativeRecordTitle = 'Какую-то запись';
 
     /**
      * @inheritdoc
      */
     public static function tableName()
     {
-        return 'goods';
+        return 'recursive_test';
     }
 
     /**
@@ -52,6 +45,7 @@ class Goods extends \app\base\db\ActiveRecord
     {
         return [
             [['title'], 'required', 'message' => 'Поле "' . static::$structure['title']['title'] . '" обязательно для заполнения.'],
+            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "' . static::$structure['title']['title'] . '" не может быть длинее 1024 символов.',],
         ];
     }
 }

@@ -4,6 +4,7 @@ Ext.define('App.core.Module', {
     },
     _mainPanel: null,
     params: {},
+    currentMainMenuNode: null,
     getMainPanel: function () {
         return this._mainPanel;
     },
@@ -19,6 +20,9 @@ Ext.define('App.core.Module', {
     init: function () {
         IndexNextApp.getApplication().getMainPanel().add(this._mainPanel);
         this.fireEvent('ready');
+    },
+    setCurrentMainMenuNode: function (node) {
+        this.currentMainMenuNode = node;
     },
     destroy: function () {
 

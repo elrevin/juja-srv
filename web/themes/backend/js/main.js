@@ -46,7 +46,7 @@ Ext.application({
 
             params = {};
             if (config['modelName']) params['modelName'] = config['modelName'];
-            if (config['idRecord']) params['idRecord'] = config['idRecord'];
+            if (config['id']) params['id'] = config['id'];
             if (config['modal']) params['modal'] = 1;
 
             // Получаем конфигурацию
@@ -60,6 +60,9 @@ Ext.application({
                     eval(code);
                     if (module != undefined) {
                         module.on('ready', function () {
+                            if (module.setCurrentMainMenuNode && config.mainMenuNode) {
+                                module.setCurrentMainMenuNode(config.mainMenuNode);
+                            }
                             //wait.close();
                         });
                         module.on('initfail', function () {
@@ -122,7 +125,7 @@ Ext.application({
 
         this._mainMenuStore = Ext.create('Ext.data.TreeStore', {
             //autoLoad: true,
-            fields: ['id', 'modelName', 'idRecord', 'runAction', 'getSubTreeAction', 'title', 'isRootNode', 'icon'],
+            fields: ['id', 'modelName', 'recordId', 'runAction', 'getSubTreeAction', 'title', 'isRootNode', 'icon'],
             proxy: {
                 type: 'ajax',
                 url: $url('backend', 'main', 'cp-menu'),
@@ -135,17 +138,20 @@ Ext.application({
             listeners: {
                 beforeload: {
                     fn: function (store, operation, eOpts) {
-                        var param;
-                        if (param = operation.node.get("modelName")) {
-                            operation.params.modelName = param;
-                        }
-
-                        if (param = operation.node.get("idRecord")) {
-                            operation.params.idRecord = param;
-                        }
-
-                        if (param = operation.node.get("getSubTreeAction")) {
-                            store.getProxy().url = $url(param);
+                        var getSubTreeAction, modelName, idRecord;
+                        getSubTreeAction = operation.node.get("getSubTreeAction");
+                        modelName = operation.node.get("modelName");
+                        idRecord = operation.node.get("recordId");
+                        if (getSubTreeAction) {
+                            store.getProxy().url = $url(
+                              getSubTreeAction[0],
+                              getSubTreeAction[1],
+                              getSubTreeAction[2],
+                              {
+                                  modelName: modelName,
+                                  id: idRecord
+                              }
+                            );
                         }
                     }
                 }
@@ -166,13 +172,7 @@ Ext.application({
             listeners: {
                 itemclick: {
                     fn: function (p, record) {
-                        var runAction = record.get('runAction');
-                        if (runAction) {
-                            var modelName = record.get('modelName');
-                            var idRecord = record.get('idRecord');
-
-                            this.loadModule({runAction: runAction, modelName: modelName, idRecord: idRecord});
-                        }
+                        this._onMainMenuNodeSelect(record);
                     },
                     scope: this
                 }
@@ -218,5 +218,42 @@ Ext.application({
             buttons: Ext.Msg.OK,
             icon: Ext.window.MessageBox.ERROR
         });
+    },
+    refreshMainMenuNode: function(id){
+        var node;
+        if (typeof id == 'integer') {
+            node = this._mainMenuStore.getNodeById(id);
+        } else {
+            node = id;
+        }
+        if (node){
+            this._mainMenuStore.load({node:node});
+        }
+    },
+    _onMainMenuNodeSelect: function (record) {
+        var runAction = record.get('runAction');
+        if (runAction) {
+            var modelName = record.get('modelName');
+            var recordId = record.get('recordId');
+
+            this.loadModule({
+                runAction: runAction,
+                modelName: modelName,
+                id: recordId,
+                mainMenuNode: record
+            });
+        }
+    },
+    selectMainMenuNode: function(id){
+        var node, sm = this._mainMenuTree.getSelectionModel();
+        if (typeof id == 'integer') {
+            node = this._mainMenuStore.getNodeById(id);
+        } else {
+            node = id;
+        }
+        if (node){
+            sm.select([node]);
+            this._onMainMenuNodeSelect(node);
+        }
     }
 });

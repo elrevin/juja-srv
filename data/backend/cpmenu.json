@@ -11,6 +11,11 @@
         "title": "Еще один тестовый справочник",
         "modelName": "PointTestTable",
         "moduleName": "backend"
+      },
+      {
+        "title": "Рекурсивный справочник",
+        "modelName": "RecursiveTest",
+        "moduleName": "backend"
       }
     ]
   },

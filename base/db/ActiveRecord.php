@@ -416,6 +416,7 @@ class ActiveRecord extends db\ActiveRecord
      *      'where' - условия, используется в качестве аргумента метода andWhere
      *      'identifyOnly' - true если требуется выгрузить только идентифицирующее поле (например для выпадающих списков)
      *      'parentId' - id родительской записи, если запрошены данные детализации
+     *      'dataKey' - Ключ в возвращаемом массиве, который будет содержать данные
      *
      * @param $params
      * @return array|\yii\db\ActiveRecord[]
@@ -615,7 +616,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        $res = ['data' => static::afterList($list)];
+        $res = [(isset($params['dataKey']) ? $params['dataKey'] : 'data') => static::afterList($list)];
         if ($totalCount !== false) {
             $res['total'] = $totalCount;
         }
@@ -965,8 +966,25 @@ class ActiveRecord extends db\ActiveRecord
             ");
         }
 
+        // Автоматически выбираем тип редактора
+        $editor = "SingleModelEditor";
+        $recursive = static::$recursive;
+        $childModel = static::getChildModel();
+
+        if ($recursive && !$childModel) {
+            $editor = 'SimpleEditor';
+            $data = null;
+            if (isset($params['recordId']) && $params['recordId']) {
+                $data = static::getList([
+                    'where' => ['id' => $params['recordId']]
+                ])['data'];
+                $data = ($data ? $data[0] : null);
+            }
+            $conf['data'] = $data;
+        }
+
         return ("
-          var module = Ext.create('App.core.SingleModelEditor', ". Json::encode($conf).");
+          var module = Ext.create('App.core.".$editor."', ". Json::encode($conf).");
         ");
     }
 }
