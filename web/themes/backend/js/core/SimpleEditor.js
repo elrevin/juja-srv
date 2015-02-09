@@ -98,26 +98,6 @@ Ext.define('App.core.SimpleEditor', {
         for (i = buttons.length -1; i >= 0; i--) {
             me.form.topToolbar.insert(0, buttons[i]);
         }
-
-        me.form.topToolbar.add('|');
-        me.form.topToolbar.add('Поместить в:');
-        me.form.topToolbar.add(Ext.create('Ext.ux.form.field.TreeCombo', {
-            store: Ext.create('Ext.data.TreeStore', {
-                //autoLoad: true,
-                fields: ['id', me.form.identifyField.name],
-                proxy: {
-                    type: 'ajax',
-                    url: $url(me.getDataAction[0], me.getDataAction[1], me.getDataAction[2], {modelName: me.modelClassName.replace('Model', ''), identifyOnly: 1, all: true}),
-                    actionMethods: {read: "POST"},
-                    reader: {
-                        type: 'json',
-                        root: 'data'
-                    }
-                }
-            }),
-            rootVisible: false,
-            displayField: me.form.identifyField.name
-        }));
     },
 
     createForm: function () {

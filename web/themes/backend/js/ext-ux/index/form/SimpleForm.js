@@ -468,9 +468,11 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
         if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
             for (i = 0; i < modelFieldsCount; i++) {
                 field = me.model.fields.getAt(i);
-                if (field.identify) {
+
+                if (field.extra) {
                     continue;
                 }
+
                 if (field.group) {
                     filtered = (function (field, groups) {
                         return groups.filter(function (element) {
@@ -611,7 +613,6 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             field,
             input,
             values = {};
-
         if (me.isValid()) {
             me.fireEvent((me.mode == 'update' ? 'beforeupdate' : 'beforeinsert'), me, me.model);
 

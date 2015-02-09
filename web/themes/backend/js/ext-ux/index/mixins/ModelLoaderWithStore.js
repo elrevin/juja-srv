@@ -69,7 +69,8 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                 settings: me.fields[i].settings,
                 showCondition: me.fields[i].showCondition,
                 calc: me.fields[i].calc,
-                selectOptions: me.fields[i].selectOptions
+                selectOptions: me.fields[i].selectOptions,
+                extra: me.fields[i].extra
             };
 
             if (me.fields[i].relativeModel != undefined && me.fields[i].relativeModel.name != undefined && me.fields[i].relativeModel.moduleName != undefined) {
@@ -100,7 +101,11 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                     extend: 'Ext.data.Model',
                     fields: me.getFields(),
                     recordTitle: me.recordTitle,
-                    accusativeRecordTitle: me.accusativeRecordTitle
+                    accusativeRecordTitle: me.accusativeRecordTitle,
+                    recursive: me.recursive,
+                    getDataAction: me.getDataAction,
+                    saveAction: me.saveAction,
+                    deleteAction: me.deleteAction
                 };
                 modelClassDefinition['fields'][modelClassDefinition['fields'].length] = {
                     name: 'id',

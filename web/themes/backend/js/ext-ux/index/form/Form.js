@@ -31,6 +31,9 @@ Ext.define('Ext.ux.index.form.Form', {
                 if (field.identify) {
                     continue;
                 }
+                if (field.extra) {
+                    continue;
+                }
                 if (field.group) {
                     filtered = (function (field, groups) {
                         return groups.filter(function (element) {
@@ -50,6 +53,9 @@ Ext.define('Ext.ux.index.form.Form', {
             for (i = 0; i < modelFieldsCount; i++) {
                 field = me.model.fields.getAt(i);
 
+                if (field.extra) {
+                    continue;
+                }
                 currentContainer = null;
 
                 if (groups.length > 1) {
@@ -92,29 +98,60 @@ Ext.define('Ext.ux.index.form.Form', {
             }
             for (i =0; i < modelFieldsCount; i++) {
                 field = me.model.fields.get(i);
+                if (field.extra) {
+                    continue;
+                }
                 me._showConditionAnalytic(field, Ext.getCmp(me.id + '_field_' + field.name));
             }
         }
     },
 
     createTopToolbar: function () {
-        var me = this;
+        var me = this,
+          toolbarItems;
 
         if (me.userRights > 1) {
+            toolbarItems = [
+                {
+                    text: 'Сохранить',
+                    handler: function () {
+                        me.save();
+                    }
+                }
+            ];
+            if (me.model.recursive) {
+                toolbarItems[toolbarItems.length] = '|';
+                toolbarItems[toolbarItems.length] = 'Поместить в:';
+                toolbarItems[toolbarItems.length] = Ext.create('Ext.ux.form.field.TreeCombo', {
+                    store: Ext.create('Ext.data.TreeStore', {
+                        //autoLoad: true,
+                        fields: ['id', me.identifyField.name],
+                        proxy: {
+                            type: 'ajax',
+                            url: $url(me.model.getDataAction[0], me.model.getDataAction[1], me.model.getDataAction[2], {modelName: me.modelClassName.replace('Model', ''), identifyOnly: 1, all: 1}),
+                            actionMethods: {read: "POST"},
+                            reader: {
+                                type: 'json',
+                                root: 'data'
+                            }
+                        }
+                    }),
+                    rootVisible: false,
+                    width: 200,
+                    treeWidth: 350,
+                    displayField: me.identifyField.name,
+                    id: me.id + '_field_parent_id',
+                    name: 'parent_id'
+                });
+            }
+
             me.topToolbar = Ext.create('Ext.toolbar.Toolbar', {
                 height: 58,
                 cls: (me.tabs.length ? 'in2-editor-form-toolbar-tab-form' : 'in2-editor-form-toolbar'),
                 defaults: {
                     scale: 'medium'
                 },
-                items: [
-                    {
-                        text: 'Сохранить',
-                        handler: function () {
-                            me.save();
-                        }
-                    }
-                ]
+                items: toolbarItems
             });
         }
         return me.topToolbar;

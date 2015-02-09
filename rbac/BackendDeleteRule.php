@@ -31,8 +31,8 @@ class BackendDeleteRule extends Rule
                         if ($masterModel) {
                             $modelName = $masterModel;
                             if ($modelName[0] != '\\') $modelName = '\\'.$modelName;
-                            if (isset($params['parentId']) && intval($params['parentId'])) {
-                                $recordId = $params['parentId'];
+                            if (isset($params['masterId']) && intval($params['masterId'])) {
+                                $recordId = $params['masterId'];
                             }
                         } elseif (isset($params['recordId'])) {
                             $recordId = $params['recordId'];

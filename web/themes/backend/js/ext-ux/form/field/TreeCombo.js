@@ -9,7 +9,6 @@ Ext.define('Ext.ux.form.field.TreeCombo',
           "itemclick": true
         });
 
-
       this.listeners = config.listeners;
       this.callParent(arguments);
     },
@@ -72,13 +71,14 @@ Ext.define('Ext.ux.form.field.TreeCombo',
     },
     afterLoadSetValue: false,
     setValue: function (valueInit) {
+      debugger;
       if (typeof valueInit == 'undefined') {
         valueInit = 0;
       };
 
       var me = this,
         tree = this.tree,
-        values = (valueInit == '') ? [] : valueInit.split(','),
+        values = (valueInit) ? [] : [valueInit],
         valueFin = [];
 
       inputEl = me.inputEl;
@@ -105,7 +105,7 @@ Ext.define('Ext.ux.form.field.TreeCombo',
       me.records = [];
       Ext.each(me.recursiveRecords, function (record) {
         var id = record.get(me.valueField),
-          index = values.indexOf('' + id);
+          index = values.indexOf(id);
 
         if (index != -1) {
           valueFin.push(record.get(me.displayField));

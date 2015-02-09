@@ -38,7 +38,11 @@ function doOverride() {
         accusativeRecordTitle: '', // Название записи в единственном числе в винительном падеже, например "характеристику"
         createNew: function () {
             return Ext.create(this.$className, {});
-        }
+        },
+        recursive: false, // Модель рекурсивная
+        getDataAction: [],
+        saveAction: [],
+        deleteAction: []
     });
 
     Ext.override(Ext.data.Field, {
@@ -46,6 +50,7 @@ function doOverride() {
         group: '',
         required: false,
         identify: false,
+        extra: false, // true если поле будет сабмититься, но создаваться в форме и в гриде не будет. Например поля hidden, parent_id
         relativeModel: {
             name: '',
             moduleName: '',

@@ -14,7 +14,7 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
     afterParentLoad: function (record) {
         var me = this;
         if (me.userRights >= 1) {
-            me.store.getProxy().setExtraParam('parentId', record.get('id'));
+            me.store.getProxy().setExtraParam('masterId', record.get('id'));
             me.store.load();
         }
     },

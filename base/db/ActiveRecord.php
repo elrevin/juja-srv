@@ -415,7 +415,7 @@ class ActiveRecord extends db\ActiveRecord
      *          особым образом
      *      'where' - условия, используется в качестве аргумента метода andWhere
      *      'identifyOnly' - true если требуется выгрузить только идентифицирующее поле (например для выпадающих списков)
-     *      'parentId' - id родительской записи, если запрошены данные детализации
+     *      'masterId' - id родительской записи, если запрошены данные детализации
      *      'dataKey' - Ключ в возвращаемом массиве, который будет содержать данные
      *
      * @param $params
@@ -432,14 +432,14 @@ class ActiveRecord extends db\ActiveRecord
         $calcFields = [];
 
         foreach (static::$structure as $fieldName => $fieldConf) {
-            if (!isset($fieldConf['calc'])) {
-                $fieldConf['calc'] = false;
-            }
-
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
                 if ((isset($fieldConf['identify']) && !$fieldConf['identify']) || (!isset($fieldConf['identify']))) {
                     continue;
                 }
+            }
+
+            if (!isset($fieldConf['calc'])) {
+                $fieldConf['calc'] = false;
             }
 
             if ($fieldConf['type'] == 'pointer' && !$fieldConf['calc']) {
@@ -503,6 +503,11 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
+        if (!(isset($params['identifyOnly']) && $params['identifyOnly'])) {
+            $select[] = "`".static::tableName()."`.`parent_id`";
+        }
+
+
         $query = static::find();
 
         $filteredFields = [];
@@ -518,16 +523,20 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        if (isset($params['where'])) {
-            $query->andWhere($params['where']);
-        }
-
-        if (isset($params['parentId']) && $params['parentId'] && static::$masterModel) {
-            $query->andWhere('master_table_id = '.intval($params['parentId']));
+        if (isset($params['masterId']) && $params['masterId'] && static::$masterModel) {
+            $query->andWhere('master_table_id = '.intval($params['masterId']));
         }
 
         foreach ($join as $item) {
             $query->leftJoin($item['name'], $item['on']);
+        }
+
+        if (isset($params['where'])) {
+            $query->andWhere($params['where']);
+        }
+
+        if (static::$recursive && array_key_exists('parentId', $params)) {
+            $query->andWhere(['parent_id' => $params['parentId']]);
         }
 
         // Начало говнокода, который надо будет извести
@@ -616,7 +625,25 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        $res = [(isset($params['dataKey']) ? $params['dataKey'] : 'data') => static::afterList($list)];
+        $dataKey = (isset($params['dataKey']) ? $params['dataKey'] : 'data');
+        $res = [$dataKey => static::afterList($list)];
+
+        if (static::$recursive && isset($params['all']) && $params['all']) {
+            // Получаем все делево
+            // todo me: Надо бы это как-то оптимизировать
+            foreach ($res[$dataKey] as $i => $data) {
+                $children = static::getList(array_merge($params, [
+                    'parentId' => $data['id']
+                ]));
+                if ($children[$dataKey]) {
+                    $res[$dataKey][$i][$dataKey] = $children[$dataKey];
+                    $res[$dataKey][$i]['leaf'] = false;
+                } else {
+                    $res[$dataKey][$i]['leaf'] = true;
+                }
+            }
+        }
+
         if ($totalCount !== false) {
             $res['total'] = $totalCount;
         }
@@ -693,13 +720,13 @@ class ActiveRecord extends db\ActiveRecord
      * Сохраняет данные переданные в массиве $data
      * @param array $data
      * @param bool $add
-     * @param int $parentId
+     * @param int $masterId
      * @return array|bool|\yii\db\ActiveRecord[]
      */
-    public function saveData($data, $add = false, $parentId = 0)
+    public function saveData($data, $add = false, $masterId = 0)
     {
         if (static::$masterModel) {
-            $this->master_table_id = $parentId;
+            $this->master_table_id = $masterId;
         }
         $this->mapJson($data);
         if ($this->save()) {
@@ -791,19 +818,19 @@ class ActiveRecord extends db\ActiveRecord
      * Если $configOnly == true, то возвращается только массив настроек,
      *      если false, то возвращается полностью javascript редактора.
      *
-     * В $parentId указывается ID записи предка
+     * В $masterId указывается ID записи предка
      *
      * Если $modal == true, то возвращается конфиг модульного окна.
      *
      * В $params передаются произвольные параметры, которые могут прийти в POST параметрах запроса.
      *
      * @param bool $configOnly
-     * @param int $parentId
+     * @param int $masterId
      * @param bool $modal
      * @param array $params
      * @return string
      */
-    public static function getUserInterface($configOnly = false, $parentId = 0, $modal = false, $params = [])
+    public static function getUserInterface($configOnly = false, $masterId = 0, $modal = false, $params = [])
     {
         $modelStructure = static::getStructure();
         $fields = [];
@@ -888,6 +915,14 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
+        if (static::$recursive) {
+            $fields[] = [
+                'name' => 'parent_id',
+                'type' => 'int',
+                'extra' => true
+            ];
+        }
+
         $getDataAction = [static::getModuleName(), 'main', 'list'];
 
         $userRights = 0;
@@ -912,8 +947,9 @@ class ActiveRecord extends db\ActiveRecord
             'recordTitle' => static::$recordTitle,
             'accusativeRecordTitle' => static::$accusativeRecordTitle,
             'params' => $params,
-            'parentRecordId' => $parentId,
-            'sortable' => static::$sortable
+            'masterRecordId' => $masterId,
+            'sortable' => static::$sortable,
+            'recursive' => static::$recursive
         ];
 
         if (!$modal) {
@@ -974,7 +1010,7 @@ class ActiveRecord extends db\ActiveRecord
         if ($recursive && !$childModel) {
             $editor = 'SimpleEditor';
             $data = null;
-            if (isset($params['recordId']) && $params['recordId']) {
+            if (array_key_exists('recordId', $params) && $params['recordId']) {
                 $data = static::getList([
                     'where' => ['id' => $params['recordId']]
                 ])['data'];

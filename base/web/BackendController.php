@@ -67,7 +67,7 @@ class BackendController extends Controller
 
         $modelName = ($modelName ? '\app\modules\\'.$this->module->id.'\models\\'.$modelName : '');
 
-        $parentId = intval(Yii::$app->request->get('parentId', 0));
+        $masterId = intval(Yii::$app->request->get('masterId', 0));
 
         $recordId = 0;
         $data = Yii::$app->request->post('data', []);
@@ -75,7 +75,7 @@ class BackendController extends Controller
             $recordId = ['id' => 0];
         }
 
-        return Yii::$app->user->can($accessRule, ['modelName' => $modelName, 'recordId' => $recordId, 'parentId' => $parentId, 'strict' => true]);
+        return Yii::$app->user->can($accessRule, ['modelName' => $modelName, 'recordId' => $recordId, 'masterId' => $masterId, 'strict' => true]);
     }
 
     public function beforeAction($action)
@@ -122,7 +122,7 @@ class BackendController extends Controller
     {
         $list = call_user_func([$modelName, 'getList'], [
             'identifyOnly' => true,
-            'where' => ['parent_id' => $parentId],
+            'parentId' => $parentId,
             "dataKey" => 'list'
         ])['list'];
 
@@ -228,12 +228,12 @@ class BackendController extends Controller
 
     /**
      * Действие, возвращает интерфейс редактора.
-     * в аргументе $parentId передается id родительской записи для детализаций, этот id так же может быть пеередан в
+     * в аргументе $masterId передается id родительской записи для детализаций, этот id так же может быть пеередан в
      * get запросе.
-     * @param int $parentId
+     * @param int $masterId
      * @return string
      */
-    public function actionGetInterface($parentId = 0) {
+    public function actionGetInterface($masterId = 0) {
         $modelName = Yii::$app->request->get('modelName', '');
         if (!$modelName) {
             $this->ajaxError('\app\base\web\BackendController\actionGetInterface?modelName='.$modelName, 'Справочник не найден.');
@@ -241,14 +241,14 @@ class BackendController extends Controller
 
         $moduleName = $this->module->id;
 
-        $parentId = ($parentId ? $parentId : intval(Yii::$app->request->get('parentRecordId', 0)));
+        $masterId = ($masterId ? $masterId : intval(Yii::$app->request->get('masterRecordId', 0)));
         $recordId = intval(Yii::$app->request->get('id', 0));
         $modal = intval(Yii::$app->request->get('modal', 0));
 
         $params = Json::decode(Yii::$app->request->post("params"), '[]');
         $params['recordId'] = $recordId;
 
-        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $parentId, $modal, $params);
+        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $masterId, $modal, $params);
 
     }
 
@@ -285,12 +285,13 @@ class BackendController extends Controller
 
             $params = [
                 "identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false),
-                'parentId' => intval(Yii::$app->request->post('parentId', 0)),
+                'masterId' => intval(Yii::$app->request->post('masterId', 0)),
                 "sort" => Json::decode(Yii::$app->request->post('sort', '[]')),
                 "start" => intval(Yii::$app->request->post('start', 0)),
                 "limit" => intval(Yii::$app->request->post('limit', 0)),
                 "filter" => Json::decode(Yii::$app->request->post('colFilter', '[]')),
                 "all" => (Yii::$app->request->get('all', 0) ? true : false),
+                "parentId" => Yii::$app->request->get('parentId', null),
             ];
 
             $list = call_user_func([$modelName, 'getList'], $params);
@@ -310,7 +311,7 @@ class BackendController extends Controller
         $modelName = Yii::$app->request->get('modelName', '');
         $add = intval(Yii::$app->request->get('add', 0));
         $data = Json::decode(Yii::$app->request->post('data', '[]'));
-        $parentId = intval(Yii::$app->request->post('parentId', 0));
+        $masterId = intval(Yii::$app->request->post('masterId', 0));
 
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
@@ -319,7 +320,7 @@ class BackendController extends Controller
                  * @var \yii\db\ActiveRecord
                  */
                 $model = new $modelName();
-                if ($result = $model->saveData($data, true, $parentId)) {
+                if ($result = $model->saveData($data, true, $masterId)) {
                     $data = [
                         'data' => $result,
                         'success' => true
@@ -335,7 +336,7 @@ class BackendController extends Controller
                 }
             } elseif (isset($data['id']) && $data['id']) {
                 $model = call_user_func([$modelName, 'findOne'], $data['id']);
-                if ($result = $model->saveData($data, false, $parentId)) {
+                if ($result = $model->saveData($data, false, $masterId)) {
                     $data = [
                         'data' => $result,
                         'success' => true
@@ -363,7 +364,7 @@ class BackendController extends Controller
     public function actionDeleteRecord () {
         $modelName = Yii::$app->request->get('modelName', '');
         $data = Json::decode(Yii::$app->request->post('data', '[]'));
-        $parentId = intval(Yii::$app->request->post('parentId', 0));
+        $masterId = intval(Yii::$app->request->post('masterId', 0));
 
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
