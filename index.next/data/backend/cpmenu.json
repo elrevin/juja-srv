@@ -1,0 +1,27 @@
+{"manage": [
+  {
+    "title": "Какой-то узел",
+    "list": [
+      {
+        "title": "Тестовый справочник",
+        "modelName": "TestTable",
+        "moduleName": "backend"
+      },
+      {
+        "title": "Еще один тестовый справочник",
+        "modelName": "PointTestTable",
+        "moduleName": "backend"
+      },
+      {
+        "title": "Рекурсивный справочник",
+        "modelName": "RecursiveTest",
+        "moduleName": "backend"
+      }
+    ]
+  },
+  {
+    "title": "Файлы и изображения",
+    "modelName": "Files",
+    "moduleName": "files"
+  }
+]}

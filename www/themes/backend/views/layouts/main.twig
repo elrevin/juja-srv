@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>index.next CMS. Панель управления.</title>
+
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="{{ urlTo('@theme') }}/js/ext/resources/css/ext-all-neptune.css">
+    <link rel="stylesheet" type="text/css" href="{{ urlTo('@theme') }}/css/next.index.css">
+    <link rel="stylesheet" type="text/css" href="{{ urlTo('@theme') }}/css/Ext.ux.index.form.Form.css">
+    <link rel="stylesheet" type="text/css" href="{{ urlTo('@theme') }}/css/Ext.ux.index.form.TitleEditPanel.css">
+    <link rel="stylesheet" type="text/css" href="{{ urlTo('@theme') }}/css/Ext.ux.form.field.FileField.css">
+    <link rel="stylesheet" type="text/css" href="{{ urlTo('@theme') }}/css/data-view.css">
+    <link rel="stylesheet" type="text/css" href="{{ urlTo('@theme') }}/js/ext-ux/grid/css/GridFilters.css">
+    <link rel="stylesheet" type="text/css" href="{{ urlTo('@theme') }}/js/ext-ux/grid/css/RangeMenu.css">
+    <script type="text/javascript" src="{{ urlTo('@theme') }}/js/ext/ext-all.js"></script>
+    <script type="text/javascript" src="{{ urlTo('@theme') }}/js/ext/locale/ext-lang-ru.js"></script>
+    <script type="text/javascript" src="{{ urlTo('@theme') }}/js/ext/ext-theme-neptune.js"></script>
+
+    <script type="text/javascript" src="{{ urlTo('@theme') }}/js/ext-ux/tinymce/tiny_mce_src.js"></script>
+
+</head>
+<body>
+{% block content %}
+{% endblock %}
+<script>
+    var themeBaseUrl = "{{ urlTo('@theme') }}";
+    var baseUrl = "{{ url('/backend/default/index') }}";
+</script>
+<script>
+    {#var addButtonMenuItemsArray = [#}
+        {#{% for item in addMenuItems %}#}
+        {#{#}
+            {#title: "{{ item.title }}",#}
+            {#command: "{{ item.command }}",#}
+            {#idModel: {{ item.idModel }},#}
+            {#icon: "{{ item.icon }}"#}
+        {#} {% if not loop.last %},{% endif %}#}
+        {#{% endfor %}#}
+    {#];#}
+</script>
+<script src="{{ urlTo('@theme') }}/js/ExtOverrides.js"></script>
+<script src="{{ urlTo('@theme') }}/js/utils.js"></script>
+<script src="{{ urlTo('@theme') }}/js/main.js"></script>
+</body>
+</html>
