@@ -503,7 +503,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        if (!(isset($params['identifyOnly']) && $params['identifyOnly'])) {
+        if (!(isset($params['identifyOnly']) && $params['identifyOnly'] && static::$recursive)) {
             $select[] = "`".static::tableName()."`.`parent_id`";
         }
 
