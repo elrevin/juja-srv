@@ -1,0 +1,23 @@
+{{ use('app/modules/backend/assets/BackendAsset') }}
+{{ register_backend_asset() }}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>index.next CMS. Панель управления.</title>
+    <meta charset="utf-8">
+    {{ head() }}
+</head>
+<body>
+{{ begin_body() }}
+{% block content %}
+{% endblock %}
+<script>
+    var baseUrl = "{{ url('/backend/default/index') }}";
+    var assetBaseUrl = "{{ assetBaseUrl('app/modules/backend/assets/BackendAsset') }}";
+</script>
+<script>
+</script>
+{{ end_body() }}
+</body>
+</html>
+{{ end_page() }}

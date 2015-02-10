@@ -53,7 +53,7 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
         items[items.length] = {
             text: 'Добавить',
             enableToggle: true,
-            icon: $themeUrl('/images/buttons/plus.png'),
+            icon: $assetUrl('/images/buttons/plus.png'),
             toggleHandler: function (button, state) {
                 me.addFilePanel.setVisible(state);
                 me.toolbar.items.getAt(3).setVisible(state);
@@ -93,8 +93,8 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
                 }
             });
         } else {
-            IndexNextApp.getApplication().showErrorMessage(null, 'Некоторые поля заполнены не правильно или не заполнены совсем.<br>Поля содержащие ошибки отмечены иконкой <img src="' + $themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png') + '" /> и красной обводкой.<br/>' +
-            'Наведя мышь на иконку <img src="' + $themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png') + '" /> рядом с полем, Вы увидите пояснение ошибки.');
+            IndexNextApp.getApplication().showErrorMessage(null, 'Некоторые поля заполнены не правильно или не заполнены совсем.<br>Поля содержащие ошибки отмечены иконкой <img src="' + $assetUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png') + '" /> и красной обводкой.<br/>' +
+            'Наведя мышь на иконку <img src="' + $assetUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png') + '" /> рядом с полем, Вы увидите пояснение ошибки.');
         }
     },
     createAddForm: function () {
@@ -105,7 +105,7 @@ Ext.define('App.modules.files.Files.ModalSelectWindow', {
             header: false,
             height: 255,
             id: me.id + '-fields-preview',
-            bodyStyle: "display: table-cell; background-image: url('" + $themeUrl('/images/transparent.png') + "')"
+            bodyStyle: "display: table-cell; background-image: url('" + $assetUrl('/images/transparent.png') + "')"
         });
 
         me.addForm = Ext.create('Ext.form.Panel', {

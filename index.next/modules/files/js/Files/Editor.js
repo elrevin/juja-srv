@@ -81,7 +81,7 @@ Ext.define('App.modules.files.Files.Editor', {
                             header: false,
                             height: 300,
                             id: me.id+'-window-fields-img',
-                            bodyStyle: "display: table-cell; background-image: url('"+$themeUrl('/images/transparent.png')+"')"
+                            bodyStyle: "display: table-cell; background-image: url('"+$assetUrl('/images/transparent.png')+"')"
                         })
                     ]
                 }
@@ -113,8 +113,8 @@ Ext.define('App.modules.files.Files.Editor', {
                 }
             });
         } else {
-            IndexNextApp.getApplication().showErrorMessage(null, 'Некоторые поля заполнены не правильно или не заполнены совсем.<br>Поля содержащие ошибки отмечены иконкой <img src="'+$themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> и красной обводкой.<br/>'+
-                'Наведя мышь на иконку <img src="'+$themeUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> рядом с полем, Вы увидите пояснение ошибки.');
+            IndexNextApp.getApplication().showErrorMessage(null, 'Некоторые поля заполнены не правильно или не заполнены совсем.<br>Поля содержащие ошибки отмечены иконкой <img src="'+$assetUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> и красной обводкой.<br/>'+
+                'Наведя мышь на иконку <img src="'+$assetUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> рядом с полем, Вы увидите пояснение ошибки.');
         }
     },
     onSelectFile: function (file) {
@@ -198,7 +198,7 @@ Ext.define('App.modules.files.Files.Editor', {
             buttons[buttons.length] = {
                 xtype: 'button',
                 text: 'Добавить',
-                icon: $themeUrl('/images/buttons/plus.png'),
+                icon: $assetUrl('/images/buttons/plus.png'),
                 scope: this,
                 itemId: 'add',
                 handler: function () {
@@ -208,7 +208,7 @@ Ext.define('App.modules.files.Files.Editor', {
             buttons[buttons.length] = { xtype: 'tbspacer' };
             buttons[buttons.length] = {
                 xtype: 'button',
-                icon: $themeUrl('/images/buttons/edit.png'),
+                icon: $assetUrl('/images/buttons/edit.png'),
                 scope: this,
                 itemId: 'edit',
                 disabled: true,
@@ -221,7 +221,7 @@ Ext.define('App.modules.files.Files.Editor', {
 
                 buttons[buttons.length] = {
                     xtype: 'button',
-                    icon: $themeUrl('/images/buttons/del.png'),
+                    icon: $assetUrl('/images/buttons/del.png'),
                     scope: this,
                     itemId: 'del',
                     disabled: true,

@@ -20,6 +20,8 @@ class View extends web\View
 
     public function init()
     {
+        \Yii::setAlias('@theme', '');
+        \Yii::setAlias('@themeroot', '');
         if ($this->themeName) {
             $this->setActiveTheme($this->themeName);
         }

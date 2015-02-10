@@ -1,0 +1,18 @@
+{{ use('app/modules/backend/assets/AuthAsset') }}
+{{ register_auth_asset() }}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>next.index Панель управления</title>
+    <meta charset="utf-8">
+    {{ head() }}
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+</head>
+<body>
+{{ begin_body() }}
+    {% block content %}
+    {% endblock %}
+{{ end_body() }}
+</body>
+</html>
+{{ end_page() }}

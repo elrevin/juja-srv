@@ -14,10 +14,16 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
 {
     public $namespaces = [];
 
+    public static function assetBaseUrl($assetBundleName)
+    {
+        $assetBundleName = str_replace('/', '\\', $assetBundleName);
+        return \Yii::$app->view->getAssetManager()->getBundle($assetBundleName)->baseUrl;
+    }
 
     public function init()
     {
         $this->functions['urlTo'] = '\yii\helpers\Url::to';
+        $this->functions['assetBaseUrl'] = '\app\components\TwigViewRenderer::assetBaseUrl';
         parent::init();
     }
 

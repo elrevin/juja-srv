@@ -1,0 +1,123 @@
+{# @title Страница авторизации #}
+{% extends '@app/modules/backend/views/layouts/auth.twig' %}
+{% block content %}
+    <div class="auth-panel" id="auth">
+        <form method="post" action="{{ url('/backend/default/auth') }}">
+            <div class="h1">Войти в панель управления</div>
+            {% if authErrors %}
+                <div class="error">
+                    {% if authErrors.username == 'empty' %}
+                        Вы не ввели логин.
+                    {% elseif authErrors.password == 'empty' %}
+                        Вы не ввели логин.
+                    {% elseif authErrors.login == 'incorrectPassword' %}
+                        Вы ввели неверный логин или пароль.
+                    {% elseif authErrors.login == 'some' %}
+                        Что-то пошло не так.
+                    {% endif %}
+                </div>
+            {% endif %}
+            <label for="input_login" class="h2">Логин</label>
+            <input id="input_login" name="login" class="text" type="text">
+
+            <label for="input_passwd" class="h2">Пароль</label>
+            <input id="input_passwd" name="password" class="text" type="password">
+
+            <div class="button-row">
+                <div class="left">
+                    <a href="#" class="changeState">Забыли логин или пароль?</a>
+                </div>
+                <div class="right">
+                    <input type="image" src="{{ assetBaseUrl('app/modules/backend/assets/AuthAsset') }}/images/authPage/auth-login-button.png">
+                </div>
+            </div>
+            <br class="clear">
+        </form>
+        <div class="copy">
+            <a href="http://index-art.ru" target="_blank"></a>
+        </div>
+    </div>
+    <div class="auth-panel" id="restore">
+        <form method="post" action="{{ url('/backend/default/restore') }}">
+            <div class="h1">Получить логин и пароль</div>
+            <div class="text">
+                Введите адрес электронной почты и мы вышлем вам логин и пароль.
+            </div>
+            {% if restoreErrors %}
+                <div class="error">
+                    {% if restoreErrors.email == 'empty' %}
+                        Вы не ввели электронную почту.
+                    {% elseif restoreErrors.user == 'notFound' %}
+                        Пользователь с таким адресом электронной почты не найден.
+                    {% elseif authErrors.login == 'incorrectPassword' %}
+                        Вы ввели неверный логин или пароль.
+                    {% elseif authErrors.login == 'some' %}
+                        Что-то пошло не так.
+                    {% endif %}
+                </div>
+            {% endif %}
+            {% if errors %}
+                <div class="error">
+                    {% if errors.rememberEmail and errors.rememberEmail == 'empty' %}
+                        Вы не указали e-mail для восстановления доступа.
+                    {% elseif errors.rememberEmail and errors.rememberEmail == 'invalid' %}
+                        Пользователь с указанным e-mail не найден
+                    {% endif %}
+                </div>
+            {% endif %}
+            <label for="input_email" class="h2">Электронная почта</label>
+            <input id="input_email" name="email" class="text" type="text">
+
+            <div class="button-row">
+                <div class="left">
+                    <a href="#" class="changeState">Перейти к авторизации</a>
+                </div>
+                <div class="right">
+                    <input type="image" src="{{ assetBaseUrl('app/modules/backend/assets/AuthAsset') }}/images/authPage/auth-get-password-button.png">
+                </div>
+            </div>
+            <br class="clear">
+        </form>
+        <div class="copy">
+            <a href="http://index-art.ru" target="_blank"></a>
+        </div>
+    </div>
+
+    {% if state and state == 'restore' %}
+        <script>var state = 1;</script>
+    {% else %}
+        <script>var state = 0;</script>
+    {% endif %}
+
+    <script>
+        $(document).on('ready', function () {
+            if (state == 1) {
+                $('#auth').hide();
+                $('#restore').show();
+            } else {
+                $('#auth').show();
+                $('#restore').hide();
+            }
+            $('.changeState').on('click', function () {
+                if (state == 0) {
+                    $('#auth').hide();
+                    $('#restore').show();
+                    state = 1;
+                } else {
+                    $('#auth').show();
+                    $('#restore').hide();
+                    state = 0;
+                }
+                return false;
+            });
+            $('label').each(function () {
+                $(this).css('opacity', .3);
+            });
+            $('input[type=text], input[type=password]').on('focusin', function () {
+                $('label[for=' + this.id + ']').animate({opacity: 1}, 200);
+            }).on('focusout', function () {
+                $('label[for=' + this.id + ']').animate({opacity: 0.3}, 200);
+            });
+        });
+    </script>
+{% endblock %}

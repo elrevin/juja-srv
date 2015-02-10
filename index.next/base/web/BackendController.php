@@ -29,8 +29,12 @@ class BackendController extends Controller
     public function init()
     {
         $this->enableCsrfValidation = false;
-        Yii::$app->view->setActiveTheme('backend');
-        Yii::$app->mailer->themeName = "backend";
+//        Yii::$app->view->setActiveTheme('backend');
+//        Yii::$app->mailer->themeName = "backend";
+        
+        Yii::$app->mailer->viewPath = '@app/modules/backend/views/mail/views';
+        Yii::$app->mailer->htmlLayout = '@app/modules/backend/views/mail/layouts/html';
+
         // Устанавливаем текущий интерфейс в куки
         $this->currentInterfaceType = $this->getCurrentInterfaceType();
         Yii::$app->params['backendCurrentInterfaceType'] = $this->currentInterfaceType;
