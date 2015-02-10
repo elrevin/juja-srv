@@ -12,6 +12,16 @@ class BackendAsset extends AssetBundle
         'js/utils.js',
         'js/main.js',
     ];
+    public $css = [
+        'js/ext/resources/css/ext-all-neptune.css',
+        'css/next.index.css',
+        'css/Ext.ux.index.form.Form.css',
+        'css/Ext.ux.index.form.TitleEditPanel.css',
+        'css/Ext.ux.form.field.FileField.css',
+        'css/data-view.css',
+        'css/GridFilters.css',
+        'css/RangeMenu.css',
+    ];
     public $jsOptions = ['position' => \yii\web\View::POS_END];
     public $depends = [
         'app\modules\backend\assets\ExtJsAsset',
@@ -19,9 +29,4 @@ class BackendAsset extends AssetBundle
     public $publishOptions = [
         'forceCopy' => true
     ];
-    public function init()
-    {
-        $this->css = array_merge($this->css, Utils::getFiles(\Yii::getAlias("@app/modules/backend/assets/css"), 'css'));
-        parent::init();
-    }
 }

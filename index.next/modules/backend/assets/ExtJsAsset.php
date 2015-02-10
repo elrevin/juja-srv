@@ -13,8 +13,5 @@ class ExtJsAsset extends AssetBundle
         'js/ext/ext-theme-neptune.js',
         'js/ext-ux/tinymce/tiny_mce_src.js',
     ];
-    public $css = [
-        'js/ext/resources/css/ext-all-neptune.css'
-    ];
     public $jsOptions = ['position' => \yii\web\View::POS_HEAD];
 }

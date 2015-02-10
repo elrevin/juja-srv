@@ -85,3 +85,7 @@
 .in2-editor-form-toolbar-tab-form {
     background: #ffffff url("../images/extOverride/h-devider-single.png") repeat-x left bottom;
 }
+
+.in2-editor-form .x-trigger-cell {
+    font-size: 1px;
+}
