@@ -15,14 +15,14 @@ Ext.define('Ext.ux.index.MainMenuTreeColumn', {
         '<img src="{blankUrl}" class="cp-node-arrow {expanderCls} {baseIconCls}">' +
         '<tpl else>',
             '<tpl if="isFirstLevel">' +
-            '<img src="/themes/backend/images/icons/place_for_ico.png">' +
+            '<img src="'+$assetUrl('/images/icons/place_for_ico.png')+'">' +
             '</tpl>'+
         '</tpl>',
         '<tpl if="isFirstLevel">' +
             '<tpl if="icon">',
             '<img src="{blankUrl}" class="{childCls} cp-main-tree-icon" style="background-image:url({icon})"/>',
             '<tpl else>',
-            '<img src="/themes/backend/images/icons/simple.png" />',
+            '<img src="'+$assetUrl('/images/icons/simple.png')+'" />',
             '</tpl>' +
         '</tpl>',
         '<tpl if="href">',
