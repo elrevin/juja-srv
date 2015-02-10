@@ -23,6 +23,6 @@
     "title": "Файлы и изображения",
     "modelName": "Files",
     "moduleName": "files",
-    "icon": "/themes/backend/images/icons/file.png"
+    "icon": "/cp-files/images/modules-icons/file.png"
   }
 ]}
