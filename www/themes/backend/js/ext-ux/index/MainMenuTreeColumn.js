@@ -14,7 +14,9 @@ Ext.define('Ext.ux.index.MainMenuTreeColumn', {
         '<tpl if="expandable">' +
         '<img src="{blankUrl}" class="cp-node-arrow {expanderCls} {baseIconCls}">' +
         '<tpl else>',
-        '<img src="/themes/backend/images/icons/place_for_ico.png">' +
+            '<tpl if="isFirstLevel">' +
+            '<img src="/themes/backend/images/icons/place_for_ico.png">' +
+            '</tpl>'+
         '</tpl>',
         '<tpl if="isFirstLevel">' +
             '<tpl if="icon">',
