@@ -22,6 +22,7 @@
   {
     "title": "Файлы и изображения",
     "modelName": "Files",
-    "moduleName": "files"
+    "moduleName": "files",
+    "icon": "/themes/backend/images/icons/file.png"
   }
 ]}

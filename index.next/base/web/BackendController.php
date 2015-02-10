@@ -152,6 +152,7 @@ class BackendController extends Controller
             }
             $res[] = $node;
         }
+
         return $res;
     }
 

@@ -11,10 +11,20 @@ Ext.define('Ext.ux.index.MainMenuTreeColumn', {
         '<input type="button" role="checkbox" <tpl if="checked">aria-checked="true" </tpl>',
         'class="{childCls} {checkboxCls}<tpl if="checked"> {checkboxCls}-checked</tpl>"/>',
         '</tpl>',
-        '<tpl if="expandable"><img src="{blankUrl}" class="cp-node-arrow {expanderCls} {baseIconCls}"></tpl>',
-        '<tpl if="isFirstLevel"><tpl if="icon">',
-        '<img src="{blankUrl}" class="{childCls} cp-main-tree-icon" style="background-image:url({icon})"/>',
-        '</tpl></tpl>',
+        '<tpl if="expandable">' +
+        '<img src="{blankUrl}" class="cp-node-arrow {expanderCls} {baseIconCls}">' +
+        '<tpl else>',
+            '<tpl if="isFirstLevel">' +
+            '<img src="/themes/backend/images/icons/place_for_ico.png">' +
+            '</tpl>'+
+        '</tpl>',
+        '<tpl if="isFirstLevel">' +
+            '<tpl if="icon">',
+            '<img src="{blankUrl}" class="{childCls} cp-main-tree-icon" style="background-image:url({icon})"/>',
+            '<tpl else>',
+            '<img src="/themes/backend/images/icons/simple.png" />',
+            '</tpl>' +
+        '</tpl>',
         '<tpl if="href">',
         '<a href="{href}" target="{hrefTarget}" class="{textCls} {childCls}">{value} </a>',
         '<tpl else>',
