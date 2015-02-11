@@ -73,7 +73,6 @@ Ext.define('Ext.ux.index.editors.SingleListEditor', {
             this.toolBar.add('-');
             this.toolBar.add(this.additionTools);
         }
-
         var dataPanelConfig = {
             model: this.mainModel,
             parentIdParamName: this.parentIdParamName,

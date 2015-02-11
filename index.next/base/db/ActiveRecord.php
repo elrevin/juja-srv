@@ -138,6 +138,12 @@ class ActiveRecord extends db\ActiveRecord
     protected static $parentModel = '';
 
     /**
+     * Имя модели связанной с родительской данной, через нее
+     * @var string
+     */
+    protected static $linkModelName = '';
+
+    /**
      * Имя модуля, которой принадлежит модель
      * @var string
      */
@@ -150,7 +156,7 @@ class ActiveRecord extends db\ActiveRecord
     protected static $modelName = '';
 
     /**
-     * Название записи в едиственном чистел в именительном падеже, нпрмер "характеристика"
+     * Название записи в единственном числе в именительном падеже, например "характеристика"
      * @var string
      */
     protected static $recordTitle = '';
@@ -177,11 +183,28 @@ class ActiveRecord extends db\ActiveRecord
     public static $modalSelect = false;
 
     /**
+     * Класс таба для детализация
+     * @var enum('Ext.ux.index.tab.DetailPanel', 'Ext.ux.index.tab.Many2ManyPanel')
+     */
+    public static $tabClassName = 'Ext.ux.index.tab.DetailPanel';
+
+    /**
+     * Тип таба для связи many2many
+     * @var enum('button', 'checkbox')
+     */
+    public static $typeGrid = 'button';
+
+    /**
      * Доступна ли ручная сортировка
      *
      * @var bool
      */
     public static $sortable = false;
+
+    public static function getRunAction ()
+    {
+        return [static::getModuleName(), 'main', 'get-interface'];
+    }
 
     public static function find()
     {
@@ -282,7 +305,7 @@ class ActiveRecord extends db\ActiveRecord
     }
 
     /**
-     * Возвращает модели-детализации, для которых вкачестве мастер-модели указана текущая (если таковые есть).
+     * Возвращает модели-детализации, для которых в качестве мастер-модели указана текущая (если таковые есть).
      * Возвращаются имена классов, включая пространства имен, в массиве.
      * Если модели-деталицации не найдены, возвращается false
      * @return array|bool
@@ -507,6 +530,10 @@ class ActiveRecord extends db\ActiveRecord
             $select[] = "`".static::tableName()."`.`parent_id`";
         }
 
+        if(static::$tabClassName == 'Ext.ux.index.tab.Many2ManyPanel' && static::$typeGrid == 'checkbox'){
+            // @todo: реализация checkbox tab'a
+            //$select[] =
+        }
 
         $query = static::find();
 
@@ -924,6 +951,11 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         $getDataAction = [static::getModuleName(), 'main', 'list'];
+        $runAction = [static::getModuleName(), 'main', 'get-interface'];
+        $linkModelRunAction = null;
+        if (static::$linkModelName) {
+            $linkModelRunAction = call_user_func([static::$linkModelName, 'getRunAction']);
+        }
 
         $userRights = 0;
 
@@ -937,9 +969,16 @@ class ActiveRecord extends db\ActiveRecord
             $userRights = 1;
         }
 
+        $linkModelName = '';
+        if (static::$linkModelName) {
+            $linkModelName = call_user_func([static::$linkModelName, 'getModelName']);
+        }
+
         $conf = [
             'fields' => $fields,
             'getDataAction' => $getDataAction,
+            'linkModelRunAction' => $linkModelRunAction,
+            'linkModelName' => $linkModelName,
             'modelName' => $modelName,
             'userRights' => $userRights,
             'createInterfaceForExistingParentOnly' => static::$createInterfaceForExistingParentOnly,
@@ -949,7 +988,9 @@ class ActiveRecord extends db\ActiveRecord
             'params' => $params,
             'masterRecordId' => $masterId,
             'sortable' => static::$sortable,
-            'recursive' => static::$recursive
+            'recursive' => static::$recursive,
+            'tabClassName' => static::$tabClassName,
+            'typeGrid' => static::$typeGrid
         ];
 
         if (!$modal) {
