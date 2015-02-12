@@ -8,6 +8,8 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
     extend: 'Ext.grid.Panel',
     alias: 'widget.listgrid',
     modelClassName: '',
+    columns: [],
+    addColumns: [],
     getDataAction: [],
     saveAction: [],
     deleteAction: [],
@@ -197,10 +199,24 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
     createColumns: function () {
         var me = this,
             fields = Ext.ClassManager.classes[me.modelClassName].getFields(),
-            i;
+            i, tmpColNames = [];
+
+        for (i = 0; i < me.addColumns.length; i++) {
+            tmpColNames[i] = me.addColumns[i].dataIndex;
+        }
 
         for (i = 0; i < fields.length; i++) {
-            me.createColumn(fields[i]);
+            if (me.addColumns.length) {
+                if (tmpColNames.indexOf(fields[i].name) < 0) {
+                    me.createColumn(fields[i]);
+                }
+            } else {
+                me.createColumn(fields[i]);
+            }
+        }
+
+        if (me.addColumns.length) {
+            me.columns = me.columns.concat(me.addColumns);
         }
     },
 

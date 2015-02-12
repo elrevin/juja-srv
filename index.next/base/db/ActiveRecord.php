@@ -474,7 +474,7 @@ class ActiveRecord extends db\ActiveRecord
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 if ($relatedIdentifyFieldConf) {
                     $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                    $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                    $select[] = "`".$relatedTableName."`.`id` AS `".$fieldName."`";
                     $select[] = "`".$relatedTableName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
                     $pointers[$fieldName] = [
                         "table" => $relatedTableName,
@@ -530,11 +530,6 @@ class ActiveRecord extends db\ActiveRecord
             $select[] = "`".static::tableName()."`.`parent_id`";
         }
 
-        if(static::$tabClassName == 'Ext.ux.index.tab.Many2ManyPanel' && static::$typeGrid == 'checkbox'){
-            // @todo: реализация checkbox tab'a
-            //$select[] =
-        }
-
         $query = static::find();
 
         $filteredFields = [];
@@ -550,12 +545,21 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        if (isset($params['masterId']) && $params['masterId'] && static::$masterModel) {
-            $query->andWhere('master_table_id = '.intval($params['masterId']));
-        }
+        if(static::$tabClassName == 'Ext.ux.index.tab.Many2ManyPanel' && static::$typeGrid == 'checkbox') {
 
-        foreach ($join as $item) {
-            $query->leftJoin($item['name'], $item['on']);
+            $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
+                static::tableName()."`.`master_table_id` = ".$params['masterId']."), 1, 0) AS `check`";
+            $query->rightJoin($relatedTableName, "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.`id`");
+
+        } else {
+
+            if (isset($params['masterId']) && $params['masterId'] && static::$masterModel) {
+                $query->andWhere('master_table_id = ' . intval($params['masterId']));
+            }
+
+            foreach ($join as $item) {
+                $query->leftJoin($item['name'], $item['on']);
+            }
         }
 
         if (isset($params['where'])) {

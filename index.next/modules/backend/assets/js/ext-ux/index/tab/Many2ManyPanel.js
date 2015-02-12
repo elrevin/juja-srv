@@ -17,13 +17,30 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
     runAction: [],
     modelName: '',
     linkModelRunAction: null,
+    masterId: 0,
 
     afterParentLoad: function (record) {
         var me = this;
         if (me.userRights >= 1) {
             me.store.getProxy().setExtraParam('masterId', record.get('id'));
+            me.masterId = record.get('id');
             me.store.load();
         }
+    },
+    getFields: function () {
+        var me = this,
+            fields;
+        fields = me.mixins.modelLoader.getFields.call(me);
+        if(me.typeGrid == 'checkbox')
+            fields[fields.length] = {
+                name: 'check',
+                type: 'bool',
+                title: '',
+                group: '',
+                identify: false,
+                required: false
+            };
+        return fields;
     },
 
     createListGrid: function () {
@@ -41,6 +58,7 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
                     store: me.store,
                     tbar: me.toolbar,
                     sortable: me.sortable,
+                    columns: [],
                     selModel: Ext.create('Ext.selection.CheckboxModel', {
                         mode: "MULTI"
                     }),
@@ -61,11 +79,66 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
                     saveAction: me.saveAction,
                     deleteAction: me.deleteAction,
                     store: me.store,
-                    sortable: me.sortable
+                    sortable: me.sortable,
+                    columns: []
                 };
+                gridConfig['addColumns'] = [
+                    {
+                        xtype: 'checkcolumn',
+                        dataIndex: 'check',
+                        text: "Выбрать",
+                        scope: this,
+                        listeners: {
+                            checkchange: function (col, rowIndex, checked) {
+
+                                rec = me.store.getAt(rowIndex);
+
+                                if(checked) {
+                                    var newRec = Ext.create(me.modelClassName);
+                                    var name = me.fields[0].name;
+                                    newRec.getProxy().setExtraParam('masterId', me.masterId);
+                                    newRec.set(name, Ext.JSON.encode({
+                                        id: rec.data[name].id,
+                                        value: rec.data[name].value
+                                    }));
+                                    newRec.save({
+                                        callback: function () {
+                                            me.store.reload();
+                                        }
+                                    });
+
+                                } else {
+                                    Ext.Ajax.request({
+                                        url: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('Model', '')}),
+                                        params: {
+                                            data: Ext.JSON.encode({
+                                                id: rec.get('id')
+                                            })
+                                        },
+                                        success: function (response) {
+                                            var data = Ext.JSON.decode(response.responseText);
+                                            if (data.success) {
+                                                me.store.reload();
+                                            }
+                                        }
+                                    });
+
+                                    //me.store.remove(rec);
+                                    //me.store.sync({
+                                    //    callback: function () {
+                                    //        me.store.reload();
+                                    //    }
+                                    //});
+                                }
+
+                            }
+                        }
+                    }
+                ];
             }
 
             me.grid = Ext.create('Ext.ux.index.grid.ListGrid', gridConfig);
+
         }
     },
 
@@ -79,14 +152,12 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
                 listeners: {
                     select: function (record) {
                         var newRec = Ext.create(me.modelClassName);
-
                         for (var i = 0; i < me.fields.length; i++) {
                             newRec.set(me.fields[i].name, Ext.JSON.encode({
                                 id: record.get('id'),
                                 value: record.get(me.fields[i].relativeModel.identifyFieldName)
                             }));
                         }
-
                         me.store.add(newRec);
                         me.store.sync({
                             failure: function () {
@@ -96,7 +167,8 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
                     }
                 },
                 modal: true,
-                modelName: me.linkModelName
+                modelName: me.linkModelName,
+                columns: []
             });
         }
     },
@@ -173,7 +245,7 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
 
                 me.layout = "fit";
 
-                me.createModelClass();
+                me.createModelClass(true);
 
                 if (me.modelClassName) {
                     me.model = Ext.create(me.modelClassName, {});
