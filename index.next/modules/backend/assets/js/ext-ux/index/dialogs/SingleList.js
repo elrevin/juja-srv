@@ -42,7 +42,6 @@ Ext.define("Ext.ux.index.dialogs.SingleList", {
                 ]
             });
         }
-
         me.window.show();
     },
     constructor: function (config) {

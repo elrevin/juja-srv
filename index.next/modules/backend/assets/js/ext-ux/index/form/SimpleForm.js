@@ -604,7 +604,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
         me.callParent([record]);
         me.afterLoad(record);
 
-        for (i =0; i < fieldsCount; i++) {
+        for (i = 0; i < fieldsCount; i++) {
             field = me.model.fields.get(i);
             me._showConditionAnalytic(field, Ext.getCmp(me.id + '_field_' + field.name));
         }

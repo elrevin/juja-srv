@@ -138,6 +138,12 @@ class ActiveRecord extends db\ActiveRecord
     protected static $parentModel = '';
 
     /**
+     * Имя модели связанной с родительской данной, через нее
+     * @var string
+     */
+    protected static $linkModelName = '';
+
+    /**
      * Имя модуля, которой принадлежит модель
      * @var string
      */
@@ -150,7 +156,7 @@ class ActiveRecord extends db\ActiveRecord
     protected static $modelName = '';
 
     /**
-     * Название записи в едиственном чистел в именительном падеже, нпрмер "характеристика"
+     * Название записи в единственном числе в именительном падеже, например "характеристика"
      * @var string
      */
     protected static $recordTitle = '';
@@ -177,11 +183,28 @@ class ActiveRecord extends db\ActiveRecord
     public static $modalSelect = false;
 
     /**
+     * Класс таба для детализация
+     * @var enum('Ext.ux.index.tab.DetailPanel', 'Ext.ux.index.tab.Many2ManyPanel')
+     */
+    public static $tabClassName = 'Ext.ux.index.tab.DetailPanel';
+
+    /**
+     * Тип таба для связи many2many
+     * @var enum('button', 'checkbox')
+     */
+    public static $typeGrid = 'button';
+
+    /**
      * Доступна ли ручная сортировка
      *
      * @var bool
      */
     public static $sortable = false;
+
+    public static function getRunAction ()
+    {
+        return [static::getModuleName(), 'main', 'get-interface'];
+    }
 
     public static function find()
     {
@@ -282,7 +305,7 @@ class ActiveRecord extends db\ActiveRecord
     }
 
     /**
-     * Возвращает модели-детализации, для которых вкачестве мастер-модели указана текущая (если таковые есть).
+     * Возвращает модели-детализации, для которых в качестве мастер-модели указана текущая (если таковые есть).
      * Возвращаются имена классов, включая пространства имен, в массиве.
      * Если модели-деталицации не найдены, возвращается false
      * @return array|bool
@@ -453,8 +476,8 @@ class ActiveRecord extends db\ActiveRecord
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 if ($relatedIdentifyFieldConf) {
                     $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                    $select[] = "`".static::tableName()."`.`".$fieldName."`";
-                    $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                    $select[] = "`".$relatedTableName."_".$fieldName."`.`id` AS `".$fieldName."`";
+                    $select[] = "`".$relatedTableName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
                     $pointers[$fieldName] = [
                         "table" => $relatedTableName."_".$fieldName,
                         "field" => $relatedIdentifyFieldConf['name']
@@ -524,7 +547,6 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-
         $query = static::find();
 
         $filteredFields = [];
@@ -540,12 +562,21 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        if (isset($params['masterId']) && $params['masterId'] && static::$masterModel) {
-            $query->andWhere('master_table_id = '.intval($params['masterId']));
-        }
+        if(static::$tabClassName == 'Ext.ux.index.tab.Many2ManyPanel' && static::$typeGrid == 'checkbox') {
 
-        foreach ($join as $item) {
-            $query->leftJoin($item['name'], $item['on']);
+            $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
+                static::tableName()."`.`master_table_id` = ".$params['masterId']."), 1, 0) AS `check`";
+            $query->rightJoin($relatedTableName, "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.`id`");
+
+        } else {
+
+            if (isset($params['masterId']) && $params['masterId'] && static::$masterModel) {
+                $query->andWhere('master_table_id = ' . intval($params['masterId']));
+            }
+
+            foreach ($join as $item) {
+                $query->leftJoin($item['name'], $item['on']);
+            }
         }
 
         if (isset($params['where'])) {
@@ -673,9 +704,9 @@ class ActiveRecord extends db\ActiveRecord
      * @param $value
      * @return int|null|string
      */
-    protected static function setType ($fieldName, $value, $type = false)
+    protected static function setType ($fieldName, $value)
     {
-        $type = (!$type ? static::$structure[$fieldName]['type'] : $type);
+        $type = static::$structure[$fieldName]['type'];
 
         if ($type == 'int') {
             return intval($value);
@@ -728,8 +759,6 @@ class ActiveRecord extends db\ActiveRecord
                     if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
                         $this->$key = static::setType($key, $val);
                     }
-                } elseif ($key == 'parent_id' && static::$recursive) {
-                    $this->$key = static::setType($key, $val, 'pointer');
                 }
             }
         }
@@ -943,6 +972,11 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         $getDataAction = [static::getModuleName(), 'main', 'list'];
+        $runAction = [static::getModuleName(), 'main', 'get-interface'];
+        $linkModelRunAction = null;
+        if (static::$linkModelName) {
+            $linkModelRunAction = call_user_func([static::$linkModelName, 'getRunAction']);
+        }
 
         $userRights = 0;
 
@@ -956,9 +990,16 @@ class ActiveRecord extends db\ActiveRecord
             $userRights = 1;
         }
 
+        $linkModelName = '';
+        if (static::$linkModelName) {
+            $linkModelName = call_user_func([static::$linkModelName, 'getModelName']);
+        }
+
         $conf = [
             'fields' => $fields,
             'getDataAction' => $getDataAction,
+            'linkModelRunAction' => $linkModelRunAction,
+            'linkModelName' => $linkModelName,
             'modelName' => $modelName,
             'userRights' => $userRights,
             'createInterfaceForExistingParentOnly' => static::$createInterfaceForExistingParentOnly,
@@ -968,7 +1009,9 @@ class ActiveRecord extends db\ActiveRecord
             'params' => $params,
             'masterRecordId' => $masterId,
             'sortable' => static::$sortable,
-            'recursive' => static::$recursive
+            'recursive' => static::$recursive,
+            'tabClassName' => static::$tabClassName,
+            'typeGrid' => static::$typeGrid
         ];
 
         if (!$modal) {

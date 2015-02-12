@@ -38,7 +38,6 @@ Ext.define('Ext.ux.form.field.ModalSelect', {
 
     onTriggerClick: function () {
         var me = this;
-
         IndexNextApp.getApplication().loadModule({
             runAction: me.runAction,
             listeners: {

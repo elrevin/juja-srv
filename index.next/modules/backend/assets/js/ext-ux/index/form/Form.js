@@ -262,9 +262,10 @@ Ext.define('Ext.ux.index.form.Form', {
                 bbar: me.createBottomToolbar(),
                 layout: 'fit'
             });
-
             for (var i = 0; i < me.tabs.length; i++) {
-                tabClassName = 'Ext.ux.index.tab.DetailPanel';
+
+                tabClassName = me.tabs[i].tabClassName;
+
                 createTabNow = false;
                 if (me.tabs[i].createInterfaceForExistingParentOnly == undefined || !me.tabs[i].createInterfaceForExistingParentOnly) {
                     createTabNow = true;
@@ -302,7 +303,7 @@ Ext.define('Ext.ux.index.form.Form', {
 
         // Создание табов.
         for (i = 0; i < me.tabs.length; i++) {
-            tabClassName = 'Ext.ux.index.tab.DetailPanel';
+            tabClassName = me.tabs[i].tabClassName;
             createTabNow = false;
             if (!me.tabs[i].createInterfaceForExistingParentOnly) {
                 createTabNow = true;
@@ -342,7 +343,8 @@ Ext.define('Ext.ux.index.form.Form', {
 
         // Создание табов.
         for (i = 0; i < me.tabs.length; i++) {
-            tabClassName = 'Ext.ux.index.tab.DetailPanel';
+            tabClassName = me.tabs[i].tabClassName;
+
             createTabNow = false;
             if (!me.tabs[i].createInterfaceForExistingParentOnly) {
                 createTabNow = true;
@@ -381,7 +383,8 @@ Ext.define('Ext.ux.index.form.Form', {
 
         for (i = 0; i < me.tabs.length; i++) {
             if ((me.tabs[i].createInterfaceForExistingParentOnly != undefined || me.tabs[i].createInterfaceForExistingParentOnly) && !me.tabs[i].object) {
-                tabClassName = 'Ext.ux.index.tab.DetailPanel';
+                tabClassName = me.tabs[i].tabClassName;
+
                 if (me.tabs[i].className != undefined && me.tabs[i].className) {
                     tabClassName = me.tabs[i].className;
                 }

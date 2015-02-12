@@ -16,6 +16,21 @@
         "title": "Рекурсивный справочник",
         "modelName": "RecursiveTest",
         "moduleName": "backend"
+      },
+      {
+        "title": "Новости",
+        "list": [
+          {
+            "title": "Теги",
+            "modelName": "Tags",
+            "moduleName": "backend"
+          },
+          {
+            "title": "Список новостей",
+            "modelName": "News",
+            "moduleName": "backend"
+          }
+        ]
       }
     ]
   },
