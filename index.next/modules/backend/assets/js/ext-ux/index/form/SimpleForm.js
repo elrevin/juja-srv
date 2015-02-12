@@ -568,11 +568,14 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
         }
     },
 
+    afterInitComponent: function () {},
+
     initComponent: function () {
         var me = this;
         me.beforeInitComponent();
         me.callParent();
         me.createFields();
+        me.afterInitComponent();
     },
 
     beforeLoad: function (record) {
@@ -641,6 +644,11 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             IndexNextApp.getApplication().showErrorMessage(null, 'Некоторые поля заполнены не правильно или не заполнены совсем.<br>Поля содержащие ошибки отмечены иконкой <img src="'+$assetUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> и красной обводкой.<br/>'+
                                                             'Наведя мышь на иконку <img src="'+$assetUrl('/js/ext/resources/ext-theme-neptune/images/form/exclamation.png')+'" /> рядом с полем, Вы увидите пояснение ошибки.');
         }
+    },
+
+    getInputFieldByName: function (name) {
+        var me = this;
+        return Ext.getCmp(me.id + '_field_' + name);
     }
 
 });

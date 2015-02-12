@@ -146,8 +146,8 @@ class BackendController extends Controller
                 // Есть ли дочерние элементы
                 $query = call_user_func([$modelName, 'find']);
                 $haveChildren = $query->where(['parent_id' => $item['id']])->select(['id'])->limit(1)->exists();
-                $node['leaf'] = !$haveChildren;
-                $node['getSubTreeAction'] = ($haveChildren ? [$this->module->id, "main", "cp-menu"] : null);
+                $node['leaf'] = false;//!$haveChildren;
+                $node['getSubTreeAction'] = [$this->module->id, "main", "cp-menu"];
                 $node['list'] = $this->getCPMenuData($recursive, $shortModelName, $modelName, $item['id'], $identifyFieldName);
             }
             $res[] = $node;

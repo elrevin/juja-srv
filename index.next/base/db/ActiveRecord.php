@@ -369,6 +369,8 @@ class ActiveRecord extends db\ActiveRecord
                 $res = ['>', ($condField), $value];
             } elseif ($comparison == 'eq') {
                 $res = ['=', ($condField), $value];
+            } elseif ($comparison == 'noteq') {
+                $res = ['<>', ($condField), $value];
             }
         } elseif ($type == 'list') {
             $res = ['=', ($condField), $value];
@@ -452,14 +454,14 @@ class ActiveRecord extends db\ActiveRecord
                 if ($relatedIdentifyFieldConf) {
                     $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
                     $select[] = "`".static::tableName()."`.`".$fieldName."`";
-                    $select[] = "`".$relatedTableName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                    $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
                     $pointers[$fieldName] = [
-                        "table" => $relatedTableName,
+                        "table" => $relatedTableName."_".$fieldName,
                         "field" => $relatedIdentifyFieldConf['name']
                     ];
                     $join[] = [
-                        'name' => $relatedTableName,
-                        'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.id"
+                        'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
+                        'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
                     ];
                 }
             } elseif ($fieldConf['type'] == 'select' && !$fieldConf['calc']) {
@@ -504,7 +506,22 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$recursive) {
-            $select[] = "`".static::tableName()."`.`parent_id`";
+            $fieldName = 'parent_id';
+            $relatedModelClass = static::className();
+            $relatedIdentifyFieldConf = static::getIdentifyFieldConf();
+            if ($relatedIdentifyFieldConf) {
+                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
+                $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $pointers[$fieldName] = [
+                    "table" => $relatedTableName."_".$fieldName,
+                    "field" => $relatedIdentifyFieldConf['name']
+                ];
+                $join[] = [
+                    'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
+                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
+                ];
+            }
         }
 
 
@@ -656,9 +673,9 @@ class ActiveRecord extends db\ActiveRecord
      * @param $value
      * @return int|null|string
      */
-    protected static function setType ($fieldName, $value)
+    protected static function setType ($fieldName, $value, $type = false)
     {
-        $type = static::$structure[$fieldName]['type'];
+        $type = (!$type ? static::$structure[$fieldName]['type'] : $type);
 
         if ($type == 'int') {
             return intval($value);
@@ -711,6 +728,8 @@ class ActiveRecord extends db\ActiveRecord
                     if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
                         $this->$key = static::setType($key, $val);
                     }
+                } elseif ($key == 'parent_id' && static::$recursive) {
+                    $this->$key = static::setType($key, $val, 'pointer');
                 }
             }
         }
@@ -918,7 +937,7 @@ class ActiveRecord extends db\ActiveRecord
         if (static::$recursive) {
             $fields[] = [
                 'name' => 'parent_id',
-                'type' => 'int',
+                'type' => 'pointer',
                 'extra' => true
             ];
         }
@@ -1012,7 +1031,7 @@ class ActiveRecord extends db\ActiveRecord
             $data = null;
             if (array_key_exists('recordId', $params) && $params['recordId']) {
                 $data = static::getList([
-                    'where' => ['id' => $params['recordId']]
+                    'where' => ["`".static::tableName()."`.id" => $params['recordId']]
                 ])['data'];
                 $data = ($data ? $data[0] : null);
             }

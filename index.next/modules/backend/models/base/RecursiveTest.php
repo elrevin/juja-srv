@@ -18,7 +18,7 @@ class RecursiveTest extends \app\base\db\ActiveRecord
         ],
     ];
 
-    public static $permanentlyDelete = false;
+    public static $permanentlyDelete = true;
 
     protected static $hiddable = false;
 

@@ -18,6 +18,11 @@ Ext.define('App.core.SimpleEditor', {
         var me = this;
         me.data = null;
         me.form.renew();
+        if (me.currentMainMenuNode && me.currentMainMenuNode.get('recordId') && me.recursive) {
+            me.form.getInputFieldByName('parent_id').store.getProxy().setExtraParam('colFilter');
+            me.form.getInputFieldByName('parent_id').store.load();
+            me.form.getInputFieldByName('parent_id').setValue(me.currentMainMenuNode.get('recordId'));
+        }
     },
 
     copyRecord: function () {
@@ -108,19 +113,33 @@ Ext.define('App.core.SimpleEditor', {
             tabs: me.tabs,
             listeners: {
                 afterinsert: function (form, record) {
-                    me.store.add(record);
-                    me.store.sync({
-                        failure: function () {
-                            me.store.reload();
-                            // Возвращяем режим записи
-                            me.form.mode = 'insert';
+                    record.save({
+                        callback: function () {
+                            IndexNextApp.getApplication().refreshMainMenuNode(me.currentMainMenuNode);
                         }
                     });
                 },
+
                 afterupdate: function (form, record) {
-                    // меняем текст текущего узла главного меню
-                    me.currentMainMenuNode.set('title', record.get(me.form.identifyField.name))
-                    record.save();
+                    record.save({
+                        callback: function () {
+                            var new_parent_id = record.get('parent_id'),
+                                old_parent_id = me.data.parent_id,
+                                node;
+                            // меняем текст текущего узла главного меню
+
+                            // Проверяем был ли изменен предок
+                            if (new_parent_id != old_parent_id) {
+                                // Нужно обновить соответствующих предков
+
+                                node = IndexNextApp.getApplication().getMainMenuNode(me.modelName, new_parent_id.id);
+                                node.appendChild(me.currentMainMenuNode);
+                                node.expand();
+                            }
+
+                            me.currentMainMenuNode.set('title', record.get(me.form.identifyField.name));
+                        }
+                    });
                 }
             },
             userRights: me.userRights

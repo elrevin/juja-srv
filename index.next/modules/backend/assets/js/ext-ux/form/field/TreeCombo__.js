@@ -11,7 +11,7 @@ Ext.define('Ext.ux.form.field.TreeCombo',
         width: 300,
         treeWidth: 300,
         treeHeight: 200,
-
+        afterLoadSetValue: null,
 
         constructor: function (config) {
             this.addEvents(

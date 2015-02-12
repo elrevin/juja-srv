@@ -14,6 +14,8 @@ Ext.define('Ext.ux.index.form.Form', {
     accusativeRecordTitle: '',
     tabs: [],
     mode: 'insert', // По умолчанию режим добавления записи
+    extraFields: {},
+    parentRecordTreeCombo: null,
 
     createFields: function () {
         var me = this,
@@ -120,11 +122,9 @@ Ext.define('Ext.ux.index.form.Form', {
                 }
             ];
             if (me.model.recursive) {
-                toolbarItems[toolbarItems.length] = '|';
-                toolbarItems[toolbarItems.length] = 'Поместить в:';
-                toolbarItems[toolbarItems.length] = Ext.create('Ext.ux.form.field.TreeCombo', {
+                me.parentRecordTreeCombo = Ext.create('Ext.ux.form.field.TreeCombo', {
                     store: Ext.create('Ext.data.TreeStore', {
-                        //autoLoad: true,
+                        autoLoad: false,
                         fields: ['id', me.identifyField.name],
                         proxy: {
                             type: 'ajax',
@@ -141,8 +141,12 @@ Ext.define('Ext.ux.index.form.Form', {
                     treeWidth: 350,
                     displayField: me.identifyField.name,
                     id: me.id + '_field_parent_id',
-                    name: 'parent_id'
+                    name: 'parent_id',
+                    modelField: (me.extraFields.parent_id ? me.extraFields.parent_id : null)
                 });
+                toolbarItems[toolbarItems.length] = '|';
+                toolbarItems[toolbarItems.length] = 'Поместить в:';
+                toolbarItems[toolbarItems.length] = me.parentRecordTreeCombo;
             }
 
             me.topToolbar = Ext.create('Ext.toolbar.Toolbar', {
@@ -201,9 +205,11 @@ Ext.define('Ext.ux.index.form.Form', {
         if (me.model && (modelFieldsCount = me.model.fields.getCount())) {
             for (i = 0; i < modelFieldsCount; i++) {
                 field = me.model.fields.getAt(i);
+                if (field.extra) {
+                    me.extraFields[field.name] = field;
+                }
                 if (field.identify) {
                     me.identifyField = field;
-                    break;
                 }
             }
         }
@@ -385,6 +391,14 @@ Ext.define('Ext.ux.index.form.Form', {
                 me.tabPanel.add(tab);
             }
         }
+
+        me.parentRecordTreeCombo.store.getProxy().setExtraParam('colFilter', Ext.JSON.encode([{
+            type: "numeric",
+            comparison: "noteq",
+            value: me.model.get('id'),
+            field: 'id'
+        }]));
+        me.parentRecordTreeCombo.store.load();
         me.callParent([record]);
     }
 });

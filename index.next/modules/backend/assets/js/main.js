@@ -255,5 +255,14 @@ Ext.application({
             sm.select([node]);
             this._onMainMenuNodeSelect(node);
         }
+    },
+    getMainMenuNode: function (modelName, recordId) {
+        var node = this._mainMenuTree.getRootNode().findChildBy(function (node) {
+            if (node.get('modelName') == modelName && node.get('recordId') == recordId) {
+                return true;
+            }
+            return false;
+        }, window, true);
+        return node;
     }
 });
