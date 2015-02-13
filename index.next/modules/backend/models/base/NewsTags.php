@@ -32,7 +32,7 @@ class NewsTags extends \app\base\db\ActiveRecord
 
     protected static $linkModelName = '\app\modules\backend\models\Tags';
 
-    public static $tabClassName = 'Ext.ux.index.tab.Many2ManyPanel';
+    public static $tabClassName = 'Many2ManyPanel';
 
     public static $typeGrid = 'checkbox';
 

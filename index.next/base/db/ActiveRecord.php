@@ -184,12 +184,12 @@ class ActiveRecord extends db\ActiveRecord
 
     /**
      * Класс таба для детализация
-     * @var enum('Ext.ux.index.tab.DetailPanel', 'Ext.ux.index.tab.Many2ManyPanel')
+     * @var enum('DetailPanel', 'Many2ManyPanel')
      */
-    public static $tabClassName = 'Ext.ux.index.tab.DetailPanel';
+    public static $tabClassName = 'DetailPanel';
 
     /**
-     * Тип таба для связи many2many
+     * Тип таба Many2ManyPanel
      * @var enum('button', 'checkbox')
      */
     public static $typeGrid = 'button';
@@ -476,8 +476,15 @@ class ActiveRecord extends db\ActiveRecord
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 if ($relatedIdentifyFieldConf) {
                     $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                    $select[] = "`".$relatedTableName."_".$fieldName."`.`id` AS `".$fieldName."`";
-                    $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+
+                    // todo me: убрать костыль для checkbox детализации
+                    if(static::$typeGrid != 'checkbox') {
+                        $select[] = "`".$relatedTableName."_".$fieldName."`.`id` AS `".$fieldName."`";
+                        $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                    } else {
+                        $select[] = "`" . $relatedTableName . "`.`id` AS `" . $fieldName . "`";
+                        $select[] = "`" . $relatedTableName . "`.`" . $relatedIdentifyFieldConf['name'] . "` as `valof_" . $fieldName . "`";
+                    }
                     $pointers[$fieldName] = [
                         "table" => $relatedTableName."_".$fieldName,
                         "field" => $relatedIdentifyFieldConf['name']
@@ -562,15 +569,13 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        // todo me: упоминание о класе Ext нужно извести.
-        if(static::$tabClassName == 'Ext.ux.index.tab.Many2ManyPanel' && static::$typeGrid == 'checkbox') {
-
-            $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
-                static::tableName()."`.`master_table_id` = ".$params['masterId']."), 1, 0) AS `check`";
-            $query->rightJoin($relatedTableName, "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.`id`");
-
+        if(static::$tabClassName == 'Many2ManyPanel' && static::$typeGrid == 'checkbox') {
+            $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL), 1, 0) AS `check`";
+            $query->rightJoin(
+                $relatedTableName,
+                "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.`id`
+                AND `".static::tableName()."`.`master_table_id` = ".$params['masterId']);
         } else {
-
             if (isset($params['masterId']) && $params['masterId'] && static::$masterModel) {
                 $query->andWhere('master_table_id = ' . intval($params['masterId']));
             }

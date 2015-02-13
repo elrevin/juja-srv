@@ -264,7 +264,7 @@ Ext.define('Ext.ux.index.form.Form', {
             });
             for (var i = 0; i < me.tabs.length; i++) {
 
-                tabClassName = me.tabs[i].tabClassName;
+                tabClassName = 'Ext.ux.index.tab.'+me.tabs[i].tabClassName;
 
                 createTabNow = false;
                 if (me.tabs[i].createInterfaceForExistingParentOnly == undefined || !me.tabs[i].createInterfaceForExistingParentOnly) {
@@ -273,7 +273,7 @@ Ext.define('Ext.ux.index.form.Form', {
 
                 if (createTabNow) {
                     if (me.tabs[i].className != undefined && me.tabs[i].className) {
-                        tabClassName = me.tabs[i].className;
+                        tabClassName = 'Ext.ux.index.tab.'+me.tabs[i].className;
                     }
                     me.tabs[i]['parentForm'] = me;
                     tab = Ext.create(tabClassName, me.tabs[i]);
@@ -303,7 +303,7 @@ Ext.define('Ext.ux.index.form.Form', {
 
         // Создание табов.
         for (i = 0; i < me.tabs.length; i++) {
-            tabClassName = me.tabs[i].tabClassName;
+            tabClassName = 'Ext.ux.index.tab.'+me.tabs[i].tabClassName;
             createTabNow = false;
             if (!me.tabs[i].createInterfaceForExistingParentOnly) {
                 createTabNow = true;
@@ -311,7 +311,7 @@ Ext.define('Ext.ux.index.form.Form', {
 
             if (createTabNow) {
                 if (me.tabs[i].className != undefined && me.tabs[i].className) {
-                    tabClassName = me.tabs[i].className;
+                    tabClassName = 'Ext.ux.index.tab.'+me.tabs[i].className;
                 }
                 me.tabs[i]['parentForm'] = me;
                 tab = Ext.create(tabClassName, me.tabs[i]);
@@ -343,7 +343,7 @@ Ext.define('Ext.ux.index.form.Form', {
 
         // Создание табов.
         for (i = 0; i < me.tabs.length; i++) {
-            tabClassName = me.tabs[i].tabClassName;
+            tabClassName = 'Ext.ux.index.tab.'+me.tabs[i].tabClassName;
 
             createTabNow = false;
             if (!me.tabs[i].createInterfaceForExistingParentOnly) {
@@ -352,7 +352,7 @@ Ext.define('Ext.ux.index.form.Form', {
 
             if (createTabNow) {
                 if (me.tabs[i].className != undefined && me.tabs[i].className) {
-                    tabClassName = me.tabs[i].className;
+                    tabClassName = 'Ext.ux.index.tab.'+me.tabs[i].className;
                 }
                 me.tabs[i]['parentForm'] = me;
                 tab = Ext.create(tabClassName, me.tabs[i]);
@@ -383,10 +383,10 @@ Ext.define('Ext.ux.index.form.Form', {
 
         for (i = 0; i < me.tabs.length; i++) {
             if ((me.tabs[i].createInterfaceForExistingParentOnly != undefined || me.tabs[i].createInterfaceForExistingParentOnly) && !me.tabs[i].object) {
-                tabClassName = me.tabs[i].tabClassName;
+                tabClassName = 'Ext.ux.index.tab.'+me.tabs[i].tabClassName;
 
                 if (me.tabs[i].className != undefined && me.tabs[i].className) {
-                    tabClassName = me.tabs[i].className;
+                    tabClassName = 'Ext.ux.index.tab.'+me.tabs[i].className;
                 }
                 me.tabs[i]['parentForm'] = me;
                 tab = Ext.create(tabClassName, me.tabs[i]);
