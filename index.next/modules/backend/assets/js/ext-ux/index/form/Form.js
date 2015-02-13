@@ -395,13 +395,15 @@ Ext.define('Ext.ux.index.form.Form', {
             }
         }
 
-        me.parentRecordTreeCombo.store.getProxy().setExtraParam('colFilter', Ext.JSON.encode([{
-            type: "numeric",
-            comparison: "noteq",
-            value: me.model.get('id'),
-            field: 'id'
-        }]));
-        me.parentRecordTreeCombo.store.load();
+        if (me.model.recursive) {
+            me.parentRecordTreeCombo.store.getProxy().setExtraParam('colFilter', Ext.JSON.encode([{
+                type: "numeric",
+                comparison: "noteq",
+                value: me.model.get('id'),
+                field: 'id'
+            }]));
+            me.parentRecordTreeCombo.store.load();
+        }
         me.callParent([record]);
     }
 });

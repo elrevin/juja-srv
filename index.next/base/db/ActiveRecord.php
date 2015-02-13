@@ -477,7 +477,7 @@ class ActiveRecord extends db\ActiveRecord
                 if ($relatedIdentifyFieldConf) {
                     $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
                     $select[] = "`".$relatedTableName."_".$fieldName."`.`id` AS `".$fieldName."`";
-                    $select[] = "`".$relatedTableName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                    $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
                     $pointers[$fieldName] = [
                         "table" => $relatedTableName."_".$fieldName,
                         "field" => $relatedIdentifyFieldConf['name']
@@ -562,6 +562,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
+        // todo me: упоминание о класе Ext нужно извести.
         if(static::$tabClassName == 'Ext.ux.index.tab.Many2ManyPanel' && static::$typeGrid == 'checkbox') {
 
             $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".

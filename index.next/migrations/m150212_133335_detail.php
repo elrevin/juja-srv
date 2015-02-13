@@ -3,7 +3,7 @@
 use yii\db\Schema;
 use yii\db\Migration;
 
-class m150210_080047_detail2 extends Migration
+class m150212_133335_detail extends Migration
 {
     public function up()
     {

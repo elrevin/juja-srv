@@ -8,11 +8,10 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
     extend: 'Ext.grid.Panel',
     alias: 'widget.listgrid',
     modelClassName: '',
-    columns: [],
-    addColumns: [],
-    getDataAction: [],
-    saveAction: [],
-    deleteAction: [],
+    addColumns: null,
+    getDataAction: null,
+    saveAction: null,
+    deleteAction: null,
     parentIdParamName: '',
     parentRecordId: 0,
     pageSize: 50,
@@ -201,12 +200,14 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
             fields = Ext.ClassManager.classes[me.modelClassName].getFields(),
             i, tmpColNames = [];
 
-        for (i = 0; i < me.addColumns.length; i++) {
-            tmpColNames[i] = me.addColumns[i].dataIndex;
+        if (me.addColumns) {
+            for (i = 0; i < me.addColumns.length; i++) {
+                tmpColNames[i] = me.addColumns[i].dataIndex;
+            }
         }
 
         for (i = 0; i < fields.length; i++) {
-            if (me.addColumns.length) {
+            if (me.addColumns && me.addColumns.length) {
                 if (tmpColNames.indexOf(fields[i].name) < 0) {
                     me.createColumn(fields[i]);
                 }
@@ -215,7 +216,7 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
             }
         }
 
-        if (me.addColumns.length) {
+        if (me.addColumns && me.addColumns.length) {
             me.columns = me.columns.concat(me.addColumns);
         }
     },
