@@ -15,7 +15,6 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
 
     _showConditionAnalytic: function (field, formField) {
         var me = this,
-          fieldName,
           fieldItem,
             i, j, fieldsCount = me.model.fields.getCount(),
           show, process, value;
@@ -30,8 +29,10 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                     showConditionArr = [showConditionArr];
                 }
                 process = true;
+
                 for (j = 0; j < showConditionArr.length; j++) {
                     showCondition = showConditionArr[j];
+
                     if (field.type == Ext.data.Types.INTEGER || field.type == Ext.data.Types.FLOAT ||
                         field.type == Ext.data.Types.STRING || field.type == Ext.data.Types.TEXT ||
                         field.type == Ext.data.Types.DATE || field.type == Ext.data.Types.DATETIME
@@ -67,15 +68,15 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                         show = (show && (showCondition.operation == 'set' && formField.getValue()) ||
                         (showCondition.operation == 'notset' && !formField.getValue()));
                     } else if (field.type == Ext.data.Types.POINTER) {
-
+                        fieldValue = formField.getValue().value;
                         if (showCondition.operation == '==') {
-                            show = (show && formField.getValue().value == showCondition.value);
+                            show = (show && fieldValue == showCondition.value);
                         } else if (showCondition.operation == '!=') {
-                            show = (show && formField.getValue().value != showCondition.value);
+                            show = (show && fieldValue != showCondition.value);
                         } else if (showCondition.operation == 'set') {
-                            show = (show && formField.getValue() ? true : false);
+                            show = (show && fieldValue ? true : false);
                         } else if (showCondition.operation == 'notset') {
-                            show = (show && !formField.getValue() ? true : false);
+                            show = (show && !fieldValue ? true : false);
                         }
                     }
                 }
@@ -86,7 +87,39 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             }
         }
     },
+    _showFilterAnalytic: function (field, formField) {
 
+        var me = this,
+            fieldItem,
+            i, j, fieldsCount = me.model.fields.getCount();
+
+        for (i = 0; i < fieldsCount; i++) {
+            fieldItem = me.model.fields.get(i);
+
+            if (fieldItem.filterCondition && fieldItem.filterCondition[field.name]) {
+                var filterConditionArr = fieldItem.filterCondition[field.name];
+                var filterType = fieldItem.filterCondition['type'];
+
+                if (!(filterConditionArr instanceof Array)) {
+                    filterConditionArr = [filterConditionArr];
+                }
+
+                for (j = 0; j < filterConditionArr.length; j++) {
+                    filterCondition = filterConditionArr[j];
+                    if (field.type == Ext.data.Types.POINTER && formField.value != null && filterCondition == 'eq') {
+                        store = Ext.getCmp(me.id + '_field_' + fieldItem.name).getStore();
+                        store.getProxy().setExtraParam('colFilter', Ext.JSON.encode([{
+                            type: filterType,
+                            comparison: filterCondition,
+                            value: formField.value,
+                            field: field.name
+                        }]));
+                        store.reload();
+                    }
+                }
+            }
+        }
+    },
     _getField: function (field) {
         var me = this;
 
@@ -412,6 +445,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 listeners: {
                     change: function (thisField) {
                         me._showConditionAnalytic(thisField.modelField, thisField);
+                        me._showFilterAnalytic(thisField.modelField, thisField);
                     }
                 }
             });

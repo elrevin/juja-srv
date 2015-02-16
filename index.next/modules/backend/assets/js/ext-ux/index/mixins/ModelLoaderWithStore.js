@@ -68,6 +68,7 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                 required: me.fields[i].required,
                 settings: me.fields[i].settings,
                 showCondition: me.fields[i].showCondition,
+                filterCondition: me.fields[i].filterCondition,
                 calc: me.fields[i].calc,
                 selectOptions: me.fields[i].selectOptions,
                 extra: me.fields[i].extra

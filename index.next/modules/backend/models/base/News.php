@@ -33,6 +33,35 @@ class News extends \app\base\db\ActiveRecord
             'title' => 'Дата публикации',
             'type' => 'datetime'
         ],
+        'module' => [
+            'title' => 'Модуль',
+            'type' => 'pointer',
+            'relativeModel' => [
+                'moduleName' => 'backend',
+                'name' => 'tags',
+                'modalSelect' => false
+            ]
+        ],
+        'template' => [
+            'title' => 'Шаблон',
+            'type' => 'pointer',
+            'relativeModel' => [
+                'moduleName' => 'backend',
+                'name' => 'goods',
+                'modalSelect' => false
+            ],
+            'showCondition' => [
+                'module' => [
+                    [
+                        'operation' => 'set',
+                    ]
+                ],
+            ],
+            'filterCondition' => [
+                'module' => 'eq',
+                'type' => 'numeric'
+            ]
+        ]
     ];
 
     public static $permanentlyDelete = true;

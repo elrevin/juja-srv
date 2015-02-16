@@ -61,6 +61,7 @@ function doOverride() {
         },
         settings: {},
         showCondition: {},
+        filterCondition: {},
         calc: false,
         selectOptions: {}
     });

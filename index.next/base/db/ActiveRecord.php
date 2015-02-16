@@ -456,6 +456,13 @@ class ActiveRecord extends db\ActiveRecord
         $selectFields = [];
         $calcFields = [];
 
+        /*$filterSetting = [
+            'name' => Yii::$app->request->get('filterName') ? Yii::$app->request->get('filterName') : '',
+            'value' => Yii::$app->request->get('filterValue') ? Yii::$app->request->get('filterValue') : '',
+            'type' => Yii::$app->request->get('filterType') ? Yii::$app->request->get('filterType') : '',
+            'condition' => Yii::$app->request->get('filterCondition') ? Yii::$app->request->get('filterCondition') : ''
+        ];*/
+
         foreach (static::$structure as $fieldName => $fieldConf) {
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
                 if ((isset($fieldConf['identify']) && !$fieldConf['identify']) || (!isset($fieldConf['identify']))) {
