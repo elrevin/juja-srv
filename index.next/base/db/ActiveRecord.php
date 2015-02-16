@@ -91,6 +91,16 @@ class ActiveRecord extends db\ActiveRecord
      *          При таких условиях данное поле будет отображаться если установлен флаг-поле payd и значение поля
      *          sum > 5000 AND sum < 8000
      *
+     *      'filterCondition' - условие для фильтрации поля типа pointer - ассоциативный массив
+     *          [
+     *              'module' => 'eq',
+     *              'type' => 'numeric'
+     *          ]
+     *          здесь
+     *              module - поле, значение которого передается фильтру,
+     *              eq - условие фильтрации (в данном случае, точное соответствие),
+     *              numeric - тип значения (string|numeric)
+     *
      *      'identify' - если true, то поле однозначно идентифицирует запись, например поле 'title' - название
      *
      *      'required' - поле обязательно для заполнения
@@ -456,13 +466,6 @@ class ActiveRecord extends db\ActiveRecord
         $selectFields = [];
         $calcFields = [];
 
-        /*$filterSetting = [
-            'name' => Yii::$app->request->get('filterName') ? Yii::$app->request->get('filterName') : '',
-            'value' => Yii::$app->request->get('filterValue') ? Yii::$app->request->get('filterValue') : '',
-            'type' => Yii::$app->request->get('filterType') ? Yii::$app->request->get('filterType') : '',
-            'condition' => Yii::$app->request->get('filterCondition') ? Yii::$app->request->get('filterCondition') : ''
-        ];*/
-
         foreach (static::$structure as $fieldName => $fieldConf) {
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
                 if ((isset($fieldConf['identify']) && !$fieldConf['identify']) || (!isset($fieldConf['identify']))) {
@@ -690,7 +693,7 @@ class ActiveRecord extends db\ActiveRecord
         $res = [$dataKey => static::afterList($list)];
 
         if (static::$recursive && isset($params['all']) && $params['all']) {
-            // Получаем все делево
+            // Получаем все дерево
             // todo me: Надо бы это как-то оптимизировать
             foreach ($res[$dataKey] as $i => $data) {
                 $children = static::getList(array_merge($params, [
