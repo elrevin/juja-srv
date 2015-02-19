@@ -42,7 +42,8 @@ function doOverride() {
         recursive: false, // Модель рекурсивная
         getDataAction: [],
         saveAction: [],
-        deleteAction: []
+        deleteAction: [],
+        parentModelName: null
     });
 
     Ext.override(Ext.data.Field, {

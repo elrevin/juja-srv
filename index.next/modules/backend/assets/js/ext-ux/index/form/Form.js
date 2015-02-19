@@ -15,7 +15,7 @@ Ext.define('Ext.ux.index.form.Form', {
     tabs: [],
     mode: 'insert', // По умолчанию режим добавления записи
     extraFields: {},
-    parentRecordTreeCombo: null,
+    parentRecordCombo: null,
 
     createFields: function () {
         var me = this,
@@ -108,6 +108,98 @@ Ext.define('Ext.ux.index.form.Form', {
         }
     },
 
+    getIdentifyField: function (model) {
+        var i, count = model.fields.getCount(), field;
+
+        for (i = 0; i < count; i++) {
+            field = model.fields.getAt(i);
+            if (field.identify) {
+                return field;
+            }
+        }
+        return null;
+    },
+
+    createParentCombo: function (toolbarItems) {
+        var me = this,
+            comboType = null,
+            parentModel,
+            parentModelIdentifyField,
+            parentModelName,
+            modelField;
+
+        if (me.model.recursive) {
+            comboType = 'tree';
+            parentModel = me.model;
+            parentModelIdentifyField = me.identifyField;
+            parentModelName = me.modelClassName.replace('ModelClass', '');
+            modelField = me.extraFields.parent_id;
+        } else if (me.model.parentModelName) {
+            parentModel = Ext.create(me.model.parentModelName+'ModelClass');
+            parentModelIdentifyField = me.getIdentifyField(parentModel);
+            parentModelName = me.model.parentModelName;
+            modelField = me.extraFields.master_table_id;
+            if (parentModel.recursive) {
+                comboType = 'tree';
+            } else {
+                comboType = 'list';
+            }
+        }
+
+        if (comboType == 'tree') {
+            me.parentRecordCombo = Ext.create('Ext.ux.form.field.TreeCombo', {
+                store: Ext.create('Ext.data.TreeStore', {
+                    autoLoad: false,
+                    fields: [{name: 'id', type: 'int'}, {name: parentModelIdentifyField.name, type: 'string'}],
+                    proxy: {
+                        type: 'ajax',
+                        url: $url(parentModel.getDataAction[0], parentModel.getDataAction[1], parentModel.getDataAction[2], {modelName: parentModelName, identifyOnly: 1, all: 1}),
+                        actionMethods: {read: "POST"},
+                        reader: {
+                            type: 'json',
+                            root: 'data'
+                        }
+                    }
+                }),
+                rootVisible: false,
+                width: 200,
+                treeWidth: 350,
+                displayField: parentModelIdentifyField.name,
+                id: me.id + '_field_'+modelField.name,
+                name: modelField.name,
+                modelField: modelField
+            });
+        } else if (comboType == 'list') {
+            me.parentRecordCombo = Ext.create('Ext.ux.form.field.PointerComboBox', {
+                store: new Ext.data.JsonStore ({
+                    autoLoad: true,
+                    fields: [{name: 'id', type: 'int'}, {name: parentModelIdentifyField.name, type: 'string'}],
+                    proxy: {
+                        type: 'ajax',
+                        url: $url(parentModel.getDataAction[0], parentModel.getDataAction[1], parentModel.getDataAction[2], {modelName: parentModelName, identifyOnly: 1}),
+                        actionMethods: {read: "POST"},
+                        reader: {
+                            type: 'json',
+                            root: 'data'
+                        }
+                    }
+                }),
+                width: 200,
+                displayField: parentModelIdentifyField.name,
+                valueField: 'id',
+                id: me.id + '_field_'+modelField.name,
+                name: modelField.name,
+                modelField: modelField,
+                isPointerField: true
+            });
+        }
+        if (me.parentRecordCombo) {
+            toolbarItems[toolbarItems.length] = '|';
+            toolbarItems[toolbarItems.length] = 'Поместить в:';
+            toolbarItems[toolbarItems.length] = me.parentRecordCombo;
+        }
+    },
+
     createTopToolbar: function () {
         var me = this,
           toolbarItems;
@@ -121,34 +213,7 @@ Ext.define('Ext.ux.index.form.Form', {
                     }
                 }
             ];
-            if (me.model.recursive) {
-                me.parentRecordTreeCombo = Ext.create('Ext.ux.form.field.TreeCombo', {
-                    store: Ext.create('Ext.data.TreeStore', {
-                        autoLoad: false,
-                        fields: ['id', me.identifyField.name],
-                        proxy: {
-                            type: 'ajax',
-                            url: $url(me.model.getDataAction[0], me.model.getDataAction[1], me.model.getDataAction[2], {modelName: me.modelClassName.replace('Model', ''), identifyOnly: 1, all: 1}),
-                            actionMethods: {read: "POST"},
-                            reader: {
-                                type: 'json',
-                                root: 'data'
-                            }
-                        }
-                    }),
-                    rootVisible: false,
-                    width: 200,
-                    treeWidth: 350,
-                    displayField: me.identifyField.name,
-                    id: me.id + '_field_parent_id',
-                    name: 'parent_id',
-                    modelField: (me.extraFields.parent_id ? me.extraFields.parent_id : null)
-                });
-                toolbarItems[toolbarItems.length] = '|';
-                toolbarItems[toolbarItems.length] = 'Поместить в:';
-                toolbarItems[toolbarItems.length] = me.parentRecordTreeCombo;
-            }
-
+            me.createParentCombo(toolbarItems);
             me.topToolbar = Ext.create('Ext.toolbar.Toolbar', {
                 height: 58,
                 cls: (me.tabs.length ? 'in2-editor-form-toolbar-tab-form' : 'in2-editor-form-toolbar'),
@@ -396,13 +461,13 @@ Ext.define('Ext.ux.index.form.Form', {
         }
 
         if (me.model.recursive) {
-            me.parentRecordTreeCombo.store.getProxy().setExtraParam('colFilter', Ext.JSON.encode([{
+            me.parentRecordCombo.store.getProxy().setExtraParam('colFilter', Ext.JSON.encode([{
                 type: "numeric",
                 comparison: "noteq",
                 value: me.model.get('id'),
                 field: 'id'
             }]));
-            me.parentRecordTreeCombo.store.load();
+            me.parentRecordCombo.store.load();
         }
         me.callParent([record]);
     }

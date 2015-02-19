@@ -615,7 +615,8 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             modelFieldsCount,
             field,
             input,
-            values = {};
+            values = {},
+            beforeModel = me.model.copy();
         if (me.isValid()) {
             me.fireEvent((me.mode == 'update' ? 'beforeupdate' : 'beforeinsert'), me, me.model);
 
@@ -637,7 +638,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
 
             me.model.set(values);
 
-            me.fireEvent((me.mode == 'update' ? 'afterupdate' : 'afterinsert'), me, me.model);
+            me.fireEvent((me.mode == 'update' ? 'afterupdate' : 'afterinsert'), me, me.model, beforeModel);
 
             me.mode = (me.mode == 'insert' ? 'update' : 'update');
         } else {

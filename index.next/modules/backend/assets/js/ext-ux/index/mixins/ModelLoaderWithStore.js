@@ -2,10 +2,10 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
     modelTitle: '',
     modelName: '',
     modelClassName: '',
-    fields: [],
-    getDataAction: [],
-    saveAction: [],
-    deleteAction: [],
+    fields: null,
+    getDataAction: null,
+    saveAction: null,
+    deleteAction: null,
     sortable: false,
     store: null,
     // Права общие пользователя на справочник:
@@ -18,37 +18,43 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
     recordTitle: '',
     accusativeRecordTitle: '',
 
-    getProxyConfig: function () {
+    constructor: function (config) {
         var me = this;
-        return {
-            type: 'ajax',
-              reader: {
-            type: 'json',
-              root: 'data',
-              idProperty: 'id',
-              successProperty: 'success'
-        },
-            writer: {
-                type: 'json',
-                  encode: true,
-                  root: 'data',
-                  dateFormat: 'Y-m-d',
-                  dateTimeFormat: 'Y-m-d H:i:s'
-            },
-            actionMethods: {read: 'POST', update: 'POST'},
-            api: {
-                create: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {
-                    modelName: me.modelClassName.replace('Model', ''),
-                    add: 1
-                }),
-                  read: $url(me.getDataAction[0], me.getDataAction[1], me.getDataAction[2], {modelName: me.modelClassName.replace('Model', '')}),
-                  update: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {modelName: me.modelClassName.replace('Model', '')}),
-                  destroy: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('Model', '')})
-            },
-            extraParams: {
-                params: Ext.JSON.encode(me.params)
-            }
-        };
+        Ext.apply(me, config);
+    },
+
+    getProxyConfig: function () {
+        var me = this,
+            config = {
+                type: 'ajax',
+                reader: {
+                    type: 'json',
+                    root: 'data',
+                    idProperty: 'id',
+                    successProperty: 'success'
+                },
+                writer: {
+                    type: 'json',
+                    encode: true,
+                    root: 'data',
+                    dateFormat: 'Y-m-d',
+                    dateTimeFormat: 'Y-m-d H:i:s'
+                },
+                actionMethods: {read: 'POST', update: 'POST'},
+                api: {
+                    create: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {
+                        modelName: me.modelClassName.replace('ModelClass', ''),
+                        add: 1
+                    }),
+                    read: $url(me.getDataAction[0], me.getDataAction[1], me.getDataAction[2], {modelName: me.modelClassName.replace('ModelClass', '')}),
+                    update: $url(me.saveAction[0], me.saveAction[1], me.saveAction[2], {modelName: me.modelClassName.replace('ModelClass', '')}),
+                    destroy: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('ModelClass', '')})
+                },
+                extraParams: {
+                    params: Ext.JSON.encode(me.params)
+                }
+            };
+        return config;
     },
 
     getFields: function () {
@@ -92,11 +98,10 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
             modelClassDefinition,
             fieldConf;
 
-        me.modelClassName = me.modelName + "Model";
+        me.modelClassName = me.modelName + "ModelClass";
 
         if (!Ext.ClassManager.isCreated(me.modelClassName)) {
             if (me.fields.length) {
-                me.modelClassName = me.modelName + "Model";
                 modelClassDefinition = {
                     extend: 'Ext.data.Model',
                     fields: me.getFields(),
@@ -105,7 +110,8 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
                     recursive: me.recursive,
                     getDataAction: me.getDataAction,
                     saveAction: me.saveAction,
-                    deleteAction: me.deleteAction
+                    deleteAction: me.deleteAction,
+                    parentModelName: me.parentModelName
                 };
                 modelClassDefinition['fields'][modelClassDefinition['fields'].length] = {
                     name: 'id',
@@ -136,13 +142,15 @@ Ext.define('Ext.ux.index.mixins.ModelLoaderWithStore', {
 
     createActions: function () {
         var me = this;
-        if (!me.saveAction.length) {
+        if (!me.saveAction || !me.saveAction.length) {
+            me.saveAction = [];
             me.saveAction[0] = me.getDataAction[0];
             me.saveAction[1] = me.getDataAction[1];
             me.saveAction[2] = 'save-record';
         }
 
-        if (!me.deleteAction.length) {
+        if (!me.deleteAction || !me.deleteAction.length) {
+            me.deleteAction = [];
             me.deleteAction[0] = me.getDataAction[0];
             me.deleteAction[1] = me.getDataAction[1];
             me.deleteAction[2] = 'delete-record';

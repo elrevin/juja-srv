@@ -37,7 +37,7 @@ class PointTestTable extends \app\base\db\ActiveRecord
             'relativeModel' => [
                 'moduleName' => 'backend',
                 'name' => 'TestTable',
-                'modalSelect' => true,
+                'modalSelect' => false,
             ],//'\app\modules\backend\models\TestTable',
             'group' => 'Группа полей'
         ],

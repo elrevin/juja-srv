@@ -151,7 +151,6 @@ Ext.define('App.core.SingleModelEditor', {
                 selModel: Ext.create('Ext.selection.CheckboxModel', {
                     //mode: "MULTI"
                 }),
-                tbar: me.createToolbar(),
                 listeners: {
                     selectionchange: function (grid, selected, eOpts) {
                         me.selectionChange(selected);

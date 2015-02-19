@@ -9,6 +9,7 @@ Ext.define('Ext.ux.form.ClearableComboBox', {
     trigger2Class: 'x-form-clear-trigger',
     triggerWidth: 54,
     isPointerField: false,
+    afterLoadSetValue: null,
     onRender: function (ct, position) {
         Ext.ux.form.ClearableComboBox.superclass.onRender.call(this, ct, position);
         var id = this.getId();
@@ -61,10 +62,22 @@ Ext.define('Ext.ux.form.ClearableComboBox', {
 
     setValue: function(value, doSelect) {
         var me = this;
-        if (value && value.id != undefined) {
-            return me.callParent([value.id, doSelect]);
+        if (value) {
+            if (typeof value == 'object') {
+                if (value && value.id != undefined) {
+                    value = value.id;
+                }
+            }
+            if (me.store.isLoading() || !me.store.wasLoaded) {
+                me.afterLoadSetValue = value;
+                return me;
+            }
+
+            if (/^[0-9]+$/.test(value+'')) {
+                value = parseInt(value);
+            }
+            return me.callParent([value, doSelect]);
         }
-        return me.callParent([value, doSelect]);
     },
     getValue: function(getObj) {
         var me = this,
@@ -87,5 +100,16 @@ Ext.define('Ext.ux.form.ClearableComboBox', {
         }
 
         return value;
+    },
+    initComponent: function () {
+        var me = this;
+        me.store.wasLoaded = false;
+        me.store.on('load', function () {
+            me.store.wasLoaded = true;
+            if (me.afterLoadSetValue) {
+                me.setValue(me.afterLoadSetValue);
+            }
+        });
+        return me.callParent(arguments);
     }
 });

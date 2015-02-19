@@ -284,15 +284,14 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getChildModel()
     {
-        $className = static::className();
+        $className = '\\'.static::className();
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
         $files = scandir(Yii::getAlias($classPath));
         foreach ($files as $file) {
             if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
-                $modelName = str_replace(".php", "", $file);
+                $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
                 if ($modelName != $className) {
-                    $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
                     $parentModel = call_user_func([$modelName, 'getParentModel']);
                     if ($parentModel == $className) {
                         return $modelName;
@@ -301,7 +300,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        return false;
+        return null;
     }
 
     /**
@@ -547,6 +546,27 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
+        if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$parentModel) {
+            $parentModelName = static::getParentModel();
+
+            $fieldName = 'master_table_id';
+            $relatedModelClass = $parentModelName;
+            $relatedIdentifyFieldConf = call_user_func([$parentModelName, 'getIdentifyFieldConf']);
+            if ($relatedIdentifyFieldConf) {
+                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
+                $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $pointers[$fieldName] = [
+                    "table" => $relatedTableName."_".$fieldName,
+                    "field" => $relatedIdentifyFieldConf['name']
+                ];
+                $join[] = [
+                    'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
+                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
+                ];
+            }
+        }
+
         $query = static::find();
 
         $filteredFields = [];
@@ -571,7 +591,7 @@ class ActiveRecord extends db\ActiveRecord
 
         } else {
 
-            if (isset($params['masterId']) && $params['masterId'] && static::$masterModel) {
+            if (isset($params['masterId']) && $params['masterId'] && (static::$masterModel || static::$parentModel)) {
                 $query->andWhere('master_table_id = ' . intval($params['masterId']));
             }
 
@@ -705,9 +725,9 @@ class ActiveRecord extends db\ActiveRecord
      * @param $value
      * @return int|null|string
      */
-    protected static function setType ($fieldName, $value)
+    protected static function setType ($fieldName, $value, $type = false)
     {
-        $type = static::$structure[$fieldName]['type'];
+        $type = (!$type ? static::$structure[$fieldName]['type'] : $type);
 
         if ($type == 'int') {
             return intval($value);
@@ -760,6 +780,10 @@ class ActiveRecord extends db\ActiveRecord
                     if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
                         $this->$key = static::setType($key, $val);
                     }
+                } elseif ($key == 'parent_id' && static::$recursive) {
+                    $this->$key = static::setType($key, $val, 'pointer');
+                } elseif ($key == 'master_table_id' && static::$parentModel) {
+                    $this->$key = static::setType($key, $val, 'pointer');
                 }
             }
         }
@@ -964,14 +988,6 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        if (static::$recursive) {
-            $fields[] = [
-                'name' => 'parent_id',
-                'type' => 'pointer',
-                'extra' => true
-            ];
-        }
-
         $getDataAction = [static::getModuleName(), 'main', 'list'];
         $runAction = [static::getModuleName(), 'main', 'get-interface'];
         $linkModelRunAction = null;
@@ -996,6 +1012,34 @@ class ActiveRecord extends db\ActiveRecord
             $linkModelName = call_user_func([static::$linkModelName, 'getModelName']);
         }
 
+        $childModel = static::getChildModel();
+        $childModelConfig = null;
+
+        if ($childModel) {
+            $childModelConfig = call_user_func([$childModel, 'getUserInterface'], true);
+            $childModelConfig['modelName'] = str_replace('app\modules\\'.static::getModuleName().'\models\\', '', trim($childModel, '\\'));
+        }
+
+        $parentModelName = static::getParentModel();
+        if ($parentModelName) {
+            $parentModelName = str_replace('app\modules\\'.static::getModuleName().'\models\\', '', trim($parentModelName, '\\'));
+        }
+
+        if (static::$recursive) {
+            $fields[] = [
+                'name' => 'parent_id',
+                'type' => 'pointer',
+                'extra' => true
+            ];
+        } elseif ($parentModelName) {
+            $fields[] = [
+                'name' => 'master_table_id',
+                'type' => 'pointer',
+                'extra' => true
+            ];
+        }
+
+
         $conf = [
             'fields' => $fields,
             'getDataAction' => $getDataAction,
@@ -1012,7 +1056,9 @@ class ActiveRecord extends db\ActiveRecord
             'sortable' => static::$sortable,
             'recursive' => static::$recursive,
             'tabClassName' => static::$tabClassName,
-            'typeGrid' => static::$typeGrid
+            'typeGrid' => static::$typeGrid,
+            'childModelConfig' => $childModelConfig,
+            'parentModelName' => $parentModelName
         ];
 
         if (!$modal) {
@@ -1068,10 +1114,19 @@ class ActiveRecord extends db\ActiveRecord
         // Автоматически выбираем тип редактора
         $editor = "SingleModelEditor";
         $recursive = static::$recursive;
-        $childModel = static::getChildModel();
 
         if ($recursive && !$childModel) {
             $editor = 'SimpleEditor';
+            $data = null;
+            if (array_key_exists('recordId', $params) && $params['recordId']) {
+                $data = static::getList([
+                    'where' => ["`".static::tableName()."`.id" => $params['recordId']]
+                ])['data'];
+                $data = ($data ? $data[0] : null);
+            }
+            $conf['data'] = $data;
+        } elseif ($childModel) {
+            $editor = 'RelatedModelsEditor';
             $data = null;
             if (array_key_exists('recordId', $params) && $params['recordId']) {
                 $data = static::getList([

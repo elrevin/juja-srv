@@ -39,5 +39,10 @@
     "modelName": "Files",
     "moduleName": "files",
     "icon": "/cp-files/images/modules-icons/file.png"
+  },
+  {
+    "title": "Связанные справочники",
+    "modelName": "MainTable",
+    "moduleName": "backend"
   }
 ]}

@@ -219,7 +219,7 @@ Ext.application({
             icon: Ext.window.MessageBox.ERROR
         });
     },
-    refreshMainMenuNode: function(id){
+    refreshMainMenuNode: function(id, callback, scope){
         var node;
         if (typeof id == 'integer') {
             node = this._mainMenuStore.getNodeById(id);
@@ -227,7 +227,7 @@ Ext.application({
             node = id;
         }
         if (node){
-            this._mainMenuStore.load({node:node});
+            this._mainMenuStore.load({node:node, callback: callback, scope: scope});
         }
     },
     _onMainMenuNodeSelect: function (record) {
@@ -244,7 +244,7 @@ Ext.application({
             });
         }
     },
-    selectMainMenuNode: function(id){
+    selectMainMenuNode: function(id, silence){
         var node, sm = this._mainMenuTree.getSelectionModel();
         if (typeof id == 'integer') {
             node = this._mainMenuStore.getNodeById(id);
@@ -253,7 +253,9 @@ Ext.application({
         }
         if (node){
             sm.select([node]);
-            this._onMainMenuNodeSelect(node);
+            if (!silence) {
+                this._onMainMenuNodeSelect(node);
+            }
         }
     },
     getMainMenuNode: function (modelName, recordId) {

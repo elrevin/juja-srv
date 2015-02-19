@@ -49,7 +49,7 @@ Ext.define('App.core.SimpleEditor', {
                 fn: function (button) {
                     if (button == 'yes') {
                         Ext.Ajax.request({
-                            url: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('Model', '')}),
+                            url: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('ModelClass', '')}),
                             params: {
                                 data: Ext.JSON.encode({
                                     id: me.record.get('id')
