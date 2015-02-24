@@ -33,7 +33,7 @@ class m150212_133335_detail extends Migration
 		
 		$this->createTable('{{%tags}}', [
 			'id' => Schema::TYPE_PK,
-			'title' => Schema::TYPE_INTEGER
+			'title' => Schema::TYPE_STRING
 		], $tableOptions);
     }
 

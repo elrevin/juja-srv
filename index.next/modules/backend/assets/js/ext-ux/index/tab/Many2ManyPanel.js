@@ -94,6 +94,7 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
                                 rec = me.store.getAt(rowIndex);
 
                                 if(checked) {
+
                                     var newRec = Ext.create(me.modelClassName);
                                     var name = me.fields[0].name;
                                     newRec.getProxy().setExtraParam('masterId', me.masterId);
@@ -108,6 +109,7 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
                                     });
 
                                 } else {
+
                                     Ext.Ajax.request({
                                         url: $url(me.deleteAction[0], me.deleteAction[1], me.deleteAction[2], {modelName: me.modelClassName.replace('ModelClass', '')}),
                                         params: {
@@ -123,12 +125,6 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
                                         }
                                     });
 
-                                    //me.store.remove(rec);
-                                    //me.store.sync({
-                                    //    callback: function () {
-                                    //        me.store.reload();
-                                    //    }
-                                    //});
                                 }
 
                             }
