@@ -58,8 +58,10 @@ class News extends \app\base\db\ActiveRecord
                 ],
             ],
             'filterCondition' => [
-                'module' => 'eq',
-                'type' => 'numeric'
+                'module' => [
+                    'field' => 'module',
+                    'comparison' => 'eq'
+                ]
             ]
         ]
     ];

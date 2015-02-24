@@ -97,15 +97,30 @@ class ActiveRecord extends db\ActiveRecord
      *          При таких условиях данное поле будет отображаться если установлен флаг-поле payd и значение поля
      *          sum > 5000 AND sum < 8000
      *
-     *      'filterCondition' - условие для фильтрации поля типа pointer - ассоциативный массив
-     *          [
-     *              'module' => 'eq',
-     *              'type' => 'numeric'
+     *      'filterCondition' - условие для фильтрации значений поля типа pointer - ассоциативный массив, котором
+     *          ключи - это имена других полей, а значения это условие или массив условий, каждое из которых -
+     *          ассоциативный массив (все условия в итоге объединяются оператором AND):
+     *          'comparison' - условие сравнения:
+     *              'eq' - '=',
+     *              'noteq' - '<>',
+     *              'lt' - '<',
+     *              'gt' - '>',
+     *              'like',
+     *              'start' - " like 'VALUE%' ",
+     *              'end' - " like '%VALUE' ",
+     *          'field' - имя поля в таблице
+     *
+     *          Например есть поля "price" (тип int) и "manager" (тип pointer ссылается на таблицу managers), в таблице
+     *          managers есть поле max_price значение которого показывает максимальный ценовой порог, при превышении которого
+     *          товар не может быть продан данным менеджером, и прии редактировании товара необходимо выбрать менеджера из
+     *          числа доступных. В таком случае условие для поля "manager" будет выглядеть так:
+     *
+     *          'filterCondition' => [
+     *              'price' => [
+     *                  'comparison' => 'lt',
+     *                  'field' => 'max_price'
+     *              ]
      *          ]
-     *          здесь
-     *              module - поле, значение которого передается фильтру,
-     *              eq - условие фильтрации (в данном случае, точное соответствие),
-     *              numeric - тип значения (string|numeric)
      *
      *      'identify' - если true, то поле однозначно идентифицирует запись, например поле 'title' - название
      *
@@ -403,6 +418,26 @@ class ActiveRecord extends db\ActiveRecord
     {
         $res = [];
 
+        if (!$type) {
+            $fieldConf = static::getStructure($field);
+            switch($fieldConf['type']) {
+                case 'int':
+                case 'pointer':
+                case 'float':
+                case 'file':
+                    $type = 'numeric';
+                    break;
+                case 'text':
+                case 'html':
+                case 'string':
+                    $type = 'string';
+                    break;
+                case 'select':
+                    $type = 'list';
+                    break;
+            }
+        }
+
         $condField = !$expression ? "`" . static::tableName() . "`.`" . $field . "`" : $expression;
         if ($type == 'string') {
             if ($comparison == 'end') {
@@ -437,7 +472,7 @@ class ActiveRecord extends db\ActiveRecord
 
         foreach ($filter['value'] as $value) {
             $condition[] = static::getSimpleFilterCondition(
-                $filter['type'],
+                (isset($filter['type']) ? $filter['type'] : null),
                 $filter['field'],
                 (isset($filter['comparison']) ? $filter['comparison'] : ''),
                 $value,
@@ -610,7 +645,6 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        // todo me: упоминание о класе Ext нужно извести.
         if(static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_CHECK) {
 
             $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".

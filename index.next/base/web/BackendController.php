@@ -288,9 +288,9 @@ class BackendController extends Controller
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
 
-            $filterParams = Json::decode(Yii::$app->request->post('colFilter', '[]')) == '[]'
-                ? Json::decode(Yii::$app->request->post('colFilter', '[]'))
-                : Json::decode(Yii::$app->request->get('colFilter', '[]'));
+            $filterParams = Yii::$app->request->post('colFilter', null);
+
+            $filterParams = Json::decode($filterParams ? $filterParams : Yii::$app->request->get('colFilter', '[]'));
 
             $params = [
                 "identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false),

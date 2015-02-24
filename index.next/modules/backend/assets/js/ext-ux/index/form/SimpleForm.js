@@ -87,36 +87,40 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
             }
         }
     },
-    _showFilterAnalytic: function (field, formField) {
+
+    _filterAnalytic: function (field, formField) {
 
         var me = this,
             fieldItem,
-            i, j, fieldsCount = me.model.fields.getCount();
+            i, j, fieldsCount = me.model.fields.getCount(), value, store, filtered = [], filterConditionArr;
 
         for (i = 0; i < fieldsCount; i++) {
             fieldItem = me.model.fields.get(i);
 
-            if (fieldItem.filterCondition && fieldItem.filterCondition[field.name]) {
-                var filterConditionArr = fieldItem.filterCondition[field.name];
-                var filterType = fieldItem.filterCondition['type'];
-
-                if (!(filterConditionArr instanceof Array)) {
-                    filterConditionArr = [filterConditionArr];
+            if (fieldItem.filterCondition && fieldItem.filterCondition[field.name] && fieldItem.type == Ext.data.Types.POINTER) {
+                if (field.type == Ext.data.Types.POINTER) {
+                    value = formField.getValue();
+                    fieldItem.filterCondition[field.name]['value'] = (value ? value.id : 0);
+                } else {
+                    fieldItem.filterCondition[field.name]['value'] = formField.getValue();
                 }
+                filtered[filtered.length] = fieldItem;
+            }
+        }
 
-                for (j = 0; j < filterConditionArr.length; j++) {
-                    filterCondition = filterConditionArr[j];
-                    if (field.type == Ext.data.Types.POINTER && formField.value != null && filterCondition == 'eq') {
-                        store = Ext.getCmp(me.id + '_field_' + fieldItem.name).getStore();
-                        store.getProxy().setExtraParam('colFilter', Ext.JSON.encode([{
-                            type: filterType,
-                            comparison: filterCondition,
-                            value: formField.value,
-                            field: field.name
-                        }]));
-                        store.reload();
-                    }
+        if (filtered.length) {
+            for (i = 0; i < filtered.length; i++) {
+                store = Ext.getCmp(me.id + '_field_' + filtered[i].name).getStore();
+                filterConditionArr = [];
+                for (j in filtered[i].filterCondition) {
+                    filterConditionArr[filterConditionArr.length] = {
+                        comparison: filtered[i].filterCondition[j].comparison,
+                        field: filtered[i].filterCondition[j].field,
+                        value: filtered[i].filterCondition[j].value
+                    };
                 }
+                store.getProxy().setExtraParam('colFilter', Ext.JSON.encode(filterConditionArr));
+                store.reload();
             }
         }
     },
@@ -429,7 +433,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                     proxy: {
                         type: 'ajax',
                         url: url,
-                        actionMethods:  {read: "GET"},
+                        actionMethods:  {read: "POST"},
                         extraParams: {},
                         reader: {
                             type: 'json',
@@ -445,7 +449,7 @@ Ext.define('Ext.ux.index.form.SimpleForm', {
                 listeners: {
                     change: function (thisField) {
                         me._showConditionAnalytic(thisField.modelField, thisField);
-                        me._showFilterAnalytic(thisField.modelField, thisField);
+                        me._filterAnalytic(thisField.modelField, thisField);
                     }
                 }
             });
