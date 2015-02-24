@@ -587,7 +587,7 @@ class ActiveRecord extends db\ActiveRecord
 
             $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
                 static::tableName()."`.`master_table_id` = ".$params['masterId']."), 1, 0) AS `check`";
-            $query->rightJoin($relatedTableName, "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.`id`");
+            $query->rightJoin("`".$relatedTableName."` `".$relatedTableName."_".$fieldName."`", "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.`id`");
 
         } else {
 
@@ -822,7 +822,8 @@ class ActiveRecord extends db\ActiveRecord
                             "property" => 'id',
                             "direction" => 'desc'
                         ]
-                    ]
+                    ],
+                    "masterId" => $masterId
                 ]);
                 if ($result && is_array($result)) {
                     return $result['data'][0];
@@ -831,7 +832,8 @@ class ActiveRecord extends db\ActiveRecord
                 }
             } else {
                 $result = static::getList([
-                    "where" => "`".static::tableName()."`.id = '{$data['id']}'"
+                    "where" => "`".static::tableName()."`.id = '{$data['id']}'",
+                    "masterId" => $masterId
                 ]);
                 if ($result && is_array($result)) {
                     return $result['data'][0];

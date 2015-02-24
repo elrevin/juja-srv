@@ -176,12 +176,18 @@ Ext.define('Ext.ux.index.tab.DetailPanel', {
 
         if (me.userRights > 0) {
             if (me.getDataAction.length) {
+                if (!me.saveAction) {
+                    me.saveAction = [];
+                }
                 if (!me.saveAction.length) {
                     me.saveAction[0] = me.getDataAction[0];
                     me.saveAction[1] = me.getDataAction[1];
                     me.saveAction[2] = 'save-record';
                 }
 
+                if (!me.deleteAction) {
+                    me.deleteAction = [];
+                }
                 if (!me.deleteAction.length) {
                     me.deleteAction[0] = me.getDataAction[0];
                     me.deleteAction[1] = me.getDataAction[1];

@@ -177,7 +177,7 @@ Ext.define('Ext.ux.index.grid.ListGrid', {
             column = Ext.apply(column, {
                 width: (field.settings && field.settings.width ? field.settings.width : 60),
                 renderer: function (val) {
-                    if (field.selectOptions && field.selectOptions[val.id]) {
+                    if (val && field.selectOptions && field.selectOptions[val.id]) {
                         return field.selectOptions[val.id];
                     }
                     return '';

@@ -62,6 +62,9 @@ Ext.define('Ext.ux.form.ClearableComboBox', {
 
     setValue: function(value, doSelect) {
         var me = this;
+        if (me.name == 'select_field') {
+//            debugger;
+        }
         if (value) {
             if (typeof value == 'object') {
                 if (value && value.id != undefined) {
@@ -84,6 +87,9 @@ Ext.define('Ext.ux.form.ClearableComboBox', {
           picker = me.picker,
           rawValue = me.getRawValue(),
           value = me.value;
+        if (me.name == 'select_field') {
+//            debugger;
+        }
         if (me.getDisplayValue() !== rawValue) {
             value = rawValue;
             me.value = me.displayTplData = me.valueModels = null;
@@ -103,7 +109,10 @@ Ext.define('Ext.ux.form.ClearableComboBox', {
     },
     initComponent: function () {
         var me = this;
-        me.store.wasLoaded = false;
+        if (me.name == 'select_field') {
+//            debugger;
+        }
+        me.store.wasLoaded = me.store.getProxy().type != 'ajax';
         me.store.on('load', function () {
             me.store.wasLoaded = true;
             if (me.afterLoadSetValue) {
