@@ -466,6 +466,9 @@ class ActiveRecord extends db\ActiveRecord
     protected static function getFilterCondition($filter, $expression = '')
     {
         $condition = [];
+        if (!isset($filter['value'])) {
+            return ['=', 'id',-8];
+        }
         if (!is_array($filter['value'])) {
             $filter['value'] = [$filter['value']];
         }
@@ -718,6 +721,7 @@ class ActiveRecord extends db\ActiveRecord
 //        }
 
         $list = $query->asArray()->all();
+
 
 //        $totalCount = false;
 //        if (!static::$sortable) {
