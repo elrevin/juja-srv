@@ -24,6 +24,15 @@ class Goods extends \app\base\db\ActiveRecord
             'title' => 'Флаг',
             'type' => 'bool',
             'group' => 'Группа 1'
+        ],
+        'module' => [
+            'title' => 'Модуль',
+            'type' => 'pointer',
+            'relativeModel' => [
+                'moduleName' => 'backend',
+                'name' => 'tags',
+                'modalSelect' => false
+            ]
         ]
     ];
 

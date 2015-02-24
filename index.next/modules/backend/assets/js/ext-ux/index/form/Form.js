@@ -104,6 +104,7 @@ Ext.define('Ext.ux.index.form.Form', {
                     continue;
                 }
                 me._showConditionAnalytic(field, Ext.getCmp(me.id + '_field_' + field.name));
+                me._showFilterAnalytic(field, Ext.getCmp(me.id + '_field_' + field.name));
             }
         }
     },
