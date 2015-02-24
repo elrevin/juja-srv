@@ -8,6 +8,12 @@ use yii\helpers\Json;
 
 class ActiveRecord extends db\ActiveRecord
 {
+    const MASTER_MODEL_RELATIONS_TYPE_MASTER_DETAIL = "master_detail";
+    const MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY = "many_to_many";
+
+    const SLAVE_MODEL_ADD_METHOD_BUTTON = "button";
+    const SLAVE_MODEL_ADD_METHOD_CHECK = "check";
+
     /**
      * Структура модели.
      * Массив в первом уровне в качестве ключей элементов используются имена полей в таблице
@@ -188,11 +194,23 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static $tabClassName = 'Ext.ux.index.tab.DetailPanel';
 
+    public static $masterModelRelationsType = "master_detail";
+
     /**
      * Тип таба для связи many2many
      * @var enum('button', 'checkbox')
      */
     public static $typeGrid = 'button';
+
+    /**
+     * Способ добавления записи в таблицу сзязи many_to_many:
+     *      'button' (static::SLAVE_MODEL_ADD_METHOD_BUTTON) - будет создана кнопка "добавить",
+     *          при нажатии на которую будет появляться диалог выбора добавляемой записи
+     *      'check' (static::SLAVE_MODEL_ADD_METHOD_CHECK) - будет создан грид, в котором будут выводиться все записи из
+     *          подключаемой таблицы, и будет столбец с чекбоксами которыми можно выбирать
+     * @var string
+     */
+    public static $slaveModelAddMethod = 'button';
 
     /**
      * Доступна ли ручная сортировка
@@ -583,7 +601,7 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         // todo me: упоминание о класе Ext нужно извести.
-        if(static::$tabClassName == 'Ext.ux.index.tab.Many2ManyPanel' && static::$typeGrid == 'checkbox') {
+        if(static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_CHECK) {
 
             $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
                 static::tableName()."`.`master_table_id` = ".$params['masterId']."), 1, 0) AS `check`";
@@ -1057,8 +1075,8 @@ class ActiveRecord extends db\ActiveRecord
             'masterRecordId' => $masterId,
             'sortable' => static::$sortable,
             'recursive' => static::$recursive,
-            'tabClassName' => static::$tabClassName,
-            'typeGrid' => static::$typeGrid,
+            'masterModelRelationsType' => static::$masterModelRelationsType,
+            'slaveModelAddMethod' => static::$slaveModelAddMethod,
             'childModelConfig' => $childModelConfig,
             'parentModelName' => $parentModelName
         ];

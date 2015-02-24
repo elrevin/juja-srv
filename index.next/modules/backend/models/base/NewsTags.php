@@ -32,9 +32,9 @@ class NewsTags extends \app\base\db\ActiveRecord
 
     protected static $linkModelName = '\app\modules\backend\models\Tags';
 
-    public static $tabClassName = 'Many2ManyPanel';
+    public static $masterModelRelationsType = self::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY;
 
-    public static $typeGrid = 'checkbox';
+    public static $slaveModelAddMethod = self::SLAVE_MODEL_ADD_METHOD_CHECK;
 
     /**
      * @inheritdoc

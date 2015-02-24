@@ -12,8 +12,8 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
     editorWindow: null,
     // тип панели
     //      button - таблица c модальным окном и кнопками Добавить, Удалить
-    //      checkbox - таблица c выводом всех элементов из зависимой модели с возможностью выбора
-    typeGrid: 'button',
+    //      check - таблица c выводом всех элементов из зависимой модели с возможностью выбора
+    slaveModelAddMethod: 'button',
     runAction: [],
     modelName: '',
     linkModelRunAction: null,
@@ -31,7 +31,7 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
         var me = this,
             fields;
         fields = me.mixins.modelLoader.getFields.call(me);
-        if(me.typeGrid == 'checkbox')
+        if(me.slaveModelAddMethod == 'check')
             fields[fields.length] = {
                 name: 'check',
                 type: 'bool',
@@ -49,7 +49,7 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
 
         if (me.userRights > 0) {
 
-            if(me.typeGrid == 'button') {
+            if(me.slaveModelAddMethod == 'button') {
                 gridConfig = {
                     modelClassName: me.modelClassName,
                     getDataAction: me.getDataAction,
@@ -194,7 +194,7 @@ Ext.define('Ext.ux.index.tab.Many2ManyPanel', {
     createToolbar: function () {
         var me = this;
         if (!me.toolbar) {
-            if (me.userRights > 1 && me.typeGrid == 'button') {
+            if (me.userRights > 1 && me.slaveModelAddMethod == 'button') {
                 me.toolbar = Ext.create('Ext.toolbar.Toolbar', {
                     height: 58,
                     defaults: {
