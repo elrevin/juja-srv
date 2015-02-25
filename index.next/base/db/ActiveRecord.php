@@ -15,6 +15,14 @@ class ActiveRecord extends db\ActiveRecord
     const SLAVE_MODEL_ADD_METHOD_CHECK = "check";
 
     /**
+     * Список поведений подключенных к данной модели
+     * @var array
+     */
+    public static $behaviorsList = [];
+
+    protected static $processedAdditionFieldsBehaviors = false;
+
+    /**
      * Структура модели.
      * Массив в первом уровне в качестве ключей элементов используются имена полей в таблице
      * каждый такой элемент - вложенный ассоциативный массив:
@@ -244,6 +252,11 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static $sortable = false;
 
+    public function behaviors()
+    {
+        return static::$behaviorsList;
+    }
+
     public static function getRunAction ()
     {
         return [static::getModuleName(), 'main', 'get-interface'];
@@ -335,9 +348,11 @@ class ActiveRecord extends db\ActiveRecord
             if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
                 $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
                 if ($modelName != $className) {
-                    $parentModel = call_user_func([$modelName, 'getParentModel']);
-                    if ($parentModel == $className) {
-                        return $modelName;
+                    if (is_callable([$modelName, 'getParentModel'])) {
+                        $parentModel = call_user_func([$modelName, 'getParentModel']);
+                        if ($parentModel == $className) {
+                            return $modelName;
+                        }
                     }
                 }
             }
@@ -363,9 +378,11 @@ class ActiveRecord extends db\ActiveRecord
                 $modelName = str_replace(".php", "", $file);
                 if ($modelName != $className) {
                     $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
-                    $masterModel = call_user_func([$modelName, 'getMasterModel']);
-                    if (trim($masterModel, '\\') == $className) {
-                        $result[] = $modelName;
+                    if (is_callable([$modelName, 'getMasterModel'])) {
+                        $masterModel = call_user_func([$modelName, 'getMasterModel']);
+                        if (trim($masterModel, '\\') == $className) {
+                            $result[] = $modelName;
+                        }
                     }
                 }
             }
@@ -513,6 +530,7 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getList($params)
     {
+        static::addAdditionFields();
         $params = static::beforeList($params);
         $select = ["`".static::tableName()."`.`id`"];
         $selectParams = [];
@@ -520,6 +538,7 @@ class ActiveRecord extends db\ActiveRecord
         $pointers = [];
         $selectFields = [];
         $calcFields = [];
+        $additionTables = [];
 
         foreach (static::$structure as $fieldName => $fieldConf) {
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
@@ -532,7 +551,11 @@ class ActiveRecord extends db\ActiveRecord
                 $fieldConf['calc'] = false;
             }
 
-            if ($fieldConf['type'] == 'pointer' && !$fieldConf['calc']) {
+            if (!isset($fieldConf['addition'])) {
+                $fieldConf['addition'] = false;
+            }
+
+            if ($fieldConf['type'] == 'pointer' && !$fieldConf['calc'] && !$fieldConf['addition']) {
                 if (is_array($fieldConf['relativeModel'])) {
                     $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
                 } else {
@@ -552,7 +575,7 @@ class ActiveRecord extends db\ActiveRecord
                         'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
                     ];
                 }
-            } elseif ($fieldConf['type'] == 'select' && !$fieldConf['calc']) {
+            } elseif ($fieldConf['type'] == 'select' && !$fieldConf['calc'] && !$fieldConf['addition']) {
                 $select[] = "`".static::tableName()."`.`".$fieldName."`";
                 $options = [];
                 $keyIndex = 1;
@@ -566,7 +589,7 @@ class ActiveRecord extends db\ActiveRecord
                 $selectFields[$fieldName] = [
                     "valField" => "valof_".$fieldName
                 ];
-            } elseif ($fieldConf['type'] == 'file' && !$fieldConf['calc']) {
+            } elseif ($fieldConf['type'] == 'file' && !$fieldConf['calc'] && !$fieldConf['addition']) {
                 $relatedModelClass = '\app\modules\files\models\Files';
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
@@ -585,8 +608,17 @@ class ActiveRecord extends db\ActiveRecord
             } elseif ($fieldConf['type'] != 'file' && $fieldConf['type'] != 'pointer') {
                 // Простые типы данных
                 if ($fieldConf['calc'] && isset($fieldConf['expression']) && $fieldConf['expression']) {
-                    $select[] = "(".$fieldConf['expression'].")"." AS `".$fieldName."`";
-                    $calcFields[$fieldName] = "(".$fieldConf['expression'].")";
+                    $select[] = "(" . $fieldConf['expression'] . ")" . " AS `" . $fieldName . "`";
+                    $calcFields[$fieldName] = "(" . $fieldConf['expression'] . ")";
+                } elseif (array_key_exists('addition', $fieldConf) && $fieldConf['addition']) {
+                    if (!in_array($fieldConf['additionTable'], $additionTables)) {
+                        $additionTables[] = $fieldConf['additionTable'];
+                        $join[] = [
+                            'name' => $fieldConf['additionTable'],
+                            'on' => "`".$fieldConf['additionTable']."`.`master_table_id` = `".static::tableName()."`.id AND `".$fieldConf['additionTable']."`.`master_table_name` = '".static::tableName()."'"
+                        ];
+                    }
+                    $select[] = "`".$fieldConf['additionTable']."`.`".$fieldName."`";
                 } else {
                     $select[] = "`".static::tableName()."`.`".$fieldName."`";
                 }
@@ -864,6 +896,7 @@ class ActiveRecord extends db\ActiveRecord
      */
     public function saveData($data, $add = false, $masterId = 0)
     {
+        static::addAdditionFields();
         if (static::$masterModel) {
             $this->master_table_id = $masterId;
         }
@@ -953,6 +986,26 @@ class ActiveRecord extends db\ActiveRecord
         return $config;
     }
 
+    protected static function addAdditionFields()
+    {
+        if (!static::$processedAdditionFieldsBehaviors) {
+            if (static::$behaviorsList) {
+                foreach (static::$behaviorsList as $item) {
+                    $className = '';
+                    if (is_string($item)) {
+                        $className = $item;
+                    } elseif (is_array($item) && isset($item['class'])) {
+                        $className = $item['class'];
+                    }
+
+                    if ($className && is_callable([$className, 'getAdditionFields'])) {
+                        static::$structure = array_merge(static::$structure, call_user_func([$className, 'getAdditionFields']));
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Возвращает настройки пользовательского интерфейса.
      *
@@ -973,6 +1026,7 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getUserInterface($configOnly = false, $masterId = 0, $modal = false, $params = [])
     {
+        static::addAdditionFields();
         $modelStructure = static::getStructure();
         $fields = [];
         foreach ($modelStructure as $fieldName => $config) {

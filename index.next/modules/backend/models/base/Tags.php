@@ -10,6 +10,10 @@ use Yii;
  */
 class Tags extends \app\base\db\ActiveRecord
 {
+    public static $behaviorsList = [
+        '\app\modules\backend\behaviors\TestAddFields'
+    ];
+
     protected static $structure = [
         'title' => [
             'title' => 'Название',
