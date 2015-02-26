@@ -1,3 +1,3 @@
-Ext.define('App.modules.backend.PointTestTable.Editor', {
-    extend: 'App.core.SingleModelEditor'
+Ext.define('App.modules.site.SiteStructure.Editor', {
+    extend: 'App.core.SimpleEditor'
 });

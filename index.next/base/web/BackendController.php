@@ -156,7 +156,7 @@ class BackendController extends Controller
         return $res;
     }
 
-    function actionCPMenu($modelName = null, $recordId = null)
+    function actionCpMenu($modelName = null, $recordId = null)
     {
         if ($modelName === null) {
             $modelName = Yii::$app->request->get('modelName', '');

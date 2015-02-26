@@ -129,7 +129,7 @@ Ext.define('App.core.SimpleEditor', {
                             // меняем текст текущего узла главного меню
 
                             // Проверяем был ли изменен предок
-                            if (new_parent_id != old_parent_id) {
+                            if (new_parent_id && old_parent_id && new_parent_id != old_parent_id) {
                                 // Нужно обновить соответствующих предков
 
                                 node = IndexNextApp.getApplication().getMainMenuNode(me.modelName, new_parent_id.id);

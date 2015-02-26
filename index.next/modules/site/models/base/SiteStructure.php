@@ -1,6 +1,6 @@
 <?php
 
-namespace app\modules\backend\models\base;
+namespace app\modules\site\models\base;
 
 use Yii;
 
@@ -14,15 +14,19 @@ class SiteStructure extends \app\base\db\ActiveRecord
         ],
         'text' => [
             'title' => 'Текст страницы раздела',
-            'type' => 'text',
+            'type' => 'html',
         ],
         'module' => [
             'title' => 'Модуль раздела',
-            'type' => 'text',
+            'type' => 'pointer',
+            'relativeModel' => [
+                'moduleName' => 'site',
+                'name' => 'Modules',
+            ],
         ],
         'template' => [
             'title' => 'Шаблон оформления',
-            'type' => 'text',
+            'type' => 'string',
         ],
     ];
 
@@ -53,7 +57,7 @@ class SiteStructure extends \app\base\db\ActiveRecord
     {
         return [
             [['title'], 'required', 'message' => 'Поле "' . static::$structure['title']['title'] . '" обязательно для заполнения.'],
-            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "' . static::$structure['title']['title'] . '" не может быть длинее 1024 символов.',],
+            [['title'], 'string', 'max' => 1024, 'tooLong' => 'Поле "' . static::$structure['title']['title'] . '" не может быть длинее 1024 символа.',],
         ];
     }
 }

@@ -1,5 +1,11 @@
 {"manage": [
   {
+    "title": "Структура сайта",
+    "modelName": "SiteStructure",
+    "moduleName": "site",
+    "icon": "/cp-files/images/modules-icons/site-structure.png"
+  },
+  {
     "title": "Какой-то узел",
     "list": [
       {

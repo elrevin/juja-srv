@@ -49,8 +49,8 @@ var module = Ext.create('App.modules.backend.PointTestTable.Editor', {
     "masterRecordId": 0,
     "sortable": false,
     "recursive": false,
-    "tabClassName": "Ext.ux.index.tab.DetailPanel",
-    "typeGrid": "button",
+    "masterModelRelationsType": "master_detail",
+    "slaveModelAddMethod": "button",
     "childModelConfig": null,
     "parentModelName": "",
     "tabs": [{
@@ -106,8 +106,8 @@ var module = Ext.create('App.modules.backend.PointTestTable.Editor', {
         "masterRecordId": 0,
         "sortable": false,
         "recursive": false,
-        "tabClassName": "Ext.ux.index.tab.DetailPanel",
-        "typeGrid": "button",
+        "masterModelRelationsType": "master_detail",
+        "slaveModelAddMethod": "button",
         "childModelConfig": null,
         "parentModelName": "",
         "className": "App.modules.backend.PointTestTable.tabs.Pttp"
