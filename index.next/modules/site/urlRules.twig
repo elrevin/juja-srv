@@ -1,7 +1,10 @@
 <?php
 return [
 {% for item in urls %}
-        '{{ item }}'
-return [
-    '/' => 'site/default/index'
+        [
+                'pattern' => '{{ item.url }}',
+                'route' => 'site/default/index',
+                'defaults' => ['id' => {{ item.id }}]
+        ],
+{% endfor %}
 ];

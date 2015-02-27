@@ -8,6 +8,7 @@ use yii\helpers\Json;
  */
 class SiteStructure extends \app\modules\site\models\base\SiteStructure
 {
+    public $urls = null;
     protected static function beforeList($params)
     {
         static::$structure['module']['type'] = 'string';
@@ -44,29 +45,36 @@ class SiteStructure extends \app\modules\site\models\base\SiteStructure
         return $list;
     }
 
-    private function generateSelfUrls($parentId = null, $url = "")
+    public static function generateSelfUrls($parentId = null, $url = "")
     {
         $ret = [];
         if (!$parentId) {
             $data = static::find()->where(['parent_id' => $parentId, 'module' => 'site'])->one();
-            $ret[] = array_merge([
+            $ret[] = [
                 "id" => $data->id,
                 "url" => "/"
-            ], $this->generateSelfUrls($data->id, ""));
+            ];
+            $ret = array_merge($ret, static::generateSelfUrls($data->id, ''));
         } else {
             $data = static::find()->where(['parent_id' => $parentId, 'module' => 'site'])->all();
             foreach ($data as $item) {
-                $ret[] = array_merge([
-                    "id" => $data->id,
+                $ret[] = [
+                    "id" => $item->id,
                     "url" => $url."/".$item->url
-                ], $this->generateSelfUrls($data->id, $url."/".$item->url));
+                ];
+                $ret = array_merge($ret, static::generateSelfUrls($item->id, $url."/".$item->url));
             }
         }
+        foreach ($ret as $key => $item) {
+            $ret[$key]['url'] = trim($item['url'], '/');
+        }
+
         return $ret;
     }
 
     public function saveData($data, $add = false, $masterId = 0)
     {
+        $this->urls = null;
         static::$structure['module']['type'] = 'string';
         static::$structure['template']['type'] = 'string';
         $modules = Modules::getModulesList();
@@ -79,10 +87,6 @@ class SiteStructure extends \app\modules\site\models\base\SiteStructure
             if ($data['template']) {
                 $data['template'] = $templates[$data['template']['id'] - 1]['name'];
             }
-        }
-
-        if ($data['module'] == 'site') {
-            $urls = $this->generateSelfUrls();
         }
 
         $ret = parent::saveData($data, $add, $masterId);
