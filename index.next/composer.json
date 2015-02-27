@@ -8,7 +8,10 @@
     "minimum-stability": "dev",
     "require": {
         "php": ">=5.4.0",
-        "index-next/site": "*"
+	    "index-next/modules-installer": "*",
+        "index-next/site": "*",
+        "index-next/backend": "*",
+        "index-next/files": "*"
     },
      "config": {
         "process-timeout": 1800
@@ -17,6 +20,18 @@
         {
             "type": "vcs",
             "url":  "http://git.web-dev.ru/index-next/site.git"
+        },
+        {
+            "type": "vcs",
+            "url":  "http://git.web-dev.ru/index-next/backend.git"
+        },
+        {
+            "type": "vcs",
+            "url":  "http://git.web-dev.ru/index-next/files.git"
+        },
+        {
+            "type": "vcs",
+            "url":  "http://git.web-dev.ru/index-next/modules-installer.git"
         }
     ]
 }
