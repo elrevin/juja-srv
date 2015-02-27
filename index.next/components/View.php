@@ -16,15 +16,10 @@ namespace app\components;
 use yii\web;
 class View extends web\View
 {
-    public $themeName;
-
     public function init()
     {
         \Yii::setAlias('@theme', '');
         \Yii::setAlias('@themeroot', '');
-        if ($this->themeName) {
-            $this->setActiveTheme($this->themeName);
-        }
 
         parent::init();
         /*
@@ -49,6 +44,7 @@ class View extends web\View
             } elseif (is_string($theme)) {
                 $this->theme = \Yii::createObject($theme);
             }
+            $this->theme->view = $this;
         }
     }
 

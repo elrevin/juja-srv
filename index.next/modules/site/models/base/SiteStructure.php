@@ -26,7 +26,24 @@ class SiteStructure extends \app\base\db\ActiveRecord
         ],
         'template' => [
             'title' => 'Шаблон оформления',
-            'type' => 'string',
+            'type' => 'pointer',
+            'relativeModel' => [
+                'moduleName' => 'site',
+                'name' => 'Templates',
+            ],
+            'showCondition' => [
+                'module' => [
+                    [
+                        'operation' => 'set',
+                    ]
+                ],
+            ],
+            'filterCondition' => [
+                'module' => [
+                    'field' => 'module',
+                    'comparison' => 'eq'
+                ]
+            ]
         ],
     ];
 

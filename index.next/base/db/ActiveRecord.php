@@ -508,93 +508,6 @@ class ActiveRecord extends db\ActiveRecord
         return $condition;
     }
 
-    protected static function getQueryProps($fieldName, $fieldConf, &$additionTables)
-    {
-        $select = [];
-        $selectParams = [];
-        $join = [];
-        $pointers = [];
-        $selectFields = [];
-        $calcFields = [];
-
-        if ($fieldConf['type'] == 'pointer' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-            if (is_array($fieldConf['relativeModel'])) {
-                $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
-            } else {
-                $relatedModelClass = $fieldConf['relativeModel'];
-            }
-            $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
-            if ($relatedIdentifyFieldConf) {
-                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $select[] = "`".$relatedTableName."_".$fieldName."`.`id` AS `".$fieldName."`";
-                $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-                $pointers[$fieldName] = [
-                    "table" => $relatedTableName."_".$fieldName,
-                    "field" => $relatedIdentifyFieldConf['name']
-                ];
-                $join[] = [
-                    'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
-                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
-                ];
-            }
-        } elseif ($fieldConf['type'] == 'select' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-            $select[] = "`".static::tableName()."`.`".$fieldName."`";
-            $options = [];
-            $keyIndex = 1;
-            foreach ($fieldConf['selectOptions'] as $key => $value) {
-                $options[] = "WHEN :option".$keyIndex."key THEN :option".$keyIndex."value";
-                $selectParams[":option".$keyIndex."key"] = $key;
-                $selectParams[":option".$keyIndex."value"] = $value;
-                $keyIndex++;
-            }
-            $select[] = "(CASE `".static::tableName()."`.`".$fieldName."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
-            $selectFields[$fieldName] = [
-                "valField" => "valof_".$fieldName
-            ];
-        } elseif ($fieldConf['type'] == 'file' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-            $relatedModelClass = '\app\modules\files\models\Files';
-            $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
-            $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-            $select[] = "`".static::tableName()."`.`".$fieldName."`";
-            $select[] = "`".$relatedTableName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-            $select[] = "`".$relatedTableName."`.`name` as `fileof_".$fieldName."`";
-            $pointers[$fieldName] = [
-                "table" => $relatedTableName,
-                "field" => $relatedIdentifyFieldConf['name'],
-                "file_field" => 'name'
-            ];
-            $join[] = [
-                'name' => $relatedTableName,
-                'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.id"
-            ];
-        } elseif ($fieldConf['type'] != 'file' && $fieldConf['type'] != 'pointer') {
-            // Простые типы данных
-            if ($fieldConf['calc'] && isset($fieldConf['expression']) && $fieldConf['expression']) {
-                $select[] = "(" . $fieldConf['expression'] . ")" . " AS `" . $fieldName . "`";
-                $calcFields[$fieldName] = "(" . $fieldConf['expression'] . ")";
-            } elseif (array_key_exists('addition', $fieldConf) && $fieldConf['addition']) {
-                if (!in_array($fieldConf['additionTable'], $additionTables)) {
-                    $additionTables[] = $fieldConf['additionTable'];
-                    $join[] = [
-                        'name' => $fieldConf['additionTable'],
-                        'on' => "`".$fieldConf['additionTable']."`.`master_table_id` = `".static::tableName()."`.id AND `".$fieldConf['additionTable']."`.`master_table_name` = '".static::tableName()."'"
-                    ];
-                }
-                $select[] = "`".$fieldConf['additionTable']."`.`".$fieldName."`";
-            } else {
-                $select[] = "`".static::tableName()."`.`".$fieldName."`";
-            }
-        }
-        return [
-            'select' => $select,
-            'selectParams' => $selectParams,
-            'join' => $join,
-            'pointers' => $pointers,
-            'selectFields' => $selectFields,
-            'calcFields' => $calcFields,
-        ];
-    }
-
     /**
      * Возвращает массив записей модели для отображения в панели управления.
      * В аргументе $params передается ассоциативный массив параметров списка
@@ -642,13 +555,74 @@ class ActiveRecord extends db\ActiveRecord
                 $fieldConf['addition'] = false;
             }
 
-            $props = static::getQueryProps($fieldName, $fieldConf, $additionTables);
-            $select = array_merge($select, $props['select']);
-            $selectParams = array_merge($selectParams, $props['selectParams']);
-            $join = array_merge($join, $props['join']);
-            $pointers = array_merge($pointers, $props['pointers']);
-            $selectFields = array_merge($selectFields, $props['selectFields']);
-            $calcFields = array_merge($calcFields, $props['calcFields']);
+            if ($fieldConf['type'] == 'pointer' && !$fieldConf['calc'] && !$fieldConf['addition']) {
+                if (is_array($fieldConf['relativeModel'])) {
+                    $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
+                } else {
+                    $relatedModelClass = $fieldConf['relativeModel'];
+                }
+                $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
+                if ($relatedIdentifyFieldConf) {
+                    $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
+                    $select[] = "`".$relatedTableName."_".$fieldName."`.`id` AS `".$fieldName."`";
+                    $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                    $pointers[$fieldName] = [
+                        "table" => $relatedTableName."_".$fieldName,
+                        "field" => $relatedIdentifyFieldConf['name']
+                    ];
+                    $join[] = [
+                        'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
+                        'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
+                    ];
+                }
+            } elseif ($fieldConf['type'] == 'select' && !$fieldConf['calc'] && !$fieldConf['addition']) {
+                $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                $options = [];
+                $keyIndex = 1;
+                foreach ($fieldConf['selectOptions'] as $key => $value) {
+                    $options[] = "WHEN :option".$keyIndex."key THEN :option".$keyIndex."value";
+                    $selectParams[":option".$keyIndex."key"] = $key;
+                    $selectParams[":option".$keyIndex."value"] = $value;
+                    $keyIndex++;
+                }
+                $select[] = "(CASE `".static::tableName()."`.`".$fieldName."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
+                $selectFields[$fieldName] = [
+                    "valField" => "valof_".$fieldName
+                ];
+            } elseif ($fieldConf['type'] == 'file' && !$fieldConf['calc'] && !$fieldConf['addition']) {
+                $relatedModelClass = '\app\modules\files\models\Files';
+                $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
+                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
+                $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                $select[] = "`".$relatedTableName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $select[] = "`".$relatedTableName."`.`name` as `fileof_".$fieldName."`";
+                $pointers[$fieldName] = [
+                    "table" => $relatedTableName,
+                    "field" => $relatedIdentifyFieldConf['name'],
+                    "file_field" => 'name'
+                ];
+                $join[] = [
+                    'name' => $relatedTableName,
+                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.id"
+                ];
+            } elseif ($fieldConf['type'] != 'file' && $fieldConf['type'] != 'pointer') {
+                // Простые типы данных
+                if ($fieldConf['calc'] && isset($fieldConf['expression']) && $fieldConf['expression']) {
+                    $select[] = "(" . $fieldConf['expression'] . ")" . " AS `" . $fieldName . "`";
+                    $calcFields[$fieldName] = "(" . $fieldConf['expression'] . ")";
+                } elseif (array_key_exists('addition', $fieldConf) && $fieldConf['addition']) {
+                    if (!in_array($fieldConf['additionTable'], $additionTables)) {
+                        $additionTables[] = $fieldConf['additionTable'];
+                        $join[] = [
+                            'name' => $fieldConf['additionTable'],
+                            'on' => "`".$fieldConf['additionTable']."`.`master_table_id` = `".static::tableName()."`.id AND `".$fieldConf['additionTable']."`.`master_table_name` = '".static::tableName()."'"
+                        ];
+                    }
+                    $select[] = "`".$fieldConf['additionTable']."`.`".$fieldName."`";
+                } else {
+                    $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                }
+            }
         }
 
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$recursive) {
