@@ -22,9 +22,11 @@ class AdmMainController extends \app\base\web\BackendController
 
         if ($moduleName == $this->module->id) {
             $urls = SiteStructure::generateSelfUrls();
+            $file = $this->renderFile(Yii::getAlias('@app/modules/'. $moduleName .'/urlRules.twig'), ['urls' => $urls]);
+        } else {
+            $file = $this->renderFile(Yii::getAlias('@app/modules/'. $moduleName .'/urlRules.twig'), ['url' => $data['url']]);
         }
 
-        $file = $this->renderFile(Yii::getAlias('@app/modules/'. $moduleName .'/urlRules.twig'), ['urls' => $urls]);
         file_put_contents(Yii::getAlias('@app/modules/'. $moduleName .'/urlRules.php'), $file);
 
         return $ret;
