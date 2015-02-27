@@ -4,6 +4,23 @@ namespace app\modules\site\models\base;
 
 use Yii;
 
+/**
+ * Модель структура сайта
+ * @package app\modules\site\models\base
+ *
+ * @property int id
+ * @property int parent_id
+ * @property int del
+ * @property int hidden
+ * @property string title
+ * @property string text
+ * @property string module
+ * @property string template
+ * @property string meta_title
+ * @property string meta_description
+ * @property string meta_keywords
+ * @property string url
+ */
 class SiteStructure extends \app\base\db\ActiveRecord
 {
     protected static $structure = [
@@ -45,6 +62,10 @@ class SiteStructure extends \app\base\db\ActiveRecord
                 ]
             ]
         ],
+    ];
+
+    public static $behaviorsList = [
+        '\app\modules\site\behaviors\MetaTagsAddFields'
     ];
 
     public static $permanentlyDelete = false;

@@ -3,6 +3,9 @@ namespace app\modules\site\models;
 
 use yii\helpers\Json;
 
+/**
+ * @inheritdoc
+ */
 class SiteStructure extends \app\modules\site\models\base\SiteStructure
 {
     protected static function beforeList($params)
@@ -41,6 +44,27 @@ class SiteStructure extends \app\modules\site\models\base\SiteStructure
         return $list;
     }
 
+    private function generateSelfUrls($parentId = null, $url = "")
+    {
+        $ret = [];
+        if (!$parentId) {
+            $data = static::find()->where(['parent_id' => $parentId, 'module' => 'site'])->one();
+            $ret[] = array_merge([
+                "id" => $data->id,
+                "url" => "/"
+            ], $this->generateSelfUrls($data->id, ""));
+        } else {
+            $data = static::find()->where(['parent_id' => $parentId, 'module' => 'site'])->all();
+            foreach ($data as $item) {
+                $ret[] = array_merge([
+                    "id" => $data->id,
+                    "url" => $url."/".$item->url
+                ], $this->generateSelfUrls($data->id, $url."/".$item->url));
+            }
+        }
+        return $ret;
+    }
+
     public function saveData($data, $add = false, $masterId = 0)
     {
         static::$structure['module']['type'] = 'string';
@@ -57,6 +81,9 @@ class SiteStructure extends \app\modules\site\models\base\SiteStructure
             }
         }
 
+        if ($data['module'] == 'site') {
+            $urls = $this->generateSelfUrls();
+        }
 
         $ret = parent::saveData($data, $add, $masterId);
         static::$structure['module']['type'] = 'pointer';

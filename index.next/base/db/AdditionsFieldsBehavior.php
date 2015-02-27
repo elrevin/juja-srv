@@ -82,6 +82,11 @@ class AdditionsFieldsBehavior extends Behavior
         // Меняем дочернюю запись
         $model = call_user_func([static::$additionModel, 'find'])->where(['master_table_id' => $id, 'master_table_name' => call_user_func([$this->owner->className(), 'tableName'])])
             ->one();
+        if (!$model) {
+            $model = new static::$additionModel();
+            $model->master_table_id = $id;
+            $model->master_table_name = call_user_func([$this->owner->className(), 'tableName']);
+        }
         foreach ($this->values as $key => $value) {
             $model->{$key} = $value;
         }
@@ -99,8 +104,15 @@ class AdditionsFieldsBehavior extends Behavior
 
     public function __get($name)
     {
+        if (!$this->values) {
+            $model = call_user_func([static::$additionModel, 'find'])->where(['master_table_id' => $this->owner->id, 'master_table_name' => call_user_func([$this->owner->className(), 'tableName'])])
+                ->asArray()->one();
+            if ($model) {
+                $this->values = $model;
+            }
+        }
         if (array_key_exists($name, static::$fields)) {
-            return $this->values[$name];
+            return (isset($this->values[$name]) ? $this->values[$name] : null);
         }
         return parent::__get($name);
     }
