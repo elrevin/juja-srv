@@ -11,7 +11,9 @@ class Mailer extends \yii\swiftmailer\Mailer
             $config['class'] = View::className();
         }
 
-        $config['themeName'] = $this->themeName;
+        if ($this->themeName) {
+            $config['themeName'] = $this->themeName;
+        }
         return \Yii::createObject($config);
     }
 }

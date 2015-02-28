@@ -46,25 +46,6 @@ class SUsers extends \app\base\db\ActiveRecord
     }
 
     /**
-     * @inheritdoc
-     */
-    public function attributeLabels()
-    {
-        return [
-            'id' => 'ID',
-            'username' => 'Username',
-            'password' => 'Password',
-            'group_id' => 'Group ID',
-            'name' => 'Name',
-            'hash' => 'Hash',
-            'email' => 'Email',
-            'last_login' => 'Last Login',
-            'restore_code' => 'Restore Code',
-            'restore_code_expires' => 'Restore Code Expires',
-        ];
-    }
-
-    /**
      * @return \yii\db\ActiveQuery
      */
     public function getGroup()

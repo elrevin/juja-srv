@@ -327,13 +327,13 @@
             "source": {
                 "type": "git",
                 "url": "http://git.web-dev.ru/index-next/backend.git",
-                "reference": "486232236a876747600f8cf0064e87d8d76f5a95"
+                "reference": "9a33f7d1ffa7f58acce82b845ca0351e56624cd6"
             },
             "require": {
                 "php": ">=5.4.0"
             },
             "type": "index-next-module",
-            "time": "2015-02-27 19:45:24"
+            "time": "2015-02-27 21:17:52"
         },
         {
             "name": "index-next/files",
@@ -398,13 +398,13 @@
             "source": {
                 "type": "git",
                 "url": "http://git.web-dev.ru/index-next/site.git",
-                "reference": "acd6c4e758d99abe31b841ac88b2850ae3216922"
+                "reference": "88e4803aed2fdc78816cf4e42109f9caefa516ae"
             },
             "require": {
                 "php": ">=5.4.0"
             },
             "type": "index-next-module",
-            "time": "2015-02-27 19:08:53"
+            "time": "2015-02-27 21:17:32"
         },
         {
             "name": "swiftmailer/swiftmailer",
@@ -521,12 +521,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-framework.git",
-                "reference": "3895ad86f78d76acedc79a4660ff3da0b1089057"
+                "reference": "cd8bb8a9d8e5507708176b4734bcca64a1490952"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/3895ad86f78d76acedc79a4660ff3da0b1089057",
-                "reference": "3895ad86f78d76acedc79a4660ff3da0b1089057",
+                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/cd8bb8a9d8e5507708176b4734bcca64a1490952",
+                "reference": "cd8bb8a9d8e5507708176b4734bcca64a1490952",
                 "shasum": ""
             },
             "require": {
@@ -601,7 +601,7 @@
                 "framework",
                 "yii2"
             ],
-            "time": "2015-02-27 10:31:45"
+            "time": "2015-02-27 21:11:03"
         },
         {
             "name": "yiisoft/yii2-bootstrap",
