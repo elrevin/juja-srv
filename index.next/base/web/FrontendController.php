@@ -22,4 +22,12 @@ class FrontendController extends Controller
         Yii::$app->mailer->htmlLayout = '@themeroot/views/mail/layouts/html';
         parent::init();
     }
+
+    public function actionError()
+    {
+        $exception = Yii::$app->errorHandler->exception;
+        if ($exception !== null) {
+            return $this->render('error', ['exception' => $exception]);
+        }
+    }
 }
