@@ -1,7 +1,7 @@
 {% macro MainMenu(links) %}
     {% for link in links %}
         <li>
-            <a href="/{{ link.data.url }}">{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}</a>
+            <a href="{{ link.data.url }}">{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}</a>
             {% if link.list %}
                 <ul>
                     {{ _self.MainMenu(link.list) }}
