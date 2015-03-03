@@ -1,14 +1,4 @@
-{"manage": [
-  {
-    "title": "Структура сайта",
-    "modelName": "SiteStructure",
-    "moduleName": "site",
-    "icon": "/cp-files/images/modules-icons/site-structure.png"
-  },
-  {
-    "title": "Файлы и изображения",
-    "modelName": "Files",
-    "moduleName": "files",
-    "icon": "/cp-files/images/modules-icons/file.png"
-  }
-]}
+{"manage": {
+  "list" : [],
+  "fixed": false
+}}
