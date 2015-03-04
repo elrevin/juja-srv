@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>{{ data.meta_title }}</title>
+<title>{{ data.meta_title ? data.meta_title : data.title}}</title>
 <link rel="stylesheet" type="text/css" href="{{ urlTo('@theme/css/bootstrap.min.css') }}" />
 
 <style>

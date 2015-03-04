@@ -68,7 +68,7 @@ $config = [
                     'class' => 'app\components\TwigViewRenderer',
                     'globals' => ['html' => '\yii\helpers\Html'],
                     'uses' => ['yii\bootstrap'],
-                    'options' => ['auto_reload' => true, 'autoescape' => ''],
+                    'options' => ['auto_reload' => true, 'autoescape' => '', 'strict_variables' => false],
                 ],
             ],
         ],

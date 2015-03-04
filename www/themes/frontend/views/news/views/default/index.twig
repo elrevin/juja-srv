@@ -1,0 +1,10 @@
+{# @title Страница новостей #}
+{% extends '@themelayouts/main.twig' %}
+{% block content %}
+    {% for item in data %}
+        <div style="padding-bottom: 20px">
+            <a href="{{ url('/news/default/index', {"id" : item.id}) }}"><b>[{{ item.date|date('d.m.Y') }}]</b> {{ item.title }}</a><br/>
+            {{ item.anons }}
+        </div>
+    {% endfor %}
+{% endblock %}
