@@ -105,7 +105,7 @@ $config = [
             'defaultRoles' => ['manager', 'admin'],
         ],
     ],
-    'params' => $params,
+    'params' => array_merge(['breadCrumbs'=>[]], $params),
 ];
 
 if (YII_ENV_DEV) {

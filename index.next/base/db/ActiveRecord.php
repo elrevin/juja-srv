@@ -18,7 +18,7 @@ class ActiveRecord extends db\ActiveRecord
      * Список поведений подключенных к данной модели
      * @var array
      */
-    public static $behaviorsList = [];
+    protected static $behaviorsList = [];
 
     protected static $processedAdditionFieldsBehaviors = false;
 

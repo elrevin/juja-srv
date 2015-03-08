@@ -1,0 +1,7 @@
+{% for item in list %}
+    {% if loop.last %}
+        {{ item.title }}
+    {% else %}
+        <a href="{{ item.url }}">{{ item.title }}</a>&nbsp;/&nbsp;
+    {% endif %}
+{% endfor %}
