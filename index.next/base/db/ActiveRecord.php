@@ -274,7 +274,7 @@ class ActiveRecord extends db\ActiveRecord
     protected  static function defaultWhere()
     {
         if (!static::$permanentlyDelete) {
-            return "`".static::tableName()."`.del = 0";
+            return static::tableName().".del = 0";
         }
         return [];
     }
