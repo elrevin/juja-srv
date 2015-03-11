@@ -4,5 +4,5 @@ return [
     'cmsEmail' => 'admin@localhost',
     'cmsEmailName' => 'index.next CMS',
     'defaultImageBgColor' => '#FFFFFF',
-    'themeName' => 'frontend',
+    'themeName' => 'base', // На время разработки сайта лучше сделать отдельную тему, а эту оставить для примеров
 ];
