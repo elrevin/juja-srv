@@ -274,7 +274,7 @@ class ActiveRecord extends db\ActiveRecord
     protected  static function defaultWhere()
     {
         if (!static::$permanentlyDelete) {
-            return static::tableName().".del = 0";
+            return "`" . static::tableName() . "`.del = 0";
         }
         return [];
     }
@@ -689,7 +689,7 @@ class ActiveRecord extends db\ActiveRecord
         } else {
 
             if (isset($params['masterId']) && $params['masterId'] && (static::$masterModel || static::$parentModel)) {
-                $query->andWhere('master_table_id = ' . intval($params['masterId']));
+                $query->andWhere('`'.static::tableName().'`.master_table_id = ' . intval($params['masterId']));
             }
 
             foreach ($join as $item) {
