@@ -1,0 +1,21 @@
+{% macro MainMenu(links) %}
+    {% for link in links %}
+        {% if link.list %}
+            <li class="dropdown"><a href="{{ link.data.url }}">{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}<i class="fa fa-angle-down"></i></a>
+                <ul role="menu" class="sub-menu">
+                    {{ _self.MainMenu(link.list) }}
+                </ul>
+            </li>
+        {% else %}
+            <li>
+                <a href="{{ link.data.url }}">{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}</a>
+            </li>
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
+
+<div class="mainmenu pull-left">
+    <ul class="nav navbar-nav collapse navbar-collapse">
+        {{ _self.MainMenu(list) }}
+    </ul>
+</div>

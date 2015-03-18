@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru-RU">
+<head>
+    {% include '@themeroot/views/include/header.twig' %}
+</head>
+<body>
+<div class="container">
+    {{ use('app/modules/site/widgets') }}
+    {{ main_menu_widget() }}
+
+    <div class="jumbotron">
+        {{ use('app/modules/site/widgets') }}
+        {{ bread_crumbs_widget() }}
+        <h1>{{ data.title }}</h1>
+        {% block content %}
+        {% endblock %}
+        {% include '@themeroot/views/include/bodyEnd.twig' %}
+    </div>
+
+</div>
+</body>
+</html>
+
+

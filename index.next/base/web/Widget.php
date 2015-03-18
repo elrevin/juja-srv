@@ -16,13 +16,13 @@ class Widget extends base\Widget
 
     public function init()
     {
+        $name = $this->className();
+        $name = trim(str_replace('widgets', '', str_replace('app\modules\\', '', trim($name, '\\'))), '\\');
+        $name = explode('\\', str_replace("\\\\", '\\', $name));
         if (!$this->name) {
-            $name = $this->className();
-            $name = trim(str_replace('widgets', '', str_replace('app\modules\\', '', trim($name, '\\'))), '\\');
-            $name = explode('\\', str_replace("\\\\", '\\', $name));
             $this->name = $name[1];
-            $this->module = $name[0];
         }
+        $this->module = $name[0];
         parent::init();
     }
 
