@@ -15,7 +15,8 @@
         "index-next/modules-installer": "*",
         "index-next/site": "*",
         "index-next/backend": "*",
-        "index-next/files": "*"
+        "index-next/files": "*",
+        "index-next/catalog": "*"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",
@@ -65,6 +66,10 @@
         {
             "type": "vcs",
             "url":  "http://git.web-dev.ru/index-next/modules-installer.git"
+        },
+        {
+            "type": "vcs",
+            "url":  "http://git.web-dev.ru/index-next/catalog.git"
         }
     ]
 }
