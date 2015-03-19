@@ -6,3 +6,4 @@
 
 # composer itself is not needed
 composer.phar
+auth.json
