@@ -147,6 +147,8 @@ class ActiveRecord extends db\ActiveRecord
      *
      *      'required' - поле обязательно для заполнения
      *
+     *      'readonly' - поле не доступно для редактирования
+     *
      *      'allowGroupEdit' - если равно false, то разрешено групповое редактирование
      *
      * @var array
