@@ -5,6 +5,7 @@
 
 namespace app\base\web;
 use Yii;
+use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 use yii\web\Controller;
 
@@ -368,6 +369,107 @@ class BackendController extends Controller
 
     public function actionSortRecords()
     {
+        $records = Yii::$app->request->post('records', '[]');
+        $modelName = Yii::$app->request->get('modelName', '');
+        $position = Yii::$app->request->post('position', '');
+        $over = intval(Yii::$app->request->post('over', ''));
+
+        if ($over && preg_match("/^\\[[0-9\\,]+\\]$/", $records) && preg_match("/^[a-zA-Z0-9_]+$/", $modelName) && ($position == 'before' || $position == 'after')) {
+            $records = Json::decode($records);
+            $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+
+            // Модель рекурсивная
+            $recursive = call_user_func([$modelName, 'getRecursive']);
+
+            // У модели есть родительская или мастер модель
+            $haveMaster = call_user_func([$modelName, 'getMasterModel']);
+            $haveMaster = ($haveMaster ? $haveMaster : call_user_func([$modelName, 'getParentModel']));
+
+            $parentId = 0;
+            $masterId = 0;
+            if ($recursive) {
+                $parentId = call_user_func([$modelName, 'findOne'], ["id" => $records[0]])->parent_id;
+            }
+
+            if ($haveMaster) {
+                $masterId = call_user_func([$modelName, 'findOne'], ["id" => $records[0]])->master_table_id;
+            }
+
+            array_walk($records, function($rec) use ($modelName, $over, $parentId, $masterId, $position) {
+                $overPriority = call_user_func([$modelName, 'findOne'], ["id" => $over])->sort_priority;
+                $oldPriority = call_user_func([$modelName, 'findOne'], ["id" => $rec])->sort_priority;
+
+                $cond = [];
+                $params = [];
+                if ($parentId) {
+                    $cond[] = "parent_id = :parent_id";
+                    $params[":parent_id"] = $parentId;
+                }
+                if ($masterId) {
+                    $cond[] = "master_table_id = :master_table_id";
+                    $params[":master_table_id"] = $masterId;
+                }
+
+                $cond = implode(" and ", $cond);
+
+                $query = call_user_func([$modelName, 'find']);
+                if ($cond) {
+                    $query = $query->where($cond);
+                }
+                $recs = $query->select(["id", "sort_priority"])->orderBy(["sort_priority" => SORT_ASC])->all();
+
+                if ($oldPriority > $overPriority) {
+                    $currentPriority = 1;
+                    $newOverPriority = 0;
+                    foreach ($recs as $item) {
+                        if ($item->id == $over) {
+                            $newOverPriority = $currentPriority + ($position == 'after' ? 1 : 0);
+                            if ($position == 'before') {
+                                $currentPriority++;
+                            }
+                            $item->sort_priority = $currentPriority;
+                            $item->save(false);
+                            $currentPriority++;
+                            if ($position == 'after') {
+                                $currentPriority++;
+                            }
+                            continue;
+                        }
+                        if ($item->id == $rec) {
+                            $item->sort_priority = $newOverPriority;
+                            $item->save(false);
+                            continue;
+                        }
+                        $item->sort_priority = $currentPriority;
+                        $item->save(false);
+                        $currentPriority++;
+                    }
+                } elseif ($oldPriority < $overPriority) {
+                    $currentPriority = 1;
+                    $sortedRecord = null;
+                    foreach ($recs as $item) {
+                        if ($item->id == $rec) {
+                            $sortedRecord = $item;
+                            continue;
+                        }
+                        if ($item->id == $over) {
+                            $sortedRecord->sort_priority = $currentPriority + ($position == 'after' ? 1 : 0);
+                            $sortedRecord->save(false);
+                            if ($position == 'before') {
+                                $currentPriority++;
+                            }
+                        }
+                        $item->sort_priority = $currentPriority;
+                        $item->save(false);
+                        $currentPriority++;
+                    }
+                }
+            });
+
+            return ['success' => true];
+        }
+        static::ajaxError('app\base\web\BackendController\actionSortRecords',
+            "Сортировка не возможна.");
 
     }
 

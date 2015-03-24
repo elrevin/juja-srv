@@ -755,6 +755,10 @@ class ActiveRecord extends db\ActiveRecord
             $query->orderBy($orderBy);
         }
 
+        if (static::$sortable) {
+            $query->orderBy(["`".static::tableName()."`.`sort_priority`" => SORT_ASC]);
+        }
+
         if (isset($params['limit']) && $params['limit']) {
             $query->limit($params['limit']);
         }

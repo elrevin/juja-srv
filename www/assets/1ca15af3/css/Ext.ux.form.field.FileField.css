@@ -1,0 +1,10 @@
+.in2-file-field {
+    border: 1px solid #e7e3ea !important;
+    position: relative;
+}
+.in2-file-field .in2-file-field-preview-cont {
+    text-align: center;
+}
+.in2-file-field .in2-file-field-preview-cont img {
+    background-color: #FFFFFF;
+}

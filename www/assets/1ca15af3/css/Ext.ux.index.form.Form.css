@@ -1,0 +1,91 @@
+.in2-editor-form {
+    padding: 15px;
+    background: #FFFFFF;
+}
+
+.in2-editor-form .x-form-item-label {
+    font-family: "Trebuchet MS", arial, helvetica, verdana, sans-serif;
+    font-size: 14px;
+    font-weight: normal;
+    color: #666666;
+}
+
+.in2-editor-form .x-autocontainer-form-item, .in2-editor-form .x-anchor-form-item, .in2-editor-form .x-vbox-form-item, .in2-editor-form .x-table-form-item {
+    margin: 7px 0;
+}
+
+.in2-editor-form .x-fieldset-header-text {
+    font-family: "Trebuchet MS", arial, helvetica, verdana, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: #333333;
+}
+
+.in2-editor-form .x-fieldset {
+    border: none;
+    padding: 15px 3px 0 3px;
+    margin: 0 0 20px 0;
+    overflow: visible;
+}
+
+.in2-editor-form .x-fieldset-body {
+    padding: 0;
+    overflow: visible;
+}
+
+.in2-editor-form .x-fieldset-header {
+    margin-bottom: 2px;
+    border-bottom: 1px solid #f3f3f3;
+    display: block;
+}
+
+.in2-editor-form .x-fieldset-header span {
+    width: 100%;
+}
+
+.in2-editor-form .x-fieldset-header span>div {
+    position: relative;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+
+    display: block !important;
+}
+
+.in2-editor-form .x-fieldset-header .x-tool-default {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.in2-editor-form .x-fieldset-header .x-fieldset-header-checkbox {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+
+.in2-editor-form .x-fieldset .x-tool-toggle {
+    background-image: url("../images/extOverride/collapse-tool.png");
+
+}
+
+.next-index-custom-field-label {
+    height: 17px;
+    margin-top: 4px;
+    display: inline-block;
+}
+
+.in2-editor-form-toolbar {
+    background: url("../images/extOverride/h-devider.png") repeat-x left bottom;
+}
+
+.in2-editor-form-bottom-toolbar {
+    background: url("../images/extOverride/h-devider.png") repeat-x left top;
+}
+
+.in2-editor-form-toolbar-tab-form {
+    background: #ffffff url("../images/extOverride/h-devider-single.png") repeat-x left bottom;
+}
+
+.in2-editor-form .x-trigger-cell {
+    font-size: 1px;
+}
