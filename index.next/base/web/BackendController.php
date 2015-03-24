@@ -458,6 +458,12 @@ class BackendController extends Controller
                             if ($position == 'before') {
                                 $currentPriority++;
                             }
+                            if ($position == 'after') {
+                                $item->sort_priority = $currentPriority;
+                                $item->save(false);
+                                $currentPriority += 2;
+                                continue;
+                            }
                         }
                         $item->sort_priority = $currentPriority;
                         $item->save(false);
