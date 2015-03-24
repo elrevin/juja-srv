@@ -16,6 +16,7 @@ class BackendController extends Controller
     protected $defaultAccessList = [
         'list' => 'backend-read',
         'save-record' => 'backend-save-record',
+        'sort-records' => 'backend-save-record',
         'delete-record' => 'backend-delete-record',
         'cp-menu' => 'backend-cp-menu',
         'get-interface' => 'backend-read',
@@ -363,6 +364,11 @@ class BackendController extends Controller
         }
         $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName, 'Справочник не найден.');
         return null;
+    }
+
+    public function actionSortRecords()
+    {
+
     }
 
     /**
