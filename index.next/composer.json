@@ -12,7 +12,6 @@
         "yiisoft/yii2-bootstrap": "*",
         "yiisoft/yii2-swiftmailer": "*",
         "yiisoft/yii2-twig": "*",
-        "2amigos/yii2-transliterator-helper": "*",
         "index-next/modules-installer": "*",
         "index-next/site": "*",
         "index-next/backend": "*",
