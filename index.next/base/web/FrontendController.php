@@ -16,10 +16,11 @@ class FrontendController extends Controller
     {
         $this->enableCsrfValidation = false;
         Yii::$app->view->setActiveTheme(Yii::$app->params['themeName']);
+        Yii::$app->mailer->view->setActiveTheme(Yii::$app->params['themeName']);
         Yii::$app->mailer->themeName = Yii::$app->params['themeName'];
-        
-        Yii::$app->mailer->viewPath = '@themeroot/views/mail/views';
-        Yii::$app->mailer->htmlLayout = '@themeroot/views/mail/layouts/html';
+
+        Yii::$app->mailer->viewPath = '@themeroot/views/'.$this->module->id.'/mail';
+        Yii::$app->mailer->htmlLayout = false;
         parent::init();
     }
 
