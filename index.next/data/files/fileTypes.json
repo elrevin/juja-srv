@@ -42,5 +42,11 @@
         "name": "xlsx",
         "icon": "excel",
         "mime": "application/vnd.ms-excel"
+    },
+    "some": {
+        "type": "bin",
+        "name": "some",
+        "icon": "some",
+        "mime": "application/binary"
     }
 }
