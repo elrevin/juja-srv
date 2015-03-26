@@ -1130,7 +1130,6 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         $getDataAction = [static::getModuleName(), 'main', 'list'];
-        $runAction = [static::getModuleName(), 'main', 'get-interface'];
         $linkModelRunAction = null;
         if (static::$linkModelName) {
             $linkModelRunAction = call_user_func([static::$linkModelName, 'getRunAction']);

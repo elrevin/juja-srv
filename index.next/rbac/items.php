@@ -12,6 +12,7 @@ return [
             'backend-save-record',
             'backend-delete-record',
             'backend-cp-menu',
+            'backend-profile',
         ],
     ],
     'admin' => [
@@ -22,6 +23,7 @@ return [
             'backend-save-record',
             'backend-delete-record',
             'backend-cp-menu',
+            'backend-profile',
         ],
     ],
     'backend-read' => [
@@ -39,5 +41,9 @@ return [
     'backend-cp-menu' => [
         'type' => 2,
         'ruleName' => 'backendCpMenuRule',
+    ],
+    'backend-profile' => [
+        'type' => 2,
+        'ruleName' => 'backendProfileRule',
     ],
 ];

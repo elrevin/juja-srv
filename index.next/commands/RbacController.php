@@ -5,7 +5,7 @@ use app\rbac\BackendDeleteRule;
 use app\rbac\BackendReadRule;
 use app\rbac\BackendWriteRule;
 use app\rbac\BackendCpMenuRule;
-use app\rbac\BackendGetInterfaceRule;
+use app\rbac\BackendProfileRule;
 use Yii;
 use yii\console\Controller;
 
@@ -37,12 +37,14 @@ class RbacController extends Controller
         $backendSaveRecord  = $authManager->createPermission('backend-save-record');
         $backendDeleteRecord = $authManager->createPermission('backend-delete-record');
         $backendCpMenu = $authManager->createPermission('backend-cp-menu');
+        $backendProfile = $authManager->createPermission('backend-profile');
 
         // Добавляем разрешения в Yii::$app->authManager
         $authManager->add($backendRead);
         $authManager->add($backendSaveRecord);
         $authManager->add($backendDeleteRecord);
         $authManager->add($backendCpMenu);
+        $authManager->add($backendProfile);
 
         // Сознаем правила и привязываем их к разрешениям
         // Чтение
@@ -61,15 +63,22 @@ class RbacController extends Controller
         $backendCpMenuRule = new BackendCpMenuRule();
         $authManager->add($backendCpMenuRule);
         $backendCpMenu->ruleName = $backendCpMenuRule->name;
+        // Профиль
+        $backendProfileRule = new BackendProfileRule();
+        $authManager->add($backendProfileRule);
+        $backendProfile->ruleName = $backendProfileRule->name;
+
 
         $authManager->addChild($manager, $backendRead);
         $authManager->addChild($manager, $backendSaveRecord);
         $authManager->addChild($manager, $backendDeleteRecord);
         $authManager->addChild($manager, $backendCpMenu);
+        $authManager->addChild($manager, $backendProfile);
 
         $authManager->addChild($admin, $backendRead);
         $authManager->addChild($admin, $backendSaveRecord);
         $authManager->addChild($admin, $backendDeleteRecord);
         $authManager->addChild($admin, $backendCpMenu);
+        $authManager->addChild($admin, $backendProfile);
     }
 }

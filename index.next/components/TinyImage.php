@@ -103,6 +103,30 @@ class TinyImage
         ];
     }
 
+    public static function resizeImage($fileName, $imageProps)
+    {
+        $bgColor = isset($imageProps['bgColor']) ? $imageProps['bgColor'] : \Yii::$app->params['defaultImageBgColor'];
+        if (!($image = static::loadImage($fileName))) {
+            return false;
+        }
+
+        $dim = static::getDimensions($image, $imageProps);
+
+        $resultImage=imagecreatetruecolor($dim['width'], $dim['height']);
+        if (is_string($bgColor)) {
+            $bgColor=static::HexToRGB($bgColor);
+        }
+        $color=imagecolorallocate($resultImage, $bgColor[0], $bgColor[1], $bgColor[2]);
+        imagefill($resultImage, 1, 1, $color);
+        if (!imagecopyresampled($resultImage, $image, $dim['x'], $dim['y'], 0, 0,
+            $dim['resampledWidth'], $dim['resampledHeight'],
+            $dim['originalWidth'], $dim['originalHeight']))
+        {
+            return false;
+        }
+        return $resultImage;
+    }
+
     /**
      * Создание масштабной копии изображения из файла, хэш которого передается в аргументе $fileHash.
      *
@@ -132,8 +156,6 @@ class TinyImage
         $cacheFile = FileSystem::getFilePathByOriginalName($fileHash, '-'.$widthProps.'-'.$heightProps.'-'.$bgColor, 'cache');
         $cacheFilePath = $cacheFile['path'].'/'.$cacheFile['fileName'];
 
-        $bgColor=static::HexToRGB($bgColor);
-
         if (FileSystem::fileExists($cacheFile['hash'], 'cache')) {
             if ($return == static::RETURN_IMAGE) {
                 $image = static::loadImage($cacheFilePath);
@@ -153,20 +175,9 @@ class TinyImage
         }
 
         $fileName = FileSystem::getFilePath($fileHash);
-        if (!($image = static::loadImage($fileName))) {
-            return false;
-        }
 
-        $dim = static::getDimensions($image, $imageProps);
 
-        $resultImage=imagecreatetruecolor($dim['width'], $dim['height']);
-        $color=imagecolorallocate($resultImage, $bgColor[0], $bgColor[1], $bgColor[2]);
-        imagefill($resultImage, 1, 1, $color);
-
-        if (!imagecopyresampled($resultImage, $image, $dim['x'], $dim['y'], 0, 0,
-            $dim['resampledWidth'], $dim['resampledHeight'],
-            $dim['originalWidth'], $dim['originalHeight']))
-        {
+        if (!($resultImage = static::resizeImage($fileName, $imageProps))) {
             return false;
         } else {
             $ImageInfo=getimagesize($fileName);

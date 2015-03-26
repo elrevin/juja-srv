@@ -76,10 +76,9 @@ $config = [
             'class' => '\app\components\UrlManager',
             'enablePrettyUrl' => true,
             'showScriptName' => false,
+            'enableStrictParsing' => true,
             'suffix' => '/',
             'rules' => [
-                'site/<action:\w+>' => 'site/<action>',
-
                 'admin' => 'backend/default/index',
                 'admin/<action:[\w-\.]+>' => 'backend/default/<action>',
                 'admin/<controller:[\w-]+>/<action:[\w-\.]+>' => 'backend/<controller>/<action>',
