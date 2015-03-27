@@ -236,19 +236,8 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static $modalSelect = false;
 
-    /**
-     * Класс таба для детализация
-     * @var enum('Ext.ux.index.tab.DetailPanel', 'Ext.ux.index.tab.Many2ManyPanel')
-     */
-    public static $tabClassName = 'Ext.ux.index.tab.DetailPanel';
 
     public static $masterModelRelationsType = "master_detail";
-
-    /**
-     * Тип таба для связи many2many
-     * @var enum('button', 'checkbox')
-     */
-    public static $typeGrid = 'button';
 
     /**
      * Способ добавления записи в таблицу сзязи many_to_many:
@@ -266,6 +255,16 @@ class ActiveRecord extends db\ActiveRecord
      * @var bool
      */
     public static $sortable = false;
+
+    /**
+     * Настройки сортировки по умолчанию
+     *
+     * например для новостей:
+     * ['date' => SORT_DESC]
+     *
+     * @var array
+     */
+    public static $defaultSort = [];
 
     public function behaviors()
     {
@@ -733,7 +732,9 @@ class ActiveRecord extends db\ActiveRecord
             $query->addParams($selectParams);
         }
 
-        if (isset($params['sort'])) {
+        if (static::$sortable) {
+            $query->orderBy(["`".static::tableName()."`.`sort_priority`" => SORT_ASC]);
+        } elseif (isset($params['sort']) && $params['sort']) {
             $orderBy = [];
             foreach ($params['sort'] as $sort) {
 
@@ -753,10 +754,8 @@ class ActiveRecord extends db\ActiveRecord
                 }
             }
             $query->orderBy($orderBy);
-        }
-
-        if (static::$sortable) {
-            $query->orderBy(["`".static::tableName()."`.`sort_priority`" => SORT_ASC]);
+        } elseif (static::$defaultSort) {
+            $query->orderBy(static::$defaultSort);
         }
 
         if (isset($params['limit']) && $params['limit']) {
