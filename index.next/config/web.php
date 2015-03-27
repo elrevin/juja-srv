@@ -79,6 +79,7 @@ $config = [
             'enableStrictParsing' => true,
             'suffix' => '/',
             'rules' => [
+                'debug/<controller>/<action>' => 'debug/<controller>/<action>',
                 'admin' => 'backend/default/index',
                 'admin/<action:[\w-\.]+>' => 'backend/default/<action>',
                 'admin/<controller:[\w-]+>/<action:[\w-\.]+>' => 'backend/<controller>/<action>',
@@ -109,8 +110,13 @@ $config = [
 
 if (YII_ENV_DEV) {
     // configuration adjustments for 'dev' environment
-//    $config['bootstrap'][] = 'debug';
-//    $config['modules']['debug'] = 'yii\debug\Module';
+    if (strncmp(trim($_SERVER['REQUEST_URI'], "/"), 'admin', 5)) {
+        $config['bootstrap'][] = 'debug';
+        $config['modules']['debug'] = [
+            'class' => 'yii\debug\Module',
+            'allowedIPs' => ['127.0.0.1']
+        ];
+    }
 
 //    $config['bootstrap'][] = 'gii';
 //    $config['modules']['gii'] = 'yii\gii\Module';
