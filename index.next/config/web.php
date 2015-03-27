@@ -22,7 +22,7 @@ $config = [
             'enableAutoLogin' => true,
         ],
         'errorHandler' => [
-            'errorAction' => 'site/error',
+            'errorAction' => 'site/default/error',
         ],
         'mailer' => [
             'class' => 'app\components\Mailer',
