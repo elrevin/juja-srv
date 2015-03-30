@@ -926,7 +926,7 @@ class ActiveRecord extends db\ActiveRecord
         $this->mapJson($data);
 
         if (static::$sortable) {
-            $maxSortPriority = \app\modules\catalog\models\Categories::find()->max('sort_priority');
+            $maxSortPriority = call_user_func([static::className(), 'find'])->max('sort_priority');
             $this->sort_priority = $maxSortPriority + 1;
         }
 
