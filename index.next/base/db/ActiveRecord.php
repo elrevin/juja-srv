@@ -732,10 +732,8 @@ class ActiveRecord extends db\ActiveRecord
             $query->addParams($selectParams);
         }
 
-        if (static::$sortable) {
-            $query->orderBy(["`".static::tableName()."`.`sort_priority`" => SORT_ASC]);
-        } elseif (isset($params['sort']) && $params['sort']) {
-            $orderBy = [];
+        $orderBy = [];
+        if (isset($params['sort']) && $params['sort']) {
             foreach ($params['sort'] as $sort) {
 
                 if (isset($sort['property'])) {
@@ -753,10 +751,17 @@ class ActiveRecord extends db\ActiveRecord
                     }
                 }
             }
-            $query->orderBy($orderBy);
-        } elseif (static::$defaultSort) {
-            $query->orderBy(static::$defaultSort);
         }
+
+        if (static::$sortable) {
+            $orderBy = array_merge($orderBy, ["`".static::tableName()."`.`sort_priority`" => SORT_ASC]);
+        }
+
+        if (static::$defaultSort && !static::$sortable) {
+            $orderBy = array_merge($orderBy, static::$defaultSort);
+        }
+
+        $query->orderBy($orderBy);
 
         if (isset($params['limit']) && $params['limit']) {
             $query->limit($params['limit']);
@@ -919,6 +924,12 @@ class ActiveRecord extends db\ActiveRecord
             $this->master_table_id = $masterId;
         }
         $this->mapJson($data);
+
+        if (static::$sortable) {
+            $maxSortPriority = \app\modules\catalog\models\Categories::find()->max('sort_priority');
+            $this->sort_priority = $maxSortPriority + 1;
+        }
+
         if ($this->save()) {
 
             foreach (static::$structure as $fieldName => $fieldData) {
