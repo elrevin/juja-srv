@@ -114,8 +114,8 @@ class BackendController extends Controller
                 'name' => 'interface',
                 'value' => $interface,
             ]));
-        } elseif (Yii::$app->response->cookies->has('interface')) {
-            $interface = Yii::$app->response->cookies->getValue('interface', 'manage');
+        } elseif (Yii::$app->request->cookies->has('interface')) {
+            $interface = Yii::$app->request->cookies->getValue('interface', 'manage');
             $interface = ($interface == 'settings' ? 'settings' : 'manage');
         } else {
             $interface = 'manage';
