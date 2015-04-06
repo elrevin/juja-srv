@@ -49,10 +49,14 @@ class BackendController extends Controller
      * @return bool
      */
     public function checkAccess($action) {
-        $this->accessList = array_merge($this->accessList, $this->defaultAccessList);
+        $this->accessList = array_merge($this->defaultAccessList, $this->accessList);
 
         if (!isset($this->accessList[$action])) {
             return false;
+        }
+
+        if ($this->accessList[$action] == 'GRAND') {
+            return true;
         }
 
         $accessRule = $this->accessList[$action];
@@ -66,7 +70,7 @@ class BackendController extends Controller
         }
 
         $modelName = Yii::$app->request->get('modelName', '');
-        if (!preg_match("/^[a-zA-Z0-9_]+$/", $modelName)) {
+        if ($modelName && !preg_match("/^[a-zA-Z0-9_]+$/", $modelName)) {
             static::ajaxError('app\base\web\BackendController\checkAccess',
                 "Неверно указана модель! Передайте это в программистам, поддерживающим сайт, они знают что с этим делать.");
         }

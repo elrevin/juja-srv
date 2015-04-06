@@ -66,6 +66,8 @@ class ActiveRecord extends db\ActiveRecord
      *
      *      'selectOptions' - Ассоциативный массив возможных значений,
      *
+     *      'showInGrid' - true если поле отображается в таблице записей, false - поле скрывается, по умолчанию true,
+     *
      *      'showCondition' - Условия отображения поля - ассоциативный массив, в котором ключи - это имена других полей,
      *        а значения это условие или массив условий, каждое из которых - ассоциативный массив (все условия в итоге
      *        объединяются оператором AND):
@@ -186,6 +188,12 @@ class ActiveRecord extends db\ActiveRecord
     protected static $masterModel = '';
 
     /**
+     * Имя поля в таблице для связи с родительской или master моделью
+     * @var string
+     */
+    protected static $masterModelRelFieldName = 'master_table_id';
+
+    /**
      * Имя класса родительской модели
      * @var string
      */
@@ -265,6 +273,13 @@ class ActiveRecord extends db\ActiveRecord
      * @var array
      */
     public static $defaultSort = [];
+
+    protected static $haveRightsRules = true;
+
+    public static function getHaveRightsRule ()
+    {
+        return static::$haveRightsRules;
+    }
 
     public function behaviors()
     {
@@ -661,7 +676,7 @@ class ActiveRecord extends db\ActiveRecord
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$parentModel) {
             $parentModelName = static::getParentModel();
 
-            $fieldName = 'master_table_id';
+            $fieldName = static::$masterModelRelFieldName;
             $relatedModelClass = $parentModelName;
             $relatedIdentifyFieldConf = call_user_func([$parentModelName, 'getIdentifyFieldConf']);
             if ($relatedIdentifyFieldConf) {
@@ -697,13 +712,13 @@ class ActiveRecord extends db\ActiveRecord
         if(static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_CHECK) {
 
             $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
-                static::tableName()."`.`master_table_id` = ".$params['masterId']."), 1, 0) AS `check`";
+                static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']."), 1, 0) AS `check`";
             $query->rightJoin("`".$relatedTableName."` `".$relatedTableName."_".$fieldName."`", "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.`id`");
 
         } else {
 
             if (isset($params['masterId']) && $params['masterId'] && (static::$masterModel || static::$parentModel)) {
-                $query->andWhere('`'.static::tableName().'`.master_table_id = ' . intval($params['masterId']));
+                $query->andWhere('`'.static::tableName().'`.'.static::$masterModelRelFieldName.' = ' . intval($params['masterId']));
             }
 
             foreach ($join as $item) {
@@ -903,7 +918,7 @@ class ActiveRecord extends db\ActiveRecord
                     }
                 } elseif ($key == 'parent_id' && static::$recursive) {
                     $this->$key = static::setType($key, $val, 'pointer');
-                } elseif ($key == 'master_table_id' && static::$parentModel) {
+                } elseif ($key == static::$masterModelRelFieldName && static::$parentModel) {
                     $this->$key = static::setType($key, $val, 'pointer');
                 }
             }
@@ -1183,7 +1198,7 @@ class ActiveRecord extends db\ActiveRecord
             ];
         } elseif ($parentModelName) {
             $fields[] = [
-                'name' => 'master_table_id',
+                'name' => static::$masterModelRelFieldName,
                 'type' => 'pointer',
                 'extra' => true
             ];
@@ -1208,7 +1223,8 @@ class ActiveRecord extends db\ActiveRecord
             'masterModelRelationsType' => static::$masterModelRelationsType,
             'slaveModelAddMethod' => static::$slaveModelAddMethod,
             'childModelConfig' => $childModelConfig,
-            'parentModelName' => $parentModelName
+            'parentModelName' => $parentModelName,
+            'masterModelRelFieldName' => static::$masterModelRelFieldName,
         ];
 
         if (!$modal) {
@@ -1254,13 +1270,6 @@ class ActiveRecord extends db\ActiveRecord
                 ");
         }
 
-        $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/Editor.js';
-        if (file_exists(Yii::getAlias($fileName))) {
-            return ("
-              var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".Editor', ". Json::encode($conf).");
-            ");
-        }
-
         // Автоматически выбираем тип редактора
         $editor = "SingleModelEditor";
         $recursive = static::$recursive;
@@ -1285,6 +1294,13 @@ class ActiveRecord extends db\ActiveRecord
                 $data = ($data ? $data[0] : null);
             }
             $conf['data'] = $data;
+        }
+
+        $fileName = '@app/modules/'.static::getModuleName().'/js/'.static::getModelName().'/Editor.js';
+        if (file_exists(Yii::getAlias($fileName))) {
+            return ("
+              var module = Ext.create('App.modules.".static::getModuleName().".".static::getModelName().".Editor', ". Json::encode($conf).");
+            ");
         }
 
         return ("
