@@ -942,7 +942,7 @@ class ActiveRecord extends db\ActiveRecord
 
         if (static::$sortable && $add) {
             $maxSortPriority = call_user_func([static::className(), 'find'])->max('sort_priority');
-            $this->sort_priority = $maxSortPriority + 1;;
+            $this->sort_priority = $maxSortPriority + 1;
         }
 
         if ($this->save()) {
