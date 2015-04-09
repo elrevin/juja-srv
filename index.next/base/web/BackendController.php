@@ -60,8 +60,12 @@ class BackendController extends Controller
         }
 
         $accessRule = $this->accessList[$action];
+        $params = [];
 
         if (is_array($accessRule)) {
+            if (isset($accessRule['params'])) {
+                $params = $accessRule['params'];
+            }
             if (isset($accessRule['function']) && is_callable([$this, $accessRule['function']])) {
                 return call_user_func([$this, $accessRule['function']], $action);
             } elseif (isset($accessRule['rule'])) {
@@ -75,9 +79,17 @@ class BackendController extends Controller
                 "Неверно указана модель! Передайте это в программистам, поддерживающим сайт, они знают что с этим делать.");
         }
 
-        $modelName = ($modelName ? '\app\modules\\'.$this->module->id.'\models\\'.$modelName : '');
+        if ($modelName && !isset($params['modelName'])) {
+            $params['modelName'] = $modelName;
+        }
+
+        $params['modelName'] = ($params['modelName'] ? '\app\modules\\'.$this->module->id.'\models\\'.$params['modelName'] : '');
 
         $masterId = intval(Yii::$app->request->get('masterId', 0));
+
+        if ($masterId && !isset($params['masterId'])) {
+            $params['masterId'] = $masterId;
+        }
 
         $recordId = 0;
         $data = Yii::$app->request->post('data', []);
@@ -85,7 +97,15 @@ class BackendController extends Controller
             $recordId = ['id' => 0];
         }
 
-        return Yii::$app->user->can($accessRule, ['modelName' => $modelName, 'recordId' => $recordId, 'masterId' => $masterId, 'strict' => true]);
+        if ($recordId && !isset($params['recordId'])) {
+            $params['recordId'] = $recordId;
+        }
+
+        if (!array_key_exists('strict', $params)) {
+            $params['strict'] = true;
+        }
+
+        return Yii::$app->user->can($accessRule, $params);
     }
 
     public function beforeAction($action)
