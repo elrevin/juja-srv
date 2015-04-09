@@ -609,9 +609,9 @@ class ActiveRecord extends db\ActiveRecord
                 $options = [];
                 $keyIndex = 1;
                 foreach ($fieldConf['selectOptions'] as $key => $value) {
-                    $options[] = "WHEN :option".$keyIndex."key THEN :option".$keyIndex."value";
-                    $selectParams[":option".$keyIndex."key"] = $key;
-                    $selectParams[":option".$keyIndex."value"] = $value;
+                    $options[] = "WHEN :option".$keyIndex."_".$fieldName."_key THEN :option".$keyIndex."_".$fieldName."_value";
+                    $selectParams[":option".$keyIndex."_".$fieldName."_key"] = $key;
+                    $selectParams[":option".$keyIndex."_".$fieldName."_value"] = $value;
                     $keyIndex++;
                 }
                 $select[] = "(CASE `".static::tableName()."`.`".$fieldName."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
@@ -713,8 +713,7 @@ class ActiveRecord extends db\ActiveRecord
 
             $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
                 static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']."), 1, 0) AS `check`";
-            $query->rightJoin("`".$relatedTableName."` `".$relatedTableName."_".$fieldName."`", "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.`id`");
-
+            $query->rightJoin("`".$relatedTableName."` `".$relatedTableName."_".$fieldName."`", "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.`id` AND `".static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
         } else {
 
             if (isset($params['masterId']) && $params['masterId'] && (static::$masterModel || static::$parentModel)) {

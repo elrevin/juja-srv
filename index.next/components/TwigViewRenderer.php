@@ -8,6 +8,7 @@
  */
 
 namespace app\components;
+use app\modules\backend\models\Constants;
 use yii\helpers\Url;
 
 class TwigViewRenderer extends \yii\twig\ViewRenderer
@@ -20,10 +21,16 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         return \Yii::$app->view->getAssetManager()->getBundle($assetBundleName)->baseUrl;
     }
 
+    public static function getConstant($constantName)
+    {
+        return Constants::getConstantByName($constantName);
+    }
+
     public function init()
     {
         $this->functions['urlTo'] = '\yii\helpers\Url::to';
         $this->functions['assetBaseUrl'] = '\app\components\TwigViewRenderer::assetBaseUrl';
+        $this->functions['getConstant'] = '\app\components\TwigViewRenderer::getConstant';
         parent::init();
     }
 
