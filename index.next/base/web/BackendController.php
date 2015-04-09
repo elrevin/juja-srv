@@ -83,7 +83,7 @@ class BackendController extends Controller
             $params['modelName'] = $modelName;
         }
 
-        $params['modelName'] = ($params['modelName'] ? '\app\modules\\'.$this->module->id.'\models\\'.$params['modelName'] : '');
+        $params['modelName'] = (isset($params['modelName']) ? '\app\modules\\'.$this->module->id.'\models\\'.$params['modelName'] : '');
 
         $masterId = intval(Yii::$app->request->get('masterId', 0));
 
