@@ -229,9 +229,7 @@ class BackendController extends Controller
      */
     public function ajaxError($type, $message = "")
     {
-        $code = intval(file_get_contents(Yii::getAlias('@app/data/base/lastErrorCode.txt')));
-        $code++;
-        file_put_contents(Yii::getAlias('@app/data/base/lastErrorCode.txt'), $code);
+        $code = dechex(mktime()*intval(rand(1, 30)));
 
         Yii::error('Error #'.$code.": ".$type);
         if (Yii::$app->response->format == \yii\web\Response::FORMAT_JSON || Yii::$app->response->format == \yii\web\Response::FORMAT_RAW) {
