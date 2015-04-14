@@ -10,6 +10,7 @@ use yii\base\NotSupportedException;
  * @property integer $id
  * @property string $username
  * @property string $name
+ * @property string $email
  * @property string $password
  * @property string $authKey
  * @property string $restoreCode
@@ -30,6 +31,12 @@ class UserIdentity extends \yii\base\Object implements \yii\web\IdentityInterfac
      * @var string
      */
     public $username;
+
+    /**
+     * email пользователя
+     * @var string
+     */
+    public $email;
 
     /**
      * имя пользователя
@@ -94,7 +101,8 @@ class UserIdentity extends \yii\base\Object implements \yii\web\IdentityInterfac
                 'password' => $user->password,
                 'authKey' => $user->hash,
                 'isSU' => $user->su,
-                'cpAccess' => $user->group->cp_access
+                'cpAccess' => $user->group->cp_access,
+                'email' => $user->email
             ]);
         }
         return null;

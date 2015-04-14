@@ -55,7 +55,7 @@ class BackendController extends Controller
             return false;
         }
 
-        if ($this->accessList[$action] == 'GRAND') {
+        if (($this->accessList[$action] == 'GRAND') && (Yii::$app->user->can('admin') || Yii::$app->user->can('manager'))) {
             return true;
         }
 
