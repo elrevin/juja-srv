@@ -673,6 +673,11 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
+        if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$hiddable) {
+            $fieldName = 'hidden';
+            $select[] = "`".static::tableName()."`.`".$fieldName."`";
+        }
+
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$parentModel) {
             $parentModelName = static::getParentModel();
 
@@ -915,6 +920,8 @@ class ActiveRecord extends db\ActiveRecord
                     if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
                         $this->$key = static::setType($key, $val);
                     }
+                } elseif ($key == 'hidden' && static::$hiddable) {
+                    $this->$key = static::setType($key, $val, 'bool');
                 } elseif ($key == 'parent_id' && static::$recursive) {
                     $this->$key = static::setType($key, $val, 'pointer');
                 } elseif ($key == static::$masterModelRelFieldName && static::$parentModel) {
@@ -1203,6 +1210,14 @@ class ActiveRecord extends db\ActiveRecord
             ];
         }
 
+        if (static::$hiddable) {
+            $fields[] = [
+                'name' => 'hidden',
+                'type' => 'bool',
+                'extra' => true
+            ];
+        }
+
 
         $conf = [
             'fields' => $fields,
@@ -1219,6 +1234,7 @@ class ActiveRecord extends db\ActiveRecord
             'masterRecordId' => $masterId,
             'sortable' => static::$sortable,
             'recursive' => static::$recursive,
+            'hiddable' => static::$hiddable,
             'masterModelRelationsType' => static::$masterModelRelationsType,
             'slaveModelAddMethod' => static::$slaveModelAddMethod,
             'childModelConfig' => $childModelConfig,
