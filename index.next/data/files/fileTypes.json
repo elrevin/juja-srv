@@ -43,6 +43,12 @@
         "icon": "excel",
         "mime": "application/vnd.ms-excel"
     },
+    "pdf": {
+        "type": "bin",
+        "name": "pdf",
+        "icon": "pdf",
+        "mime": "application/pdf"
+    },
     "some": {
         "type": "bin",
         "name": "some",
