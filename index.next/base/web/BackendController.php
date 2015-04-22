@@ -118,7 +118,7 @@ class BackendController extends Controller
                     if (Yii::$app->request->isAjax) {
                         $this->ajaxError('app\base\web\BackendController\beforeAction\cpAccessDeny?action='.$action->id, 'У Вас не хватает прав для выполнения операции');
                     } else {
-                        throw new ForbiddenHttpException('Access denied');
+                        throw new \yii\web\ForbiddenHttpException('Access denied');
                     }
                 }
                 return true;
