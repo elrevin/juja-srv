@@ -113,23 +113,25 @@ class ActiveRecord extends db\ActiveRecord
      *          ключи - это имена других полей, а значения это условие или массив условий, каждое из которых -
      *          ассоциативный массив (все условия в итоге объединяются оператором AND):
      *          'comparison' - условие сравнения:
-     *              'eq' - '=',
-     *              'noteq' - '<>',
-     *              'lt' - '<',
-     *              'gt' - '>',
-     *              'like',
-     *              'start' - " like 'VALUE%' ",
-     *              'end' - " like '%VALUE' ",
+     *                  '==' - равно,
+     *                  '!=' - не равно
+     *                  '>' - больше
+     *                  '<' - меньше
+     *                  '>=' - больше или равно
+     *                  '<=' - меньше или равно
+     *                  'like', - " like '%VALUE%'"
+     *                  'start' - " like 'VALUE%' ",
+     *                  'end' - " like '%VALUE' ",
      *          'field' - имя поля в таблице
      *
-     *          Например есть поля "price" (тип int) и "manager" (тип pointer ссылается на таблицу managers), в таблице
+     *          Например есть поле "price" (тип int) и "manager" (тип pointer ссылается на таблицу managers), в таблице
      *          managers есть поле max_price значение которого показывает максимальный ценовой порог, при превышении которого
      *          товар не может быть продан данным менеджером, и прии редактировании товара необходимо выбрать менеджера из
      *          числа доступных. В таком случае условие для поля "manager" будет выглядеть так:
      *
      *          'filterCondition' => [
      *              'price' => [
-     *                  'comparison' => 'lt',
+     *                  'comparison' => '<',
      *                  'field' => 'max_price'
      *              ]
      *          ]
@@ -496,13 +498,13 @@ class ActiveRecord extends db\ActiveRecord
                 $res = ['like', ($condField), $value];
             }
         } elseif ($type == 'numeric') {
-            if ($comparison == 'lt') {
+            if ($comparison == 'lt' || $comparison == '<') {
                 $res = ['<', ($condField), $value];
-            } elseif ($comparison == 'gt') {
+            } elseif ($comparison == 'gt' || $comparison == '>') {
                 $res = ['>', ($condField), $value];
-            } elseif ($comparison == 'eq') {
+            } elseif ($comparison == 'eq' || $comparison == '==') {
                 $res = ['=', ($condField), $value];
-            } elseif ($comparison == 'noteq') {
+            } elseif ($comparison == 'noteq' || $comparison == '!=') {
                 $res = ['<>', ($condField), $value];
             }
         } elseif ($type == 'list') {
