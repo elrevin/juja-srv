@@ -186,7 +186,7 @@ class ActiveRecord extends db\ActiveRecord
     protected static $recursive = false;
 
     /**
-     * Имя класса "master" модель
+     * Имя класса "master" модели с пространством имен
      * @var string
      */
     protected static $masterModel = '';
