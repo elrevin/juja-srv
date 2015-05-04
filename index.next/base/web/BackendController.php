@@ -436,7 +436,7 @@ class BackendController extends Controller
 
                 $query = call_user_func([$modelName, 'find']);
                 if ($cond) {
-                    $query = $query->where($cond);
+                    $query = $query->where($cond, $params);
                 }
                 $recs = $query->select(["id", "sort_priority"])->orderBy(["sort_priority" => SORT_ASC])->all();
 
