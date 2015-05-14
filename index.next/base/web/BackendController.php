@@ -165,7 +165,9 @@ class BackendController extends Controller
                 "leaf" => true,
                 "title" => $item[$identifyFieldName],
                 "recordId" => $item['id'],
-                "runAction" => [$this->module->id, "main", "get-interface"]
+                "runAction" => [$this->module->id, "main", "get-interface"],
+                "sortAction" => [$this->module->id, "main", "sort-records"],
+                "sortable" => call_user_func([$modelName, 'isSortable'])
             ];
 
             if ($recursive) {
@@ -391,7 +393,7 @@ class BackendController extends Controller
 
     public function actionSortRecords()
     {
-        $records = Yii::$app->request->post('records', '[]');
+        $records = str_replace('"', '', Yii::$app->request->post('records', '[]'));
         $modelName = Yii::$app->request->get('modelName', '');
         $position = Yii::$app->request->post('position', '');
         $over = intval(Yii::$app->request->post('over', ''));

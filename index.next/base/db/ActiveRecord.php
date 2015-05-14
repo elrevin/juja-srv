@@ -280,6 +280,11 @@ class ActiveRecord extends db\ActiveRecord
 
     protected static $haveRightsRules = true;
 
+    public static function isSortable()
+    {
+        return static::$sortable;
+    }
+
     public static function getHaveRightsRule ()
     {
         return static::$haveRightsRules;
