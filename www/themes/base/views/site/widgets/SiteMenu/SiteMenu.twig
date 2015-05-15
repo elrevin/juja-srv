@@ -1,14 +1,14 @@
-{% macro MainMenu(links) %}
+{% macro MainMenu(links, currentSection, currentSectionPath) %}
     {% for link in links %}
         {% if link.list %}
-            <li class="dropdown"><a href="{{ link.data.url }}">{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}<i class="fa fa-angle-down"></i></a>
+            <li class="dropdown"><a href="{{ link.data.url }}" {% if (link.data.id in currentSectionPath and link.data.parent_id) or (not link.data.parent_id and link.data.id == currentSection) %} style="color: red" {% endif %}>{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}<i class="fa fa-angle-down"></i></a>
                 <ul role="menu" class="sub-menu">
-                    {{ _self.MainMenu(link.list) }}
+                    {{ _self.MainMenu(link.list, currentSection, currentSectionPath) }}
                 </ul>
             </li>
         {% else %}
             <li>
-                <a href="{{ link.data.url }}">{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}</a>
+                <a href="{{ link.data.url }}" {% if (link.data.id in currentSectionPath and link.data.parent_id) or (not link.data.parent_id and link.data.id == currentSection) %} style="color: red !important;" {% endif %}>{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}</a>
             </li>
         {% endif %}
     {% endfor %}
@@ -16,6 +16,6 @@
 
 <div class="mainmenu pull-left">
     <ul class="nav navbar-nav collapse navbar-collapse">
-        {{ _self.MainMenu(list) }}
+        {{ _self.MainMenu(list, currentSection, currentSectionPath) }}
     </ul>
 </div>

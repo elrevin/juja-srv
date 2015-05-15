@@ -1,5 +1,5 @@
 <ul>
     {% for item in list %}
-        <li><a href="{{ item.data.url }}">{{ item.data.title }}</a></li>
+        <li><a href="{{ item.data.url }}" {% if (item.data.id in currentSectionPath and item.data.parent_id) or (not item.data.parent_id and item.data.id == currentSection) %} style="color: red !important;" {% endif %}>{{ item.data.title }}</a></li>
     {% endfor %}
 </ul>
