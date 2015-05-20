@@ -190,7 +190,7 @@ class BackendController extends Controller
             $modelName = Yii::$app->request->get('modelName', '');
         }
         if ($recordId === null) {
-            $recordId = intval(Yii::$app->request->get('recordId', 0));
+            $recordId = intval(Yii::$app->request->get('id', 0));
         }
         if (!$recordId) {
             $recordId = null;
