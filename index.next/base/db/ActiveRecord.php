@@ -325,7 +325,7 @@ class ActiveRecord extends db\ActiveRecord
             if (isset($field['required']) && $field['required']) {
                 $rules[] = [
                     [$name], 'required',
-                    'message' => 'Поле "' . static::$structure['title']['title'] . '" обязательно для заполнения.'
+                    'message' => 'Поле "' . $field['title'] . '" обязательно для заполнения.'
                 ];
             }
 
@@ -333,21 +333,21 @@ class ActiveRecord extends db\ActiveRecord
                 $rules[] = [
                     [$name], 'string', 'min' => (isset($field['minLength']) ? $field['minLength'] : null),
                     'max' => (isset($field['maxLength']) ? $field['maxLength'] : 1024),
-                    'tooLong' => 'Поле "' . static::$structure['title']['title'] . '" не может быть длинее 1024 символа.'
+                    'tooLong' => 'Поле "' . $field['title'] . '" не может быть длинее 1024 символа.'
                 ];
             } elseif ($field['type'] == 'int') {
                 $rules[] = [
                     [$name], 'integer', 'integerOnly' => true, 'min' => (isset($field['min']) ? $field['min'] : null),
                     'max' => (isset($field['max']) ? $field['max'] : null),
-                    'tooSmall' => 'Значение поля "' . static::$structure['title']['title'] . '" не может быть меньше '.(isset($field['min']) ? $field['min'] : '0').'.',
-                    'tooBig' => 'Значение поля "' . static::$structure['title']['title'] . '" не может быть больше '.(isset($field['max']) ? $field['max'] : '0').'.',
+                    'tooSmall' => 'Значение поля "' . $field['title'] . '" не может быть меньше '.(isset($field['min']) ? $field['min'] : '0').'.',
+                    'tooBig' => 'Значение поля "' . $field['title'] . '" не может быть больше '.(isset($field['max']) ? $field['max'] : '0').'.',
                 ];
             } elseif ($field['type'] == 'float') {
                 $rules[] = [
                     [$name], 'double', 'integerOnly' => false, 'min' => (isset($field['min']) ? $field['min'] : null),
                     'max' => (isset($field['max']) ? $field['max'] : null),
-                    'tooSmall' => 'Значение поля "' . static::$structure['title']['title'] . '" не может быть меньше '.(isset($field['min']) ? $field['min'] : '0').'.',
-                    'tooBig' => 'Значение поля "' . static::$structure['title']['title'] . '" не может быть больше '.(isset($field['max']) ? $field['max'] : '0').'.',
+                    'tooSmall' => 'Значение поля "' . $field['title'] . '" не может быть меньше '.(isset($field['min']) ? $field['min'] : '0').'.',
+                    'tooBig' => 'Значение поля "' . $field['title'] . '" не может быть больше '.(isset($field['max']) ? $field['max'] : '0').'.',
                 ];
             }
         }
