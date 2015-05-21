@@ -766,7 +766,9 @@ class ActiveRecord extends db\ActiveRecord
             $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
                 static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']."), 1, 0) AS `check`";
             $query->rightJoin("`".$relatedTableName."` `".$relatedTableName."_".$fieldName."`", "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.`id` AND `".static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
-            $query->andWhere("`".$relatedTableName."_".$fieldName."`.del = 0");
+            if (!call_user_func([static::$linkModelName, 'getPermanentlyDelete'])) {
+                $query->andWhere("`".$relatedTableName."_".$fieldName."`.del = 0");
+            }
         } else {
 
             if (isset($params['masterId']) && $params['masterId'] && (static::$masterModel || static::$parentModel)) {
