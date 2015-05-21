@@ -766,6 +766,7 @@ class ActiveRecord extends db\ActiveRecord
             $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
                 static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']."), 1, 0) AS `check`";
             $query->rightJoin("`".$relatedTableName."` `".$relatedTableName."_".$fieldName."`", "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.`id` AND `".static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
+            $query->andWhere("`".$relatedTableName."_".$fieldName."`.del = 0");
         } else {
 
             if (isset($params['masterId']) && $params['masterId'] && (static::$masterModel || static::$parentModel)) {
@@ -819,6 +820,10 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
+        if(static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_CHECK) {
+            $orderBy = array_merge($orderBy, ["`".$relatedTableName."_".$fieldName."`.id" => SORT_ASC]);
+        }
+
         if (static::$sortable) {
             $orderBy = array_merge($orderBy, ["`".static::tableName()."`.`sort_priority`" => SORT_ASC]);
         }
@@ -827,7 +832,7 @@ class ActiveRecord extends db\ActiveRecord
             $orderBy = array_merge($orderBy, static::$defaultSort);
         }
 
-        $query->orderBy($orderBy);
+        $query->orderBy(($orderBy ? $orderBy : null));
 
         if (isset($params['limit']) && $params['limit']) {
             $query->limit($params['limit']);
