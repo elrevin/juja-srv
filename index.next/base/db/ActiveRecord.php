@@ -169,6 +169,12 @@ class ActiveRecord extends db\ActiveRecord
     protected static $permanentlyDelete = true;
 
     /**
+     * Если true то в модель нельзя ничего писать
+     * @var bool1
+     */
+    protected static $readonly = false;
+
+    /**
      * если true, записи можно скывать, установкой поля hidden = 1
      * @var bool
      */
@@ -1224,7 +1230,9 @@ class ActiveRecord extends db\ActiveRecord
 
         $modelName = static::getModelName();
 
-        if (Yii::$app->user->can('backend-delete-record', ['modelName' => static::className()])) {
+        if (static::$readonly) {
+            $userRights = 1;
+        } elseif (Yii::$app->user->can('backend-delete-record', ['modelName' => static::className()])) {
             $userRights = 3;
         } elseif (Yii::$app->user->can('backend-save-record', ['modelName' => static::className()])) {
             $userRights = 2;
@@ -1286,9 +1294,9 @@ class ActiveRecord extends db\ActiveRecord
             'accusativeRecordTitle' => static::$accusativeRecordTitle,
             'params' => $params,
             'masterRecordId' => $masterId,
-            'sortable' => static::$sortable,
+            'sortable' => static::$sortable && !static::$readonly,
             'recursive' => static::$recursive,
-            'hiddable' => static::$hiddable,
+            'hiddable' => static::$hiddable && !static::$readonly,
             'masterModelRelationsType' => static::$masterModelRelationsType,
             'slaveModelAddMethod' => static::$slaveModelAddMethod,
             'childModelConfig' => $childModelConfig,
