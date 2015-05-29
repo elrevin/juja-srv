@@ -1,6 +1,8 @@
 <?php
 namespace app\base\db;
 
+use app\models\SDataHistory;
+use app\models\SDataHistoryEvents;
 use app\modules\files\models\Files;
 use Yii;
 use yii\db;
@@ -59,6 +61,8 @@ class ActiveRecord extends db\ActiveRecord
      *          ...
      *
      *      'group' - Название группы полей,
+     *
+     *      'keepHistory' - Если true, то автоматически будет сохраняться история значений поля,
      *
      *      'relativeModel' - имя связанной модели (полное имя класса, включая namespace) или ассоциативный массив:
      *          'classname' - полное имя класса,
@@ -286,6 +290,8 @@ class ActiveRecord extends db\ActiveRecord
     public static $defaultSort = [];
 
     protected static $haveRightsRules = true;
+
+    protected $oldDirtyAttributes = [];
 
     public static function isSortable()
     {
@@ -543,6 +549,8 @@ class ActiveRecord extends db\ActiveRecord
                 $res = ['like', $condField, "%".$value, false];
             } elseif ($comparison == 'start') {
                 $res = ['like', ($condField), $value."%", false];
+            } elseif ($comparison == 'eq' || $comparison == '==') {
+                $res = ['=', ($condField), $value];
             } else {
                 $res = ['like', ($condField), $value];
             }
@@ -991,6 +999,30 @@ class ActiveRecord extends db\ActiveRecord
         }
     }
 
+    private function saveToHistory($event, $id)
+    {
+        $history = new SDataHistoryEvents();
+        $history->user_id = Yii::$app->user->id;
+        $history->event = $event;
+        $history->model = static::className();
+        $history->record_id = $id;
+        $history->save();
+        $eventId = $history->id;
+
+        if ($event != 'delete') {
+            foreach (static::$structure as $name => $fieldConf) {
+                if (isset($fieldConf['keepHistory']) && $fieldConf['keepHistory'] && array_key_exists($name, $this->oldDirtyAttributes)) {
+                    $dirtyFieldOldValue = $this->oldDirtyAttributes[$name];
+                    $historyData = new SDataHistory();
+                    $historyData->event_id = $eventId;
+                    $historyData->field = $name;
+                    $historyData->value = $dirtyFieldOldValue;
+                    $historyData->save();
+                }
+            }
+        }
+    }
+
     /**
      * Сохраняет данные переданные в массиве $data
      * @param array $data
@@ -1011,6 +1043,7 @@ class ActiveRecord extends db\ActiveRecord
             $this->sort_priority = $maxSortPriority + 1;
         }
 
+        $this->oldDirtyAttributes = $this->dirtyAttributes;
         if ($this->save()) {
 
             foreach (static::$structure as $fieldName => $fieldData) {
@@ -1035,6 +1068,7 @@ class ActiveRecord extends db\ActiveRecord
                     "masterId" => $masterId
                 ]);
                 if ($result && is_array($result)) {
+                    $this->saveToHistory("create", $result['data'][0]['id']);
                     return $result['data'][0];
                 } else {
                     return false;
@@ -1044,7 +1078,9 @@ class ActiveRecord extends db\ActiveRecord
                     "where" => "`".static::tableName()."`.id = '{$data['id']}'",
                     "masterId" => $masterId
                 ]);
+
                 if ($result && is_array($result)) {
+                    $this->saveToHistory("update", $result['data'][0]['id']);
                     return $result['data'][0];
                 } else {
                     return false;
@@ -1083,6 +1119,13 @@ class ActiveRecord extends db\ActiveRecord
                 $condition = implode(' OR ', $condition);
             }
             list($condition, $params) = static::beforeDeleteRecords($condition, $params);
+
+            $records = static::find()->where($condition, $params)->all();
+            foreach ($records as $record) {
+                $record->saveToHistory("delete", $record->id);
+            }
+
+
             if (static::$permanentlyDelete) {
                 static::deleteAll($condition, $params);
             } else {
@@ -1302,6 +1345,7 @@ class ActiveRecord extends db\ActiveRecord
             'childModelConfig' => $childModelConfig,
             'parentModelName' => $parentModelName,
             'masterModelRelFieldName' => static::$masterModelRelFieldName,
+            'historyAccess' => Yii::$app->user->getIdentity(true)->isSU,
         ];
 
         if (!$modal) {
