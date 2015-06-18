@@ -335,12 +335,12 @@ class ActiveRecord extends db\ActiveRecord
             $tmp = call_user_func([$relatedModelClass, 'tableName']);
             Yii::$app->db->createCommand("
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL,
-                    ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `". $tmp ."`(id)
+                    ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE SET NULL ON UPDATE CASCADE
             ")->execute();
         } elseif ($field['type'] == 'file') {
             Yii::$app->db->createCommand("
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL,
-                    ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `s_files`(id)
+                    ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `s_files`(id) ON DELETE SET NULL ON UPDATE CASCADE
             ")->execute();
         }
     }
@@ -390,7 +390,7 @@ class ActiveRecord extends db\ActiveRecord
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."`
                         ADD COLUMN `parent_id` int(11) DEFAULT NULL,
-                        ADD CONSTRAINT `". $tableName ."__parent_id` FOREIGN KEY (parent_id) REFERENCES `". $tableName ."`(id)
+                        ADD CONSTRAINT `". $tableName ."__parent_id` FOREIGN KEY (parent_id) REFERENCES `". $tableName ."`(id)  ON DELETE CASCADE ON UPDATE CASCADE
                 ")->execute();
             } elseif (!static::$recursive && array_key_exists('parent_id', $cols)) {
                 Yii::$app->db->createCommand("
@@ -408,7 +408,7 @@ class ActiveRecord extends db\ActiveRecord
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."`
                         ADD COLUMN `".static::$masterModelRelFieldName."` int(11) DEFAULT NULL,
-                        ADD CONSTRAINT `". $tableName ."__".static::$masterModelRelFieldName."` FOREIGN KEY (`".static::$masterModelRelFieldName."`) REFERENCES `". $tmp ."`(id)
+                        ADD CONSTRAINT `". $tableName ."__".static::$masterModelRelFieldName."` FOREIGN KEY (`".static::$masterModelRelFieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE CASCADE ON UPDATE CASCADE
                 ")->execute();
             }
 
@@ -417,7 +417,7 @@ class ActiveRecord extends db\ActiveRecord
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."`
                         ADD COLUMN `".static::$masterModelRelFieldName."` int(11) DEFAULT NULL,
-                        ADD CONSTRAINT `". $tableName ."__".static::$masterModelRelFieldName."` FOREIGN KEY (`".static::$masterModelRelFieldName."`) REFERENCES `". $tmp ."`(id)
+                        ADD CONSTRAINT `". $tableName ."__".static::$masterModelRelFieldName."` FOREIGN KEY (`".static::$masterModelRelFieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE CASCADE ON UPDATE CASCADE
                 ")->execute();
             }
 
