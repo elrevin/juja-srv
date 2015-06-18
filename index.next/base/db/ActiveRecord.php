@@ -48,7 +48,6 @@ class ActiveRecord extends db\ActiveRecord
      *              которой указано в relativeModel
      *          'select' - одно из предустановленных значений, значения указываются в selectOptions
      *          'file' - файл, в mysql - int(11) с внешним ключем на модель s_files
-     *          'img' - изображение, в mysql - int(11) с внешним ключем на модель s_files
      *          'bool' - флаг, в mysql tinyint(1)
      *
      *      'settings' - Дополнительные настройки (ассоциативный массив):
@@ -292,6 +291,155 @@ class ActiveRecord extends db\ActiveRecord
     protected static $haveRightsRules = true;
 
     protected $oldDirtyAttributes = [];
+
+    protected static function createTableCol($fieldName, $field) {
+        $tableName = static::tableName();
+        if ($field['type'] == 'string') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` VARCHAR(1024) NOT NULL DEFAULT ''
+            ")->execute();
+        } elseif ($field['type'] == 'text' || $field['type'] == 'html') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` LONGTEXT
+            ")->execute();
+        } elseif ($field['type'] == 'int') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) NOT NULL DEFAULT 0
+            ")->execute();
+        } elseif ($field['type'] == 'float') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` DOUBLE NOT NULL DEFAULT 0
+            ")->execute();
+        } elseif ($field['type'] == 'bool') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` tinyint(1) NOT NULL DEFAULT 0
+            ")->execute();
+        } elseif ($field['type'] == 'select') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` VARCHAR(1024) NOT NULL DEFAULT ''
+            ")->execute();
+        } elseif ($field['type'] == 'date') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` DATE DEFAULT NULL
+            ")->execute();
+        } elseif ($field['type'] == 'datetime') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` DATETIME DEFAULT NULL
+            ")->execute();
+        } elseif ($field['type'] == 'pointer') {
+            if (is_array($field['relativeModel'])) {
+                $relatedModelClass = '\app\modules\\'.$field['relativeModel']['moduleName'].'\models\\'.$field['relativeModel']['name'];
+            } else {
+                $relatedModelClass = $field['relativeModel'];
+            }
+            $tmp = call_user_func([$relatedModelClass, 'tableName']);
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL,
+                    ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `". $tmp ."`(id)
+            ")->execute();
+        } elseif ($field['type'] == 'file') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL,
+                    ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `s_files`(id)
+            ")->execute();
+        }
+    }
+
+    protected static function checkStructure () {
+        if (YII_DEBUG) {
+            // Проверяем наличие таблицы
+            $tableName = static::tableName();
+            $table = Yii::$app->db->createCommand("Show tables like '". $tableName ."'")->queryAll();
+            $cols = [];
+            if (!$table) {
+                // Создаем таблицу
+                Yii::$app->db->createCommand("
+                    CREATE TABLE `". $tableName ."` (
+                        id int(11) NOT NULL AUTO_INCREMENT, PRIMARY KEY (id)
+                    )
+                    ENGINE = INNODB
+                    CHARACTER SET utf8
+                    COLLATE utf8_general_ci
+                ")->execute();
+            } else {
+                $tmp = Yii::$app->db->createCommand("SHOW COLUMNS FROM `". $tableName ."`")->queryAll();
+                foreach ($tmp as $col) {
+                    $cols[$col['Field']] = $col;
+                }
+
+            }
+
+            // Перманентное удаление
+            if (!static::$permanentlyDelete && !array_key_exists('del', $cols)) {
+                // Добавляем поле 'del'
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."` ADD COLUMN `del` tinyint(1) NOT NULL DEFAULT 0
+                ")->execute();
+            } elseif (static::$permanentlyDelete && array_key_exists('del', $cols)) {
+                // Удаляем записи помеченные на удаление и поле del
+                Yii::$app->db->createCommand("
+                    DELETE FROM `". $tableName ."` WHERE `del` = 1
+                ")->execute();
+
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."` DROP COLUMN `del`
+                ")->execute();
+            }
+
+            if (static::$recursive && !array_key_exists('parent_id', $cols)) {
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."`
+                        ADD COLUMN `parent_id` int(11) DEFAULT NULL,
+                        ADD CONSTRAINT `". $tableName ."__parent_id` FOREIGN KEY (parent_id) REFERENCES `". $tableName ."`(id)
+                ")->execute();
+            } elseif (!static::$recursive && array_key_exists('parent_id', $cols)) {
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."`
+                        DROP FOREIGN KEY `". $tableName ."__parent_id`
+                ")->execute();
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."`
+                        DROP COLUMN `parent_id`,
+                ")->execute();
+            }
+
+            if (static::$parentModel && !array_key_exists(static::$masterModelRelFieldName, $cols)) {
+                $tmp = call_user_func([static::$parentModel, 'tableName']);
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."`
+                        ADD COLUMN `".static::$masterModelRelFieldName."` int(11) DEFAULT NULL,
+                        ADD CONSTRAINT `". $tableName ."__".static::$masterModelRelFieldName."` FOREIGN KEY (`".static::$masterModelRelFieldName."`) REFERENCES `". $tmp ."`(id)
+                ")->execute();
+            }
+
+            if (static::$masterModel && !array_key_exists(static::$masterModelRelFieldName, $cols)) {
+                $tmp = call_user_func([static::$masterModel, 'tableName']);
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."`
+                        ADD COLUMN `".static::$masterModelRelFieldName."` int(11) DEFAULT NULL,
+                        ADD CONSTRAINT `". $tableName ."__".static::$masterModelRelFieldName."` FOREIGN KEY (`".static::$masterModelRelFieldName."`) REFERENCES `". $tmp ."`(id)
+                ")->execute();
+            }
+
+            if (static::$hiddable && !array_key_exists('hidden', $cols)) {
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."` ADD COLUMN `hidden` tinyint(1) NOT NULL DEFAULT 0
+                ")->execute();
+            } elseif (!static::$hiddable && array_key_exists('hidden', $cols)) {
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."` DROP COLUMN `hidden`
+                ")->execute();
+            }
+
+            // Проверяем структуру
+
+            foreach (static::$structure as $name => $field) {
+                if (!array_key_exists($name, $cols)) {
+                    static::createTableCol($name, $field);
+                }
+            }
+        }
+    }
 
     public static function isSortable()
     {
@@ -620,6 +768,7 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getList($params)
     {
+        static::checkStructure();
         static::addAdditionFields();
         $params = static::beforeList($params);
         $select = ["`".static::tableName()."`.`id`"];
