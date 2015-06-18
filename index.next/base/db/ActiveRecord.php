@@ -434,7 +434,7 @@ class ActiveRecord extends db\ActiveRecord
             // Проверяем структуру
 
             foreach (static::$structure as $name => $field) {
-                if (!array_key_exists($name, $cols)) {
+                if (!isset($field['addition']) && !array_key_exists($name, $cols)) {
                     static::createTableCol($name, $field);
                 }
             }
@@ -1301,7 +1301,11 @@ class ActiveRecord extends db\ActiveRecord
                     }
 
                     if ($className && is_callable([$className, 'getAdditionFields'])) {
-                        static::$structure = array_merge(static::$structure, call_user_func([$className, 'getAdditionFields']));
+                        $addFields = call_user_func([$className, 'getAdditionFields']);
+                        foreach ($addFields as $key=>$field) {
+                            $addFields[$key]['addition'] = true;
+                        }
+                        static::$structure = array_merge(static::$structure, $addFields);
                     }
                 }
             }
