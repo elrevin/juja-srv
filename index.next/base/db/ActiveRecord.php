@@ -431,6 +431,16 @@ class ActiveRecord extends db\ActiveRecord
                 ")->execute();
             }
 
+            if (static::$sortable && !array_key_exists('sort_priority', $cols)) {
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."` ADD COLUMN `sort_priority` int(11) NOT NULL DEFAULT 0
+                ")->execute();
+            } elseif (!static::$sortable && array_key_exists('sort_priority', $cols)) {
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."` DROP COLUMN `sort_priority`
+                ")->execute();
+            }
+
             // Проверяем структуру
 
             foreach (static::$structure as $name => $field) {
