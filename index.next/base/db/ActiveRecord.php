@@ -1136,11 +1136,24 @@ class ActiveRecord extends db\ActiveRecord
      * "Накладывает" массив данных или JSON строку на модель
      * @param $data
      */
-    public function mapJson($data)
+    public function mapJson(&$data)
     {
         if (is_string($data)) {
             $data = Json::decode($data);
         }
+
+        // Ищем поля типа file и проверяем есть ли загрузка файла
+        foreach (static::$structure as $key => $field) {
+            if ($field['type'] == 'file') {
+                if (!array_key_exists($key, $data) && isset($_FILES[$key."_filebin"])) {
+                    $file = \app\modules\files\models\FilesUtils::uploadFile(0, '' , 1, $key."_filebin");
+                    if ($file['success']) {
+                        $data[$key] = ['id' => $file['data']['id']];
+                    }
+                }
+            }
+        }
+
         if ($data) {
             foreach ($data as $key => $val) {
                 if (isset(static::$structure[$key])) {
