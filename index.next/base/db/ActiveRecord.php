@@ -40,6 +40,7 @@ class ActiveRecord extends db\ActiveRecord
      *          'int' - целое число,
      *          'float' - число с точкой,
      *          'string' - строка, в mysql varchar(1024),
+     *          'tinystring' - строка, в mysql varchar(256),
      *          'text' - многострочный текст, редактируется textarea, в mysql - longtext
      *          'html' - многострочный текст с форматированием, редактируется tinymce, в mysql - longtext
      *          'date' - дата
@@ -292,11 +293,30 @@ class ActiveRecord extends db\ActiveRecord
 
     protected $oldDirtyAttributes = [];
 
+    public function __get($name)
+    {
+        if (strncmp($name, 'valof_', 6) == 0 && array_key_exists($key = str_replace('valof_', '', $name), static::$structure)) {
+            if (static::$structure[$key]['type'] == 'select') {
+                $val = $this->{$key};
+                if (array_key_exists($val, static::$structure[$key]['selectOptions'])) {
+                    return static::$structure[$key]['selectOptions'][$val];
+                }
+                return null;
+            }
+            return null;
+        }
+        return parent::__get($name);
+    }
+
     protected static function createTableCol($fieldName, $field) {
         $tableName = static::tableName();
         if ($field['type'] == 'string') {
             Yii::$app->db->createCommand("
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` VARCHAR(1024) NOT NULL DEFAULT ''
+            ")->execute();
+        } elseif ($field['type'] == 'tinystring') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` VARCHAR(256) NOT NULL DEFAULT ''
             ")->execute();
         } elseif ($field['type'] == 'text' || $field['type'] == 'html') {
             Yii::$app->db->createCommand("
@@ -316,7 +336,7 @@ class ActiveRecord extends db\ActiveRecord
             ")->execute();
         } elseif ($field['type'] == 'select') {
             Yii::$app->db->createCommand("
-                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` VARCHAR(1024) NOT NULL DEFAULT ''
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` VARCHAR(256) DEFAULT NULL
             ")->execute();
         } elseif ($field['type'] == 'date') {
             Yii::$app->db->createCommand("
@@ -444,7 +464,7 @@ class ActiveRecord extends db\ActiveRecord
             // Проверяем структуру
 
             foreach (static::$structure as $name => $field) {
-                if (!isset($field['addition']) && !array_key_exists($name, $cols)) {
+                if (!isset($field['addition']) && !isset($field['calc']) && !array_key_exists($name, $cols)) {
                     static::createTableCol($name, $field);
                 }
             }
@@ -503,6 +523,12 @@ class ActiveRecord extends db\ActiveRecord
                 $rules[] = [
                     [$name], 'string', 'min' => (isset($field['minLength']) ? $field['minLength'] : null),
                     'max' => (isset($field['maxLength']) ? $field['maxLength'] : 1024),
+                    'tooLong' => 'Поле "' . $field['title'] . '" не может быть длинее 1024 символа.'
+                ];
+            } elseif ($field['type'] == 'tinystring') {
+                $rules[] = [
+                    [$name], 'string', 'min' => (isset($field['minLength']) ? $field['minLength'] : null),
+                    'max' => (isset($field['maxLength']) ? $field['maxLength'] : 256),
                     'tooLong' => 'Поле "' . $field['title'] . '" не может быть длинее 1024 символа.'
                 ];
             } elseif ($field['type'] == 'int') {
@@ -693,6 +719,7 @@ class ActiveRecord extends db\ActiveRecord
                 case 'text':
                 case 'html':
                 case 'string':
+                case 'tinystring':
                     $type = 'string';
                     break;
                 case 'select':
@@ -702,7 +729,7 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         $condField = !$expression ? "`" . static::tableName() . "`.`" . $field . "`" : $expression;
-        if ($type == 'string') {
+        if ($type == 'string' || $type == 'tinystring') {
             if ($comparison == 'end') {
                 $res = ['like', $condField, "%".$value, false];
             } elseif ($comparison == 'start') {
@@ -1100,7 +1127,7 @@ class ActiveRecord extends db\ActiveRecord
             return intval($value);
         } elseif ($type == 'float') {
             return floatval($value);
-        } elseif ($type == 'string' || $type == 'text' || $type == 'html') {
+        } elseif ($type == 'string' || $type == 'tinystring' || $type == 'text' || $type == 'html') {
             return strval($value);
         } elseif ($type == 'date') {
             $value = strval($value);
