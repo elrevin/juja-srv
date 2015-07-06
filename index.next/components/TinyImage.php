@@ -63,6 +63,7 @@ class TinyImage
     {
         $widthProps = (isset($imageProps['width']) && $imageProps['width'] ? $imageProps['width'] : 0);
         $heightProps = (isset($imageProps['height']) && $imageProps['height'] ? $imageProps['height'] : 0);
+        $crop = isset($imageProps['crop']) ? $imageProps['crop'] : false;
 
         $width=imagesx($image);
         $height=imagesy($image);
@@ -70,8 +71,10 @@ class TinyImage
         // Вычисляем коэфициенты масштабирования
         $KW = 0;
         $KH = 0;
-        if (!$widthProps && !$heightProps) {
+        if (!$widthProps) {
             $widthProps = $width;
+        }
+        if (!$heightProps) {
             $heightProps = $height;
         }
         if ($widthProps) {
@@ -82,7 +85,11 @@ class TinyImage
         }
 
         // Выбираем итоговый коэфициент
-        $K = ($KW && $KH ? (($KW < $KH) ? $KW : $KH) : ($KW ? $KW : ($KH ? $KH : 1)));
+        if ($crop) {
+            $K = ($KW && $KH ? (($KW < $KH) ? $KH : $KW) : ($KW ? $KW : ($KH ? $KH : 1)));
+        } else {
+            $K = ($KW && $KH ? (($KW < $KH) ? $KW : $KH) : ($KW ? $KW : ($KH ? $KH : 1)));
+        }
 
         $widthProps = ($widthProps ? $widthProps : round($width*$K));
         $heightProps = ($heightProps ? $heightProps : round($height*$K));
@@ -152,8 +159,9 @@ class TinyImage
         $widthProps = (isset($imageProps['width']) && $imageProps['width'] ? $imageProps['width'] : 0);
         $heightProps = (isset($imageProps['height']) && $imageProps['height'] ? $imageProps['height'] : 0);
         $bgColor = isset($imageProps['bgColor']) ? $imageProps['bgColor'] : \Yii::$app->params['defaultImageBgColor'];
+        $crop = isset($imageProps['crop']) && $imageProps['crop'] ? 1 : 0;
 
-        $cacheFile = FileSystem::getFilePathByOriginalName($fileHash, '-'.$widthProps.'-'.$heightProps.'-'.$bgColor, 'cache');
+        $cacheFile = FileSystem::getFilePathByOriginalName($fileHash, '-'.$widthProps.'-'.$heightProps.'-'.$bgColor.($crop ? '-'.$crop : ''), 'cache');
         $cacheFilePath = $cacheFile['path'].'/'.$cacheFile['fileName'];
 
         if (FileSystem::fileExists($cacheFile['hash'], 'cache')) {
