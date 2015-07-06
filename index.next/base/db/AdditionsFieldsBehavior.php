@@ -91,7 +91,9 @@ class AdditionsFieldsBehavior extends Behavior
                 // Создаем таблицу
                 Yii::$app->db->createCommand("
                     CREATE TABLE `". $tableName ."` (
-                        id int(11) NOT NULL AUTO_INCREMENT, PRIMARY KEY (id)
+                        id int(11) NOT NULL AUTO_INCREMENT, PRIMARY KEY (id),
+                        master_table_id int(11) NOT NULL,
+                        master_table_name varchar(1024) NOT NULL DEFAULT ''
                     )
                     ENGINE = INNODB
                     CHARACTER SET utf8
