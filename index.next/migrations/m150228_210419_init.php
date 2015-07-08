@@ -56,8 +56,8 @@ class m150228_210419_init extends Migration
         $this->createTable("s_rights_rules", [
             'id' => 'pk',
             'model_name' => "varchar(1024) not null default ''",
-            'user_group_id' => "int(11) not null",
-            'user_id' => "int(11) not null",
+            'user_group_id' => "int(11) default null",
+            'user_id' => "int(11) default null",
             'rights' => "tinyint(1) not null default 0",
         ]);
 
