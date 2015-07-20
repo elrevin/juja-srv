@@ -1,0 +1,36 @@
+{% extends '@themelayouts/inner.twig' %}
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12"><h1>{{ data.title }}</h1></div>
+    </div>
+    <div class="row">
+        {% for item in data.goodsList %}
+            <div class="col-xs-12 col-sm-4 col-lg-3 goods-list-item">
+                <div class="goods-inner">
+                    <div>
+                        <a href="{{ url('/catalog/default/goods', {url: item.url}) }}" class="goods-title">{{ item.title }}</a>
+                    </div>
+                    <a href="{{ url('/catalog/default/goods', {url: item.url}) }}">
+                        <img src="{{ item.image.getImageUrl(300, 300, '#FFFFFF') }}"/>
+                    </a>
+
+                    <div class="row">
+                        {% for paramItem in item.getShortDescriptionParams() %}
+                            <div class="col-xs-6">
+                                {{ paramItem.param.title }}
+                            </div>
+                            <div class="col-xs-6">
+                                {{ paramItem.value }}
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="row price-row">
+                        <div class="col-xs-6 text-success price">{{ item.price|number_format(0, '', ' ') }} &#8399;</div>
+                        <div class="col-xs-6"><a href="#" class="btn btn-success btn-md pull-right">Купить</a></div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

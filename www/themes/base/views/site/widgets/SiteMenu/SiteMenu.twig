@@ -1,21 +1,42 @@
 {% macro MainMenu(links, currentSection, currentSectionPath) %}
     {% for link in links %}
         {% if link.list %}
-            <li class="dropdown"><a href="{{ link.data.url }}" {% if (link.data.id in currentSectionPath and link.data.parent_id) or (not link.data.parent_id and link.data.id == currentSection) %} style="color: red" {% endif %}>{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}<i class="fa fa-angle-down"></i></a>
-                <ul role="menu" class="sub-menu">
+            <li class="dropdown {% if (link.data.id in currentSectionPath and link.data.parent_id) or (not link.data.parent_id and link.data.id == currentSection) %} active {% endif %}">
+                <a href="{{ link.data.url }}" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }} <span class="caret"></span></a>
+                <ul class="dropdown-menu" role="menu">
                     {{ _self.MainMenu(link.list, currentSection, currentSectionPath) }}
                 </ul>
             </li>
         {% else %}
-            <li>
-                <a href="{{ link.data.url }}" {% if (link.data.id in currentSectionPath and link.data.parent_id) or (not link.data.parent_id and link.data.id == currentSection) %} style="color: red !important;" {% endif %}>{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}</a>
+            <li {% if (link.data.id in currentSectionPath and link.data.parent_id) or (not link.data.parent_id and link.data.id == currentSection) %} class="active" {% endif %}>
+                <a href="{{ link.data.url }}">{{ link.data.title_in_menu ? link.data.title_in_menu : link.data.title }}</a>
             </li>
         {% endif %}
     {% endfor %}
 {% endmacro %}
+<div class="row">
+    <div class="col-12-xs">
+        <nav class="navbar navbar-default">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-2">
+                        <span class="sr-only">Меню</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="/">{{ getConstant('siteTitle') }}</a>
+                </div>
 
-<div class="mainmenu pull-left">
-    <ul class="nav navbar-nav collapse navbar-collapse">
-        {{ _self.MainMenu(list, currentSection, currentSectionPath) }}
-    </ul>
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-2">
+                    <ul class="nav navbar-nav">
+                        {{ _self.MainMenu(list, currentSection, currentSectionPath) }}
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right hidden-xs">
+                        <li><p class="navbar-text">{{ getConstant('phone') }}</p></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
 </div>

@@ -47,6 +47,8 @@ class ActiveRecord extends db\ActiveRecord
      *          'datetime' - дата и время
      *          'pointer' - ссылка на запись в другой модели, в mysql - int(11) и внешний ключ ссылающийся на другую модель, имя
      *              которой указано в relativeModel
+     *          'linked' - ссылка на запись в связанной модели (ее имя указано в $linkModelName), в mysql - int(11) и внешний ключ ссылающийся на другую модель, имя
+     *              которой указано в relativeModel
      *          'select' - одно из предустановленных значений, значения указываются в selectOptions
      *          'file' - файл, в mysql - int(11) с внешним ключем на модель s_files
      *          'bool' - флаг, в mysql tinyint(1)
@@ -191,10 +193,16 @@ class ActiveRecord extends db\ActiveRecord
     protected static $modelTitle = '';
 
     /**
-     * Если модуль рекурсивная (древовидная), то это свойство = true
+     * Если модель рекурсивная (древовидная), то это свойство = true
      * @var bool
      */
     protected static $recursive = false;
+
+    /**
+     * Если модель рекурсивная (древовидная), и возможен только один корень
+     * @var bool
+     */
+    protected static $singleRoot = false;
 
     /**
      * Имя класса "master" модели с пространством имен
@@ -441,6 +449,15 @@ class ActiveRecord extends db\ActiveRecord
                 ")->execute();
             }
 
+            if (static::$masterModel && static::$masterModelRelationsType == self::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$linkModelName && !array_key_exists(static::getLinkTableIdField(), $cols)) {
+                $tmp = call_user_func([static::$linkModelName, 'tableName']);
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."`
+                        ADD COLUMN `".static::getLinkTableIdField()."` int(11) DEFAULT NULL,
+                        ADD CONSTRAINT `". $tableName ."__link_table_id` FOREIGN KEY (`".static::getLinkTableIdField()."`) REFERENCES `". $tmp ."`(id) ON DELETE CASCADE ON UPDATE CASCADE
+                ")->execute();
+            }
+
             if (static::$hiddable && !array_key_exists('hidden', $cols)) {
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."` ADD COLUMN `hidden` tinyint(1) NOT NULL DEFAULT 0
@@ -469,6 +486,19 @@ class ActiveRecord extends db\ActiveRecord
                 }
             }
         }
+    }
+
+    public static function getLinkTableIdField ()
+    {
+        if (static::$masterModel && static::$masterModelRelationsType == self::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY) {
+            foreach (static::$structure as $name => $field) {
+                if ($field['type'] == 'linked') {
+                    return $name;
+                }
+                return 'link_table_id';
+            }
+        }
+        return '';
     }
 
     public static function isSortable()
@@ -512,6 +542,9 @@ class ActiveRecord extends db\ActiveRecord
     {
         $rules = [];
         foreach (static::$structure as $name => $field) {
+            if (isset($field['calc']) && ['calc']) {
+                continue;
+            }
             if (isset($field['required']) && $field['required']) {
                 $rules[] = [
                     [$name], 'required',
@@ -565,6 +598,10 @@ class ActiveRecord extends db\ActiveRecord
 
     public static function getRecursive () {
         return static::$recursive;
+    }
+
+    public static function getSingleRoot () {
+        return static::$singleRoot;
     }
 
     public static function getMasterModel () {
@@ -693,7 +730,7 @@ class ActiveRecord extends db\ActiveRecord
         return null;
     }
 
-    protected static  function beforeList($params)
+    protected static function beforeList($params)
     {
         return $params;
     }
@@ -831,7 +868,22 @@ class ActiveRecord extends db\ActiveRecord
                 $fieldConf['addition'] = false;
             }
 
-            if ($fieldConf['type'] == 'pointer' && !$fieldConf['calc'] && !$fieldConf['addition']) {
+            if ($fieldConf['type'] == 'linked' && !$fieldConf['calc'] && !$fieldConf['addition']) {
+                $relatedIdentifyFieldConf = call_user_func([static::$linkModelName, 'getIdentifyFieldConf']);
+                if ($relatedIdentifyFieldConf) {
+                    $select[] = "`__link_model_table`.`id` AS `".$fieldName."`";
+                    $select[] = "`__link_model_table`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                    $pointers[$fieldName] = [
+                        "table" => '__link_model_table',
+                        "field" => $relatedIdentifyFieldConf['name']
+                    ];
+
+                    if (strtolower(call_user_func([static::$linkModelName, 'tableName'])) == 's_files') {
+                        $select[] = "`__link_model_table`.`name` as `fileof_".$fieldName."`";
+                        $pointers[$fieldName]['file_field'] = 'name';
+                    }
+                }
+            } elseif ($fieldConf['type'] == 'pointer' && !$fieldConf['calc'] && !$fieldConf['addition']) {
                 if (is_array($fieldConf['relativeModel'])) {
                     $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
                 } else {
@@ -870,16 +922,16 @@ class ActiveRecord extends db\ActiveRecord
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
                 $select[] = "`".static::tableName()."`.`".$fieldName."`";
-                $select[] = "`".$relatedTableName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-                $select[] = "`".$relatedTableName."`.`name` as `fileof_".$fieldName."`";
+                $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $select[] = "`".$relatedTableName."_".$fieldName."`.`name` as `fileof_".$fieldName."`";
                 $pointers[$fieldName] = [
-                    "table" => $relatedTableName,
+                    "table" => $relatedTableName."_".$fieldName,
                     "field" => $relatedIdentifyFieldConf['name'],
                     "file_field" => 'name'
                 ];
                 $join[] = [
-                    'name' => $relatedTableName,
-                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."`.id"
+                    'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
+                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
                 ];
             } elseif ($fieldConf['type'] != 'file' && $fieldConf['type'] != 'pointer') {
                 // Простые типы данных
@@ -963,21 +1015,32 @@ class ActiveRecord extends db\ActiveRecord
 
         if(static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_CHECK) {
 
-            $select[] = "IF((`".static::tableName()."`.`".$fieldName."` IS NOT NULL AND `".
+            //Вызываем рак мозга у запроса - нам надо в секцию FROM запроса затолкать таблицу, которую мы подключаем, а основную сджоинить
+            $relatedTableName = call_user_func([static::$linkModelName, 'tableName']);
+            $query->from($relatedTableName." as __link_model_table");
+            $select[] = "IF((`".static::tableName()."`.`id` IS NOT NULL AND `".
                 static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']."), 1, 0) AS `check`";
-            $query->rightJoin("`".$relatedTableName."` `".$relatedTableName."_".$fieldName."`", "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.`id` AND `".static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
+
+            $query->leftJoin("`".static::tableName()."`", "`__link_model_table`.`id` = `".static::tableName()."`.`".static::getLinkTableIdField()."` AND `".static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
             if (!call_user_func([static::$linkModelName, 'getPermanentlyDelete'])) {
-                $query->andWhere("`".$relatedTableName."_".$fieldName."`.del = 0");
+                $query->andWhere("`__link_model_table`.del = 0");
+            }
+        } elseif (static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_BUTTON) {
+            $relatedTableName = call_user_func([static::$linkModelName, 'tableName']);
+            $query->leftJoin("`".$relatedTableName."` as __link_model_table", "`".static::tableName()."`.`".static::getLinkTableIdField()."` = `__link_model_table`.`id`");
+            $query->andWhere("`".static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
+            if (!call_user_func([static::$linkModelName, 'getPermanentlyDelete'])) {
+                $query->andWhere("`__link_model_table`.del = 0");
             }
         } else {
 
             if (isset($params['masterId']) && $params['masterId'] && (static::$masterModel || static::$parentModel)) {
                 $query->andWhere('`'.static::tableName().'`.'.static::$masterModelRelFieldName.' = ' . intval($params['masterId']));
             }
+        }
 
-            foreach ($join as $item) {
-                $query->leftJoin($item['name'], $item['on']);
-            }
+        foreach ($join as $item) {
+            $query->leftJoin($item['name'], $item['on']);
         }
 
         if (isset($params['where'])) {
@@ -1023,7 +1086,7 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         if(static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_CHECK) {
-            $orderBy = array_merge($orderBy, ["`".$relatedTableName."_".$fieldName."`.id" => SORT_ASC]);
+            $orderBy = array_merge($orderBy, ["`__link_model_table`.id" => SORT_ASC]);
         }
 
         if (static::$sortable) {
@@ -1152,7 +1215,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         } elseif ($type == 'bool') {
             return $value ? 1 : 0;
-        } elseif ($type == 'pointer' || $type == 'img' || $type == 'file') {
+        } elseif ($type == 'pointer' || $type == 'linked' || $type == 'img' || $type == 'file') {
             return $value['id'];
         }
 
@@ -1183,7 +1246,11 @@ class ActiveRecord extends db\ActiveRecord
 
         if ($data) {
             foreach ($data as $key => $val) {
-                if (isset(static::$structure[$key])) {
+                if (isset(static::$structure[$key]) && static::$structure[$key]['type'] == 'linked') {
+                    if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
+                        $this->{static::getLinkTableIdField()} = static::setType($key, $val);
+                    }
+                } elseif (isset(static::$structure[$key])) {
                     if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
                         $this->$key = static::setType($key, $val);
                     }
@@ -1542,6 +1609,7 @@ class ActiveRecord extends db\ActiveRecord
             'masterRecordId' => $masterId,
             'sortable' => static::$sortable && !static::$readonly,
             'recursive' => static::$recursive,
+            'singleRoot' => static::$singleRoot,
             'hiddable' => static::$hiddable && !static::$readonly,
             'masterModelRelationsType' => static::$masterModelRelationsType,
             'slaveModelAddMethod' => static::$slaveModelAddMethod,

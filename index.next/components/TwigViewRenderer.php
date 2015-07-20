@@ -26,9 +26,18 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         return Constants::getConstantByName($constantName);
     }
 
+    public static function url($path, $args = [])
+    {
+        if ($args !== []) {
+            $path = array_merge([$path], $args);
+        }
+        return preg_replace('|\%2F|i', '/', Url::to($path, true));
+    }
+
     public function init()
     {
         $this->functions['urlTo'] = '\yii\helpers\Url::to';
+        $this->functions['url'] = '\app\components\TwigViewRenderer::url';
         $this->functions['assetBaseUrl'] = '\app\components\TwigViewRenderer::assetBaseUrl';
         $this->functions['getConstant'] = '\app\components\TwigViewRenderer::getConstant';
         parent::init();

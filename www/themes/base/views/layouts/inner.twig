@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {% include '@themeroot/views/include/header.twig' %}
+</head>
+<body>
+<div class="container">
+    {% include '@themeroot/views/include/pageHeader.twig' %}
+    {% block content %}
+    {% endblock %}
+    {% include '@themeroot/views/include/pageFooter.twig' %}
+</div>
+{% include '@themeroot/views/include/js.twig' %}
+{{ end_body() }}
+</body>
+</html>

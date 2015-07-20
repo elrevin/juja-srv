@@ -350,7 +350,7 @@ class BackendController extends Controller
 
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
-            if ($add) {
+            if ($add || !(isset($data['id']) && $data['id'])) {
                 /**
                  * @var \yii\db\ActiveRecord
                  */

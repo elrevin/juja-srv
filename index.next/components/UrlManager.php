@@ -70,4 +70,9 @@ class UrlManager extends \yii\web\UrlManager
         }
         return $route;
     }
+
+    public function createUrl ($params)
+    {
+        return preg_replace('|\%2F|i', '/', parent::createUrl($params));
+    }
 }

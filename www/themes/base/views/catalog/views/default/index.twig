@@ -1,0 +1,31 @@
+{% macro SubCategories (list) %}
+    {% if list %}
+        <ul>
+            {% for item in list %}
+                <li>
+                    <a href="{{ url('/catalog/default/category', {url: item.fullUrl}) }}">{{ item.title }}</a>
+                    {{ _self.MainMenu(link.list, currentSection, currentSectionPath) }}
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endmacro %}
+
+{% extends '@themelayouts/inner.twig' %}
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12"><h1>Каталог товаров</h1></div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <ul>
+                {% for item in list %}
+                    <li>
+                        <a href="{{ url('/catalog/default/category', {url: item.fullUrl}) }}">{{ item.title }}</a>
+                        {{ _self.SubCategories(item.children) }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

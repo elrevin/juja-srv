@@ -1,0 +1,11 @@
+<script src="{{ urlTo('@theme/js/jquery-2.1.4.min.js') }}"></script>
+<script src="{{ urlTo('@theme/js/bootstrap.min.js') }}"></script>
+
+<script type="text/javascript">
+    $(".copyr img").on("mouseover",function(event)
+    {
+        $(this).attr('src','{{ urlTo('@theme/images/logo21.png') }}');
+    }).on("mouseout",function(event){
+        $(this).attr('src','{{ urlTo('@theme/images/logo22.png') }}');
+    });
+</script>

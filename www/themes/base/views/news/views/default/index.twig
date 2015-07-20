@@ -1,10 +1,43 @@
-{# @title Страница новостей #}
-{% extends '@themelayouts/news.twig' %}
+{% extends '@themelayouts/inner.twig' %}
 {% block content %}
-    {% for item in list %}
-        <div style="padding-bottom: 20px">
-            <a href="{{ url('/news/default/index', {"id" : item.id}) }}"><b>[{{ item.date|date('d.m.Y') }}]</b> {{ item.title }}</a><br/>
-            {{ item.anons }}
+    <div class="row">
+        <div class="col-md-10 col-xs-12"><h1>Новости</h1></div>
+        <div class="col-md-2 col-xs-12">
+            <div class="btn-toolbar">
+                <div class="btn-group">
+                    <div class="btn-group">
+                        <a href="#" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                            {% if not year %}
+                                Все новости
+                            {% else %}
+                                {{ year }}
+                            {% endif %}
+                            <span class="caret"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a href="{{ url(['/news/default/index']) }}">все новости</a></li>
+                            {% for yr in years %}
+                                <li><a href="{{ url('/news/default/index', {"year" : yr.year}) }}">{{ yr.year }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+    {% for item in list %}
+        <div class="row">
+            <div class="col-md-1 col-xs-12 text-muted">{{ item.date|date("d.m.Y") }}</div>
+            <div class="col-md-11 col-xs-12"><a href="{{ url('/news/default/index', {"id" : item.id}) }}">{{ item.title }}</a></div>
+        </div>
+        <div class="empty-divider-horizontal-8"></div>
+        <div class="row">
+            <div class="col-xs-12">
+                {{ item.anons }}
+            </div>
+        </div>
+        <div class="empty-divider-horizontal-20"></div>
     {% endfor %}
+    {{ use('yii/widgets') }}
+    {{ link_pager_widget({'pagination': pages}) }}
 {% endblock %}

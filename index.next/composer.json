@@ -18,7 +18,8 @@
         "index-next/files": "*",
         "index-next/catalog": "*",
         "index-next/news": "*",
-        "index-next/usersmanager": "*"
+        "index-next/usersmanager": "*",
+        "index-next/faq": "*"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",
@@ -80,6 +81,10 @@
         {
             "type": "vcs",
             "url":  "http://git.web-dev.ru/index-next/usersmanager.git"
+        },
+        {
+            "type": "vcs",
+            "url":  "http://git.web-dev.ru/index-next/faq.git"
         }
     ]
 }
