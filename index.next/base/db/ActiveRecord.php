@@ -1246,6 +1246,22 @@ class ActiveRecord extends db\ActiveRecord
 
         if ($data) {
             foreach ($data as $key => $val) {
+                if (isset(static::$structure[$key]) && static::$structure[$key]['type'] != 'linked' &&
+                    static::$structure[$key]['type'] != 'file' && static::$structure[$key]['type'] != 'bool' &&
+                    (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) &&
+                    !$val && isset(static::$structure[$key]['default'])
+                ) {
+                    if (is_array(static::$structure[$key]['default'])) {
+                        if (isset(static::$structure[$key]['default']['expression'])) {
+                            $this->$key = new db\Expression(static::$structure[$key]['default']['expression']);
+                            continue;
+                        }
+                    } else {
+                        $this->$key = static::$structure[$key]['default'];
+                        continue;
+                    }
+                }
+
                 if (isset(static::$structure[$key]) && static::$structure[$key]['type'] == 'linked') {
                     if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
                         $this->{static::getLinkTableIdField()} = static::setType($key, $val);

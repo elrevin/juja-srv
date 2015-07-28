@@ -4,33 +4,67 @@
         <div class="col-xs-12"><h1>{{ data.title }}</h1></div>
     </div>
     <div class="row">
-        {% for item in data.goodsList %}
-            <div class="col-xs-12 col-sm-4 col-lg-3 goods-list-item">
-                <div class="goods-inner">
-                    <div>
-                        <a href="{{ url('/catalog/default/goods', {url: item.url}) }}" class="goods-title">{{ item.title }}</a>
-                    </div>
-                    <a href="{{ url('/catalog/default/goods', {url: item.url}) }}">
-                        <img src="{{ item.image.getImageUrl(300, 300, '#FFFFFF') }}"/>
-                    </a>
-
-                    <div class="row">
-                        {% for paramItem in item.getShortDescriptionParams() %}
-                            <div class="col-xs-6">
-                                {{ paramItem.param.title }}
+        <div class="col-xs-12 col-md-8">
+            <div class="row">
+                {% for item in data.goodsList %}
+                    <div class="col-xs-12 col-sm-6 col-lg-4 goods-list-item">
+                        <div class="goods-inner">
+                            <div>
+                                <a href="{{ url('/catalog/default/goods', {url: item.url}) }}" class="goods-title">{{ item.title }}</a>
                             </div>
-                            <div class="col-xs-6">
-                                {{ paramItem.value }}
-                            </div>
-                        {% endfor %}
-                    </div>
+                            <a href="{{ url('/catalog/default/goods', {url: item.url}) }}">
+                                <img src="{{ item.image.getImageUrl(300, 300, '#FFFFFF') }}"/>
+                            </a>
 
-                    <div class="row price-row">
-                        <div class="col-xs-6 text-success price">{{ item.price|number_format(0, '', ' ') }} &#8399;</div>
-                        <div class="col-xs-6"><a href="#" class="btn btn-success btn-md pull-right">Купить</a></div>
+                            <div class="row">
+                                {% for paramItem in item.getShortDescriptionParams() %}
+                                    <div class="col-xs-6">
+                                        {{ paramItem.param.title }}
+                                    </div>
+                                    <div class="col-xs-6">
+                                        {{ paramItem.value }}
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="row price-row">
+                                <div class="col-xs-6 text-success price">{{ item.price|number_format(0, '', ' ') }} &#8399;</div>
+                                <div class="col-xs-6"><a href="#" class="btn btn-success btn-md pull-right">Купить</a></div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-4 hidden-xs hidden-sm">
+            <form class="form-horizontal">
+                <div class="form-group">
+                    <label class="col-md-6 control-label">Цена</label>
+                    <div class="col-md-6">
+                        <input catalogFilter="property" name="price" class="rangeSlider" value="" data-slider-min="{{ data.minPrice }}" data-slider-max="{{ data.maxPrice }}" data-slider-step="{{ ((data.maxPrice - data.minPrice) / 20)|round}}" data-slider-value="[{{ data.minPrice }},{{ data.maxPrice }}]"/>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
+                {% for item in data.params %}
+                    <div class="form-group">
+                        <label class="col-md-6 control-label">{{ item.title }}</label>
+                        <div class="col-md-6">
+                            {% if item.type == 'int' %}
+                                <input catalogFilter="param" name="{{ item.url }}" class="rangeSlider" value="" data-slider-min="{{ data.minPrice }}" data-slider-max="{{ data.maxPrice }}" data-slider-step="{{ ((data.maxPrice - data.minPrice) / 20)|round}}" data-slider-value="[{{ data.minPrice }},{{ data.maxPrice }}]"/>
+                            {% elseif item.type == 'float' %}
+                                <input catalogFilter="param" name="{{ item.url }}" class="rangeSlider" value="" data-slider-min="{{ data.minPrice }}" data-slider-max="{{ data.maxPrice }}" data-slider-step="{{ ((data.maxPrice - data.minPrice) / 20)|round(2)}}" data-slider-value="[{{ data.minPrice }},{{ data.maxPrice }}]"/>
+                            {% elseif item.type == 'string' %}
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" catalogFilter="param" name="{{ item.url }}"> Checkbox
+                                    </label>
+                                </div>
+
+                                <input catalogFilter="param" name="{{ item.url }}" class="rangeSlider" value="" data-slider-min="{{ data.minPrice }}" data-slider-max="{{ data.maxPrice }}" data-slider-step="{{ ((data.maxPrice - data.minPrice) / 20)|round(2)}}" data-slider-value="[{{ data.minPrice }},{{ data.maxPrice }}]"/>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </form>
+        </div>
     </div>
 {% endblock %}
