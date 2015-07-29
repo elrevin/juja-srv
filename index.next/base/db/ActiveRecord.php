@@ -1216,7 +1216,12 @@ class ActiveRecord extends db\ActiveRecord
         } elseif ($type == 'bool') {
             return $value ? 1 : 0;
         } elseif ($type == 'pointer' || $type == 'linked' || $type == 'img' || $type == 'file') {
-            return $value['id'];
+            if(isset($value['id'])) {
+                return $value['id'];
+            } else {
+                $value = intval($value);
+                return ($value ? $value : null);
+            }
         }
 
         return null;
@@ -1318,6 +1323,7 @@ class ActiveRecord extends db\ActiveRecord
         if (static::$masterModel) {
             $this->master_table_id = $masterId;
         }
+
         $this->mapJson($data);
 
         if (static::$sortable && $add) {
@@ -1349,6 +1355,7 @@ class ActiveRecord extends db\ActiveRecord
                     ],
                     "masterId" => $masterId
                 ]);
+
                 if ($result && is_array($result)) {
                     $this->saveToHistory("create", $result['data'][0]['id']);
                     return $result['data'][0];
