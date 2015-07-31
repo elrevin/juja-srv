@@ -7,6 +7,9 @@ class TinyImage
     const RETURN_IMAGE = 1;
     const RETURN_PATH = 2;
     const RETURN_URL = 3;
+    // качество генерируемого изображения
+    const qualityIMG = 98;
+
     /**
      * Перевод шестнадцатиричного кода цвета в массив значений R, G, B
      * @param string $Color
@@ -54,7 +57,7 @@ class TinyImage
     }
 
     /**
-     * Вычисление новых размеров изображения и координаты его зимененой копии в новом холсте
+     * Вычисление новых размеров изображения и координаты его измененой копии в новом холсте
      * @param $image
      * @param $imageProps
      * @return array
@@ -94,7 +97,7 @@ class TinyImage
         $widthProps = ($widthProps ? $widthProps : round($width*$K));
         $heightProps = ($heightProps ? $heightProps : round($height*$K));
 
-        // Позиция нового ихображения в нутри результирующего
+        // Позиция нового ихображения внутри результирующего
         $X = round($widthProps/2 - $width*$K/2);
         $Y = round($heightProps/2 - $height*$K/2);
 
@@ -116,10 +119,21 @@ class TinyImage
         if (!($image = static::loadImage($fileName))) {
             return false;
         }
+        $isGray = isset($imageProps['isGray']) ? true : false;
+        $isTransparency = isset($imageProps['isTransparency']) ? true : false;
 
         $dim = static::getDimensions($image, $imageProps);
 
         $resultImage=imagecreatetruecolor($dim['width'], $dim['height']);
+
+        if($isTransparency) {
+            imagealphablending($resultImage, false);
+            imagesavealpha($resultImage, true);
+        }
+        if($isGray) {
+            imagefilter($resultImage, IMG_FILTER_GRAYSCALE);
+        }
+
         if (is_string($bgColor)) {
             $bgColor=static::HexToRGB($bgColor);
         }
@@ -184,7 +198,6 @@ class TinyImage
 
         $fileName = FileSystem::getFilePath($fileHash);
 
-
         if (!($resultImage = static::resizeImage($fileName, $imageProps))) {
             return false;
         } else {
@@ -193,7 +206,7 @@ class TinyImage
             if ($imageType == IMAGETYPE_GIF) {
                 imagegif($resultImage, $cacheFilePath);
             } elseif ($imageType == IMAGETYPE_JPEG) {
-                imagejpeg($resultImage, $cacheFilePath);
+                imagejpeg($resultImage, $cacheFilePath, static::qualityIMG);
             } elseif ($imageType == IMAGETYPE_PNG) {
                 imagepng($resultImage, $cacheFilePath);
             }
