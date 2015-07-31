@@ -311,6 +311,23 @@ class ActiveRecord extends db\ActiveRecord
                 }
                 return null;
             }
+            if (static::$structure[$key]['type'] == 'pointer') {
+                $val = $this->{$key};
+                if (is_array(static::$structure[$key]['relativeModel'])) {
+                    $relatedModelClass = '\app\modules\\'.static::$structure[$key]['relativeModel']['moduleName'].'\models\\'.static::$structure[$key]['relativeModel']['name'];
+                } else {
+                    $relatedModelClass = static::$structure[$key]['relativeModel'];
+                }
+
+                $hiddable = call_user_func([$relatedModelClass, 'getHiddable']);
+
+                $val = call_user_func([$relatedModelClass, 'find'])->andWhere(['id' => $val]);
+                if ($hiddable) {
+                    $val->andWhere(['hidden' => 0]);
+                }
+
+                return $val->one();
+            }
             return null;
         }
         return parent::__get($name);
@@ -1239,12 +1256,10 @@ class ActiveRecord extends db\ActiveRecord
 
         // Ищем поля типа file и проверяем есть ли загрузка файла
         foreach (static::$structure as $key => $field) {
-            if ($field['type'] == 'file') {
-                if (!array_key_exists($key, $data) && isset($_FILES[$key."_filebin"])) {
-                    $file = \app\modules\files\models\FilesUtils::uploadFile(0, '' , 1, $key."_filebin");
-                    if ($file['success']) {
-                        $data[$key] = ['id' => $file['data']['id']];
-                    }
+            if (!array_key_exists($key, $data) && isset($_FILES[$key."_filebin"])) {
+                $file = \app\modules\files\models\FilesUtils::uploadFile(0, '' , 1, $key."_filebin");
+                if ($file['success']) {
+                    $data[$key] = ['id' => $file['data']['id']];
                 }
             }
         }
