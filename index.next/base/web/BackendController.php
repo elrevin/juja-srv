@@ -276,7 +276,7 @@ class BackendController extends Controller
         $recordId = intval(Yii::$app->request->get('id', 0));
         $modal = intval(Yii::$app->request->get('modal', 0));
 
-        $params = Json::decode(Yii::$app->request->post("params"), '[]');
+        $params = Json::decode(Yii::$app->request->post("params", '[]'));
         $params['recordId'] = $recordId;
 
         return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $masterId, $modal, $params);
