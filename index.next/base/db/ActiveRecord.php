@@ -761,11 +761,10 @@ class ActiveRecord extends db\ActiveRecord
     {
         $res = [];
 
+        $fieldConf = static::getStructure($field);
         if (!$type) {
-            $fieldConf = static::getStructure($field);
             switch($fieldConf['type']) {
                 case 'int':
-                case 'pointer':
                 case 'float':
                 case 'file':
                     $type = 'numeric';
@@ -778,6 +777,9 @@ class ActiveRecord extends db\ActiveRecord
                     break;
                 case 'select':
                     $type = 'list';
+                    break;
+                case 'pinter':
+                    $type = 'pointer';
                     break;
             }
         }
@@ -805,6 +807,19 @@ class ActiveRecord extends db\ActiveRecord
             }
         } elseif ($type == 'list') {
             $res = ['=', ($condField), $value];
+        } elseif ($type == 'pointer') {
+            if (is_array($fieldConf['relativeModel'])) {
+                $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
+            } else {
+                $relatedModelClass = $fieldConf['relativeModel'];
+            }
+            $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
+            if ($relatedIdentifyFieldConf) {
+                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
+                $relatedTableName = $relatedTableName."_".$field;
+                $relatedFieldName = $relatedIdentifyFieldConf['name'];
+                $res = ['like', ($relatedTableName.".".$relatedFieldName), $value];
+            }
         }
         return $res;
     }
