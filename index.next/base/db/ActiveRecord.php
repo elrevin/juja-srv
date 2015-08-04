@@ -781,6 +781,12 @@ class ActiveRecord extends db\ActiveRecord
                 case 'pinter':
                     $type = 'pointer';
                     break;
+                case 'date':
+                    $type = 'date';
+                    break;
+                case 'datetype':
+                    $type = 'datetime';
+                    break;
             }
         }
 
@@ -796,6 +802,16 @@ class ActiveRecord extends db\ActiveRecord
                 $res = ['like', ($condField), $value];
             }
         } elseif ($type == 'numeric') {
+            if ($comparison == 'lt' || $comparison == '<') {
+                $res = ['<', ($condField), $value];
+            } elseif ($comparison == 'gt' || $comparison == '>') {
+                $res = ['>', ($condField), $value];
+            } elseif ($comparison == 'eq' || $comparison == '==') {
+                $res = ['=', ($condField), $value];
+            } elseif ($comparison == 'noteq' || $comparison == '!=') {
+                $res = ['<>', ($condField), $value];
+            }
+        } elseif ($type == 'date' || $type == 'datetime') {
             if ($comparison == 'lt' || $comparison == '<') {
                 $res = ['<', ($condField), $value];
             } elseif ($comparison == 'gt' || $comparison == '>') {
