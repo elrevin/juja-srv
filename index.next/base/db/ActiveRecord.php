@@ -1569,6 +1569,54 @@ class ActiveRecord extends db\ActiveRecord
                 if (!isset($relativeModel['modalSelect'])) {
                     $relativeModel['modalSelect'] = call_user_func([$relativeModel['classname'], 'getModalSelect']);
                 }
+            } elseif ($config['type'] == 'linked') {
+                // Для полей типа pointer получаем конфигурацию связанной модели
+
+                if (is_array($config['relativeModel'])) {
+                    $relativeModel = $config['relativeModel'];
+                    if (!isset($relativeModel['classname'])) {
+                        if (!isset($relativeModel['moduleName']) || !isset($relativeModel['name'])) {
+                            return false;
+                        } else {
+                            $relativeModel['classname'] = '\app\modules\\'.$relativeModel['moduleName'].'\models\\'.$relativeModel['name'];
+                        }
+                    }
+                } else {
+                    $relativeModel['classname'] = $config['relativeModel'];
+                }
+
+                $relativeModel['classname'] = static::$linkModelName;
+
+                if (!isset($relativeModel['moduleName']) || !isset($relativeModel['name'])) {
+                    $relativeModelFullName = $relativeModel['classname'];
+                    $relativeModelPath = str_replace('\app\modules\\', '', str_replace('\models', '', $relativeModelFullName));
+                    $relativeModelPath = explode('\\', $relativeModelPath);
+                }
+
+                if (!isset($relativeModel['moduleName'])) {
+                    $relativeModel['moduleName'] = $relativeModelPath[0];
+                }
+
+                if (!isset($relativeModel['name'])) {
+                    $relativeModel['name'] = $relativeModelPath[1];
+                }
+
+                $relativeModelIdentifyFieldConf = call_user_func([$relativeModel['classname'], 'getIdentifyFieldConf']);
+
+                $relativeModel['identifyFieldName'] = $relativeModelIdentifyFieldConf['name'];
+                $relativeModel['identifyFieldType'] = $relativeModelIdentifyFieldConf['type'];
+
+                if (!isset($relativeModel['runAction'])) {
+                    $relativeModel['runAction'] = [
+                        $relativeModel['moduleName'],
+                        'main',
+                        'get-interface'
+                    ];
+                }
+
+                if (!isset($relativeModel['modalSelect'])) {
+                    $relativeModel['modalSelect'] = call_user_func([$relativeModel['classname'], 'getModalSelect']);
+                }
             } elseif ($config['type'] == 'img' || $config['type'] == 'file') {
                 $relativeModel['classname'] = '\app\modules\files\models\Files';
                 $relativeModel['moduleName'] = 'files';
