@@ -1572,19 +1572,6 @@ class ActiveRecord extends db\ActiveRecord
             } elseif ($config['type'] == 'linked') {
                 // Для полей типа pointer получаем конфигурацию связанной модели
 
-                if (is_array($config['relativeModel'])) {
-                    $relativeModel = $config['relativeModel'];
-                    if (!isset($relativeModel['classname'])) {
-                        if (!isset($relativeModel['moduleName']) || !isset($relativeModel['name'])) {
-                            return false;
-                        } else {
-                            $relativeModel['classname'] = '\app\modules\\'.$relativeModel['moduleName'].'\models\\'.$relativeModel['name'];
-                        }
-                    }
-                } else {
-                    $relativeModel['classname'] = $config['relativeModel'];
-                }
-
                 $relativeModel['classname'] = static::$linkModelName;
 
                 if (!isset($relativeModel['moduleName']) || !isset($relativeModel['name'])) {
