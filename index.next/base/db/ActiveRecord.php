@@ -391,7 +391,7 @@ class ActiveRecord extends db\ActiveRecord
         }
     }
 
-    protected static function checkStructure () {
+    public static function checkStructure () {
         if (YII_DEBUG) {
             // Проверяем наличие таблицы
             $tableName = static::tableName();
