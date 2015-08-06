@@ -33,7 +33,7 @@ class BackendController extends Controller
         $this->enableCsrfValidation = false;
 //        Yii::$app->view->setActiveTheme('backend');
 //        Yii::$app->mailer->themeName = Yii::$app->view->themeName;
-        
+
         Yii::$app->mailer->viewPath = '@app/modules/backend/views/mail/views';
         Yii::$app->mailer->htmlLayout = '@app/modules/backend/views/mail/layouts/html';
 
@@ -354,20 +354,43 @@ class BackendController extends Controller
                 /**
                  * @var \yii\db\ActiveRecord
                  */
-                $model = new $modelName();
-                if ($result = $model->saveData($data, true, $masterId)) {
+                if (!ArrayHelper::isAssociative($data)) {
+                    $results = [];
+
+                    foreach ($data as $item) {
+                        $model = new $modelName();
+                        if ($result = $model->saveData($item, true, $masterId)) {
+                            $results[] = $result;
+                        } else {
+                            $errors = "";
+                            foreach ($model->errors as $error) {
+                                $errors .= implode("<br/>", $error);
+                            }
+                            $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName.'&add=1', 'Ошибка сохранения данных:<br/>'.$errors);
+                            return null;
+                        }
+                    }
                     $data = [
-                        'data' => $result,
+                        'data' => $results,
                         'success' => true
                     ];
                     return $data;
                 } else {
-                    $errors = "";
-                    foreach ($model->errors as $error) {
-                        $errors .= implode("<br/>", $error);
+                    $model = new $modelName();
+                    if ($result = $model->saveData($data, true, $masterId)) {
+                        $data = [
+                            'data' => $result,
+                            'success' => true
+                        ];
+                        return $data;
+                    } else {
+                        $errors = "";
+                        foreach ($model->errors as $error) {
+                            $errors .= implode("<br/>", $error);
+                        }
+                        $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName.'&add=1', 'Ошибка сохранения данных:<br/>'.$errors);
+                        return null;
                     }
-                    $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName.'&add=1', 'Ошибка сохранения данных:<br/>'.$errors);
-                    return null;
                 }
             } elseif (isset($data['id']) && $data['id']) {
                 $model = call_user_func([$modelName, 'findOne'], $data['id']);
