@@ -9,12 +9,15 @@ class UrlManager extends \yii\web\UrlManager
     public function init()
     {
         // Загружаем правила
+
         foreach (\Yii::$app->modules as $name => $moduleConf) {
             $file = \Yii::getAlias("@app/modules/{$name}/urlRules.php");
             if (is_file($file)) {
                 $this->addRules(require_once($file));
             }
         }
+
+
         parent::init();
     }
 
@@ -28,19 +31,14 @@ class UrlManager extends \yii\web\UrlManager
          * Если в конце URL нет слеша, добавляем его и выполняем 301 редирект
          */
         $url = $request->getAbsoluteUrl();
-        $relUrl = $request->getUrl();
-        if (!preg_match("|^/?directrequest|", $relUrl) && !preg_match("|^/?admin|", $relUrl) && !$request->isAjax) {
-            if (preg_match('|[^/]\?|', $url)) {
-                \Yii::$app->response->statusCode = 301;
-                \Yii::$app->response->redirect(str_replace('?', '/?', $url));
-                \Yii::$app->end();
-            } elseif (strpos($url, '?') === false && $url[strlen($url) - 1] != '/') {
-                \Yii::$app->response->statusCode = 301;
-                \Yii::$app->response->redirect($url . "/");
-                \Yii::$app->end();
-            }
-        } else {
-            $this->suffix = '';
+        if (preg_match('|[^/]\?|', $url)) {
+            \Yii::$app->response->statusCode = 301;
+            \Yii::$app->response->redirect(str_replace('?', '/?', $url));
+            \Yii::$app->end();
+        } elseif (strpos($url, '?') === false && $url[strlen($url) - 1] != '/') {
+            \Yii::$app->response->statusCode = 301;
+            \Yii::$app->response->redirect($url."/");
+            \Yii::$app->end();
         }
 
         $route = parent::parseRequest($request);
