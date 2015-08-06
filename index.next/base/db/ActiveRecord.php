@@ -303,20 +303,21 @@ class ActiveRecord extends db\ActiveRecord
 
     public function __get($name)
     {
-        if (strncmp($name, 'valof_', 6) == 0 && array_key_exists($key = str_replace('valof_', '', $name), static::$structure)) {
-            if (static::$structure[$key]['type'] == 'select') {
+        $structure = static::getStructure();
+        if (strncmp($name, 'valof_', 6) == 0 && array_key_exists($key = str_replace('valof_', '', $name), $structure)) {
+            if ($structure[$key]['type'] == 'select') {
                 $val = $this->{$key};
-                if (array_key_exists($val, static::$structure[$key]['selectOptions'])) {
-                    return static::$structure[$key]['selectOptions'][$val];
+                if (array_key_exists($val, $structure[$key]['selectOptions'])) {
+                    return $structure[$key]['selectOptions'][$val];
                 }
                 return null;
             }
-            if (static::$structure[$key]['type'] == 'pointer') {
+            if ($structure[$key]['type'] == 'pointer') {
                 $val = $this->{$key};
-                if (is_array(static::$structure[$key]['relativeModel'])) {
-                    $relatedModelClass = '\app\modules\\'.static::$structure[$key]['relativeModel']['moduleName'].'\models\\'.static::$structure[$key]['relativeModel']['name'];
+                if (is_array($structure[$key]['relativeModel'])) {
+                    $relatedModelClass = '\app\modules\\'. $structure[$key]['relativeModel']['moduleName'].'\models\\'. $structure[$key]['relativeModel']['name'];
                 } else {
-                    $relatedModelClass = static::$structure[$key]['relativeModel'];
+                    $relatedModelClass = $structure[$key]['relativeModel'];
                 }
 
                 $hiddable = call_user_func([$relatedModelClass, 'getHiddable']);
@@ -497,7 +498,8 @@ class ActiveRecord extends db\ActiveRecord
 
             // Проверяем структуру
 
-            foreach (static::$structure as $name => $field) {
+            $structure = static::getStructure();
+            foreach ($structure as $name => $field) {
                 if (!isset($field['addition']) && !isset($field['calc']) && !array_key_exists($name, $cols)) {
                     static::createTableCol($name, $field);
                 }
@@ -508,7 +510,8 @@ class ActiveRecord extends db\ActiveRecord
     public static function getLinkTableIdField ()
     {
         if (static::$masterModel && static::$masterModelRelationsType == self::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY) {
-            foreach (static::$structure as $name => $field) {
+            $structure = static::getStructure();
+            foreach ($structure as $name => $field) {
                 if ($field['type'] == 'linked') {
                     return $name;
                 }
@@ -558,7 +561,8 @@ class ActiveRecord extends db\ActiveRecord
     public function rules()
     {
         $rules = [];
-        foreach (static::$structure as $name => $field) {
+        $structure = static::getStructure();
+        foreach ($structure as $name => $field) {
             if (isset($field['calc']) && ['calc']) {
                 continue;
             }
@@ -738,7 +742,8 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getIdentifyFieldConf ()
     {
-        foreach (static::$structure as $fieldName => $fieldConf) {
+        $structure = static::getStructure();
+        foreach ($structure as $fieldName => $fieldConf) {
             if (isset($fieldConf['identify']) && $fieldConf['identify']) {
                 $fieldConf['name'] = $fieldName;
                 return $fieldConf;
@@ -901,7 +906,8 @@ class ActiveRecord extends db\ActiveRecord
         $calcFields = [];
         $additionTables = [];
 
-        foreach (static::$structure as $fieldName => $fieldConf) {
+        $structure = static::getStructure();
+        foreach ($structure as $fieldName => $fieldConf) {
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
                 if ((isset($fieldConf['identify']) && !$fieldConf['identify']) || (!isset($fieldConf['identify']))) {
                     continue;
@@ -1232,7 +1238,8 @@ class ActiveRecord extends db\ActiveRecord
      */
     protected static function setType ($fieldName, $value, $type = false)
     {
-        $type = (!$type ? static::$structure[$fieldName]['type'] : $type);
+        $structure = static::getStructure();
+        $type = (!$type ? $structure[$fieldName]['type'] : $type);
 
         if ($type == 'int') {
             return intval($value);
@@ -1256,7 +1263,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         } elseif ($type == 'select') {
             $value = strval($value['id']);
-            if (isset(static::$structure[$fieldName]['selectOptions']) && isset(static::$structure[$fieldName]['selectOptions'][$value])) {
+            if (isset($structure[$fieldName]['selectOptions']) && isset($structure[$fieldName]['selectOptions'][$value])) {
                 return $value;
             } else {
                 return null;
@@ -1286,7 +1293,8 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         // Ищем поля типа file и проверяем есть ли загрузка файла
-        foreach (static::$structure as $key => $field) {
+        $structure = static::getStructure();
+        foreach ($structure as $key => $field) {
             if (!array_key_exists($key, $data) && isset($_FILES[$key."_filebin"])) {
                 $file = \app\modules\files\models\FilesUtils::uploadFile(0, '' , 1, $key."_filebin");
                 if ($file['success']) {
@@ -1297,28 +1305,28 @@ class ActiveRecord extends db\ActiveRecord
 
         if ($data) {
             foreach ($data as $key => $val) {
-                if (isset(static::$structure[$key]) && static::$structure[$key]['type'] != 'linked' &&
-                    static::$structure[$key]['type'] != 'file' && static::$structure[$key]['type'] != 'bool' &&
-                    (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) &&
-                    !$val && isset(static::$structure[$key]['default'])
+                if (isset($structure[$key]) && $structure[$key]['type'] != 'linked' &&
+                    $structure[$key]['type'] != 'file' && $structure[$key]['type'] != 'bool' &&
+                    (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) &&
+                    !$val && isset($structure[$key]['default'])
                 ) {
-                    if (is_array(static::$structure[$key]['default'])) {
-                        if (isset(static::$structure[$key]['default']['expression'])) {
-                            $this->$key = new db\Expression(static::$structure[$key]['default']['expression']);
+                    if (is_array($structure[$key]['default'])) {
+                        if (isset($structure[$key]['default']['expression'])) {
+                            $this->$key = new db\Expression($structure[$key]['default']['expression']);
                             continue;
                         }
                     } else {
-                        $this->$key = static::$structure[$key]['default'];
+                        $this->$key = $structure[$key]['default'];
                         continue;
                     }
                 }
 
-                if (isset(static::$structure[$key]) && static::$structure[$key]['type'] == 'linked') {
-                    if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
+                if (isset($structure[$key]) && $structure[$key]['type'] == 'linked') {
+                    if (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) {
                         $this->{static::getLinkTableIdField()} = static::setType($key, $val);
                     }
-                } elseif (isset(static::$structure[$key])) {
-                    if (!isset(static::$structure[$key]['calc']) || !static::$structure[$key]['calc']) {
+                } elseif (isset($structure[$key])) {
+                    if (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) {
                         $this->$key = static::setType($key, $val);
                     }
                 } elseif ($key == 'hidden' && static::$hiddable) {
@@ -1343,7 +1351,8 @@ class ActiveRecord extends db\ActiveRecord
         $eventId = $history->id;
 
         if ($event != 'delete') {
-            foreach (static::$structure as $name => $fieldConf) {
+            $structure = static::getStructure();
+            foreach ($structure as $name => $fieldConf) {
                 if (isset($fieldConf['keepHistory']) && $fieldConf['keepHistory'] && array_key_exists($name, $this->oldDirtyAttributes)) {
                     $dirtyFieldOldValue = $this->oldDirtyAttributes[$name];
                     $historyData = new SDataHistory();
@@ -1380,7 +1389,8 @@ class ActiveRecord extends db\ActiveRecord
         $this->oldDirtyAttributes = $this->dirtyAttributes;
         if ($this->save()) {
 
-            foreach (static::$structure as $fieldName => $fieldData) {
+            $structure = static::getStructure();
+            foreach ($structure as $fieldName => $fieldData) {
                 if ($fieldData['type'] == 'img' || $fieldData['type'] == 'file') {
                     $file = Files::findOne(['id' => $data[$fieldName]]);
                     if ($file) {
@@ -1491,7 +1501,7 @@ class ActiveRecord extends db\ActiveRecord
                         foreach ($addFields as $key=>$field) {
                             $addFields[$key]['addition'] = true;
                         }
-                        static::$structure = array_merge(static::$structure, $addFields);
+                        static::$structure = array_merge(static::getStructure(), $addFields);
                     }
                 }
             }
