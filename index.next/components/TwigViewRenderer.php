@@ -34,12 +34,18 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         return preg_replace('|\%2F|i', '/', Url::to($path, true));
     }
 
+    public static function getCsrfToken()
+    {
+        return \Yii::$app->request->getCsrfToken();
+    }
+
     public function init()
     {
         $this->functions['urlTo'] = '\yii\helpers\Url::to';
         $this->functions['url'] = '\app\components\TwigViewRenderer::url';
         $this->functions['assetBaseUrl'] = '\app\components\TwigViewRenderer::assetBaseUrl';
         $this->functions['getConstant'] = '\app\components\TwigViewRenderer::getConstant';
+        $this->functions['getCsrfToken'] = '\app\components\TwigViewRenderer::getCsrfToken';
         parent::init();
     }
 

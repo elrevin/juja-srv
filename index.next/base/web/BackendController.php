@@ -275,11 +275,12 @@ class BackendController extends Controller
         $masterId = ($masterId ? $masterId : intval(Yii::$app->request->get('masterRecordId', 0)));
         $recordId = intval(Yii::$app->request->get('id', 0));
         $modal = intval(Yii::$app->request->get('modal', 0));
+        $configOnly = intval(Yii::$app->request->get('configOnly', 0));
 
         $params = Json::decode(Yii::$app->request->post("params", '[]'));
         $params['recordId'] = $recordId;
 
-        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], false, $masterId, $modal, $params);
+        return call_user_func(['\app\modules\\'.$moduleName.'\models\\'.$modelName, 'getUserInterface'], $configOnly, $masterId, $modal, $params);
 
     }
 
@@ -354,7 +355,7 @@ class BackendController extends Controller
                 /**
                  * @var \yii\db\ActiveRecord
                  */
-                if (!ArrayHelper::isAssociative($data)) {
+                if ($data && !ArrayHelper::isAssociative($data)) {
                     $results = [];
 
                     foreach ($data as $item) {

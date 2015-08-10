@@ -730,7 +730,7 @@ class ActiveRecord extends db\ActiveRecord
     public static function getStructure($fieldName = '')
     {
         if ($fieldName) {
-            return static::$structure[$fieldName];
+            return (isset(static::$structure[$fieldName]) ? static::$structure[$fieldName] : null);
         }
         return static::$structure;
     }
