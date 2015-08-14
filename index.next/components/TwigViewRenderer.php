@@ -26,6 +26,14 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         return Constants::getConstantByName($constantName);
     }
 
+    public static function getCookie($key)
+    {
+        if (isset($_COOKIE[$key])) {
+            return $_COOKIE[$key];
+        }
+        return null;
+    }
+
     public static function url($path, $args = [])
     {
         if ($args !== []) {
@@ -44,6 +52,7 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         $this->functions['urlTo'] = '\yii\helpers\Url::to';
         $this->functions['url'] = '\app\components\TwigViewRenderer::url';
         $this->functions['assetBaseUrl'] = '\app\components\TwigViewRenderer::assetBaseUrl';
+        $this->functions['getCookie'] = '\app\components\TwigViewRenderer::getCookie';
         $this->functions['getConstant'] = '\app\components\TwigViewRenderer::getConstant';
         $this->functions['getCsrfToken'] = '\app\components\TwigViewRenderer::getCsrfToken';
         parent::init();

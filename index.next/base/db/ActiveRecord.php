@@ -599,10 +599,21 @@ class ActiveRecord extends db\ActiveRecord
                     'tooSmall' => 'Значение поля "' . $field['title'] . '" не может быть меньше '.(isset($field['min']) ? $field['min'] : '0').'.',
                     'tooBig' => 'Значение поля "' . $field['title'] . '" не может быть больше '.(isset($field['max']) ? $field['max'] : '0').'.',
                 ];
+            } elseif ($field['type'] == 'select') {
+                $rules[] = [
+                    $name, 'validateSelectValue',
+                ];
             }
         }
 
         return $rules;
+    }
+
+    public function validateSelectValue($field, $params)
+    {
+        if (!array_key_exists($this->{$field}, static::$structure[$field]['selectOptions'])) {
+            $this->addError($field, 'Недопустимое значение поля "'.static::$structure[$field]['title'].'", необходимо выбрать одно из предложенных значений');
+        }
     }
 
     public static function getPermanentlyDelete () {

@@ -14,7 +14,7 @@ class FrontendController extends Controller
 
     public function init()
     {
-        $this->enableCsrfValidation = false;
+        $this->enableCsrfValidation = true;
         Yii::$app->view->setActiveTheme(Yii::$app->params['themeName']);
         Yii::$app->mailer->view->setActiveTheme(Yii::$app->params['themeName']);
         Yii::$app->mailer->themeName = Yii::$app->params['themeName'];
