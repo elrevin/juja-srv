@@ -181,7 +181,7 @@ class FileSystem
                 $fsPath = \Yii::getAlias('@webroot/fs/' . $dir);
                 for ($i = 3; $i >= 0; $i--) {
                     $toDel = implode('/', $path);
-                    if (file_exists($fsPath . '/' . $toDel)) {
+                    if (file_exists($fsPath . '/' . $toDel) && count(scandir($fsPath.'/'. $toDel)) == 2) {
                         rmdir($fsPath . '/' . $toDel);
                     }
                     array_pop($path);
