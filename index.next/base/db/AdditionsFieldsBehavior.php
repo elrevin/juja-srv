@@ -186,6 +186,16 @@ class AdditionsFieldsBehavior extends Behavior
         $model->save(false);
     }
 
+    public function afterDelete()
+    {
+        $id = $this->owner->id;
+        $model = call_user_func([static::$additionModel, 'find'])->where(['master_table_id' => $id, 'master_table_name' => call_user_func([$this->owner->className(), 'tableName'])])
+            ->one();
+        if ($model) {
+            $model->delete();
+        }
+    }
+
     public function __set($name, $value)
     {
         if (array_key_exists($name, static::$fields)) {
