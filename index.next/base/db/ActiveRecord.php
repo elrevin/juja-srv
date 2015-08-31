@@ -777,6 +777,10 @@ class ActiveRecord extends db\ActiveRecord
     {
         $res = [];
 
+        if ($field == static::$masterModelRelFieldName) {
+            $type = 'numeric';
+        }
+
         $fieldConf = static::getStructure($field);
         if (!$type) {
             switch($fieldConf['type']) {
