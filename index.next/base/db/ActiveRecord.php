@@ -192,7 +192,7 @@ class ActiveRecord extends db\ActiveRecord
 
     /**
      * Если true то в модель нельзя ничего писать
-     * @var bool1
+     * @var bool
      */
     protected static $readonly = false;
 
@@ -1184,12 +1184,13 @@ class ActiveRecord extends db\ActiveRecord
 
         $query->orderBy(($orderBy ? $orderBy : null));
 
-        if (isset($params['limit']) && $params['limit']) {
-            $query->limit($params['limit']);
-        }
-
-        if (isset($params['start']) && $params['limit']) {
-            $query->offset($params['start']);
+        if (!static::$sortable) {
+            if (isset($params['limit']) && $params['limit']) {
+                $query->limit($params['limit']);
+            }
+            if (isset($params['start']) && $params['limit']) {
+                $query->offset($params['start']);
+            }
         }
 
 //        if (!static::$sortable) {
