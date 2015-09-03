@@ -62,6 +62,8 @@ class ActiveRecord extends db\ActiveRecord
      *          'width' - ширина столбца,
      *          ...
      *
+     *      'editInGrid' - если установлено true, то разрешено редактирование прямо в списке (кроме файлов и полей типа pointer)
+     *
      *      'group' - Название группы полей,
      *
      *      'keepHistory' - Если true, то автоматически будет сохраняться история значений поля,
@@ -1615,6 +1617,7 @@ class ActiveRecord extends db\ActiveRecord
         $modelStructure = static::getStructure();
         $fields = [];
         foreach ($modelStructure as $fieldName => $config) {
+            $linkedSubType = '';
             $relativeModel = [];
             if ($config['type'] == 'pointer') {
                 // Для полей типа pointer получаем конфигурацию связанной модели
@@ -1666,6 +1669,13 @@ class ActiveRecord extends db\ActiveRecord
                 // Для полей типа pointer получаем конфигурацию связанной модели
 
                 $relativeModel['classname'] = static::$linkModelName;
+                $relativeTableName = call_user_func([static::$linkModelName, 'tableName']);
+
+                if ($relativeTableName == 's_files') {
+                    $linkedSubType = 'file';
+                } else {
+                    $linkedSubType = 'pointer';
+                }
 
                 if (!isset($relativeModel['moduleName']) || !isset($relativeModel['name'])) {
                     $relativeModelFullName = $relativeModel['classname'];
@@ -1711,6 +1721,8 @@ class ActiveRecord extends db\ActiveRecord
                 ];
                 $relativeModel['modalSelect'] = call_user_func([$relativeModel['classname'], 'getModalSelect']);
             }
+
+            $config['linkedSubType'] = $linkedSubType;
 
             $i = count($fields);
             $fields[$i] = array_merge([
