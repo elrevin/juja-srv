@@ -1,8 +1,10 @@
 <?php
 
-$params = require(__DIR__ . '/params.php');
-$params = array_merge($params, require(__DIR__ . '/webParams.php'));
+$params = [];
 $modules = require_once(__DIR__ . '/modules.php');
+if (file_exists(__DIR__ . '/params.php')) {
+    $params = require(__DIR__ . '/params.php');
+}
 
 $config = [
     'id' => 'basic',
