@@ -366,6 +366,9 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static $defaultSort = [];
 
+    protected static $detailModels = [];
+    protected static $childModel = null;
+
     protected static $haveRightsRules = true;
 
     protected $oldDirtyAttributes = [];
@@ -400,6 +403,28 @@ class ActiveRecord extends db\ActiveRecord
             }
             return null;
         }
+
+        $detailsModel = static::getDetailModels();
+        foreach ($detailsModel as $model) {
+            $modelClassNameParts = explode('\\', $model);
+            $countOfModelClassNameParts = count($modelClassNameParts);
+            if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !is_callable([static::className(), 'get'.$name])) {
+                $masterModelRelFieldName = call_user_func([$model, 'getMasterModelRelFieldName']);
+                return $this->hasMany($model, [$masterModelRelFieldName => 'id']);
+            }
+        }
+
+        $childModel = static::getChildModel();
+        if ($childModel) {
+            $modelClassNameParts = explode('\\', $childModel);
+            $countOfModelClassNameParts = count($modelClassNameParts);
+
+            if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !is_callable([static::className(), 'get'.$name])) {
+                $masterModelRelFieldName = call_user_func([$childModel, 'getMasterModelRelFieldName']);
+                return $this->hasMany($childModel, [$masterModelRelFieldName => 'id']);
+            }
+        }
+
         return parent::__get($name);
     }
 
@@ -709,6 +734,11 @@ class ActiveRecord extends db\ActiveRecord
         return static::$masterModel;
     }
 
+    public static function getMasterModelRelFieldName ()
+    {
+        return static::$masterModelRelFieldName;
+    }
+
     public static function getParentModel ()
     {
         return static::$parentModel;
@@ -750,6 +780,10 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getChildModel()
     {
+        if (static::$childModel) {
+            return static::$childModel;
+        }
+
         $className = '\\'.static::className();
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
@@ -761,6 +795,7 @@ class ActiveRecord extends db\ActiveRecord
                     if (is_callable([$modelName, 'getParentModel'])) {
                         $parentModel = call_user_func([$modelName, 'getParentModel']);
                         if ($parentModel == $className) {
+                            static::$childModel = $modelName;
                             return $modelName;
                         }
                     }
@@ -778,6 +813,10 @@ class ActiveRecord extends db\ActiveRecord
      * @return array|bool
      */
     public static function getDetailModels() {
+        if (static::$detailModels) {
+            return static::$detailModels;
+        }
+
         $className = trim(static::className(), '\\');
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
