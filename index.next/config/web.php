@@ -11,7 +11,6 @@ $config = [
     'modules' => $modules,
     'components' => [
         'request' => [
-            // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'U3vahA9HZrCImrMtw5Y2HgfNDXRPTJOi',
         ],
         'cache' => [
@@ -27,8 +26,6 @@ $config = [
         'mailer' => [
             'class' => 'app\components\Mailer',
             'useFileTransport' => false,
-//            'viewPath' => '@themeroot/mail/views',
-//            'htmlLayout' => '@themeroot/mail/layouts/html',
             'view' => [
                 'defaultExtension' => 'twig',
                 'class' => 'app\components\View',
@@ -41,14 +38,6 @@ $config = [
                     ],
                 ],
             ],
-//            'transport' => [
-//                'class' => 'Swift_SmtpTransport',
-//                'host' => 'smtp.gmail.com',
-//                'username' => 'username@gmail.com',
-//                'password' => 'password',
-//                'port' => '587',
-//                'encryption' => 'tls',
-//            ],
         ],
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
@@ -105,11 +94,18 @@ $config = [
             'defaultRoles' => ['manager', 'admin'],
         ],
     ],
-    'params' => array_merge(['breadCrumbs'=>[]], $params),
+    'params' => array_merge(['breadCrumbs' => []], [
+        'passwordRestoreLetterSubject' => 'Востановление доступа к панели управления сайта '.$_SERVER['SERVER_NAME'],
+        'supportLetterSubject' => 'Обращение в службу поддержки сайта '.$_SERVER['SERVER_NAME'],
+    ], [
+        'cmsEmail' => 'admin@localhost',
+        'cmsEmailName' => 'index.next CMS',
+        'defaultImageBgColor' => '#FFFFFF',
+        'themeName' => 'base',
+    ], $params),
 ];
 
 if (YII_ENV_DEV) {
-    // configuration adjustments for 'dev' environment
     if (strncmp(trim($_SERVER['REQUEST_URI'], "/"), 'admin', 5)) {
         $config['bootstrap'][] = 'debug';
         $config['modules']['debug'] = [
@@ -120,6 +116,11 @@ if (YII_ENV_DEV) {
 
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = 'yii\gii\Module';
+}
+
+if (file_exists(__DIR__ . '/web-project.php')) {
+    $overrideConfig = require_once(__DIR__ . '/web-project.php');
+    $config = array_merge($config, $overrideConfig);
 }
 
 return $config;
