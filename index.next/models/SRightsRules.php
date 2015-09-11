@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "s_rights_rules".
@@ -16,7 +17,7 @@ use Yii;
  * @property SUsers $user
  * @property SUsersGroups $userGroup
  */
-class SRightsRules extends \app\base\db\ActiveRecord
+class SRightsRules extends ActiveRecord
 {
     const RIGHTS_NONE = 0;
     const RIGHTS_READ = 1;

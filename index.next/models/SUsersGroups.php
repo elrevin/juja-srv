@@ -3,6 +3,7 @@
 namespace app\models;
 
 use Yii;
+use yii\db\ActiveRecord;
 
 /**
  * This is the model class for table "s_users_groups".
@@ -13,7 +14,7 @@ use Yii;
  *
  * @property SUsers[] $sUsers
  */
-class SUsersGroups extends \app\base\db\ActiveRecord
+class SUsersGroups extends ActiveRecord
 {
     /**
      * @inheritdoc

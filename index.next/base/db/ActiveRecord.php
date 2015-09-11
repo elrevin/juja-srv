@@ -419,13 +419,13 @@ class ActiveRecord extends db\ActiveRecord
             $modelClassNameParts = explode('\\', $childModel);
             $countOfModelClassNameParts = count($modelClassNameParts);
 
-            if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !is_callable([static::className(), 'get'.$name])) {
+            if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !method_exists($this, 'get'.$name)) {
                 $masterModelRelFieldName = call_user_func([$childModel, 'getMasterModelRelFieldName']);
                 return $this->hasMany($childModel, [$masterModelRelFieldName => 'id']);
             }
         }
 
-        if (isset(static::$structure[$name]) && static::$structure[$name]['type'] == 'file') {
+        if (isset(static::$structure[$name]) && static::$structure[$name]['type'] == 'file' && !method_exists($this, 'get'.$name)) {
             return Files::find()->where(['id' => parent::__get($name)])->one();
         }
 
