@@ -366,8 +366,8 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static $defaultSort = [];
 
-    protected static $detailModels = [];
-    protected static $childModel = null;
+    public static $detailModels = false;
+    public static $childModel = false;
 
     protected static $haveRightsRules = true;
 
@@ -408,7 +408,7 @@ class ActiveRecord extends db\ActiveRecord
         foreach ($detailsModel as $model) {
             $modelClassNameParts = explode('\\', $model);
             $countOfModelClassNameParts = count($modelClassNameParts);
-            if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !is_callable([static::className(), 'get'.$name])) {
+            if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !method_exists($this, 'get'.$name)) {
                 $masterModelRelFieldName = call_user_func([$model, 'getMasterModelRelFieldName']);
                 return $this->hasMany($model, [$masterModelRelFieldName => 'id']);
             }
@@ -780,10 +780,6 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getChildModel()
     {
-        if (static::$childModel) {
-            return static::$childModel;
-        }
-
         $className = '\\'.static::className();
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
@@ -813,10 +809,6 @@ class ActiveRecord extends db\ActiveRecord
      * @return array|bool
      */
     public static function getDetailModels() {
-        if (static::$detailModels) {
-            return static::$detailModels;
-        }
-
         $className = trim(static::className(), '\\');
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
@@ -837,7 +829,12 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        return ($result ? $result : false);
+        return $result;
+    }
+
+    public static function setDetailModels ($detailModels)
+    {
+        static::$detailModels = $detailModels;
     }
 
     /**
