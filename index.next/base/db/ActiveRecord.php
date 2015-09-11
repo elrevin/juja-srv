@@ -410,7 +410,7 @@ class ActiveRecord extends db\ActiveRecord
             $countOfModelClassNameParts = count($modelClassNameParts);
             if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !method_exists($this, 'get'.$name)) {
                 $masterModelRelFieldName = call_user_func([$model, 'getMasterModelRelFieldName']);
-                return $this->hasMany($model, [$masterModelRelFieldName => 'id']);
+                return $this->hasMany($model, [$masterModelRelFieldName => 'id'])->all();
             }
         }
 
@@ -423,6 +423,10 @@ class ActiveRecord extends db\ActiveRecord
                 $masterModelRelFieldName = call_user_func([$childModel, 'getMasterModelRelFieldName']);
                 return $this->hasMany($childModel, [$masterModelRelFieldName => 'id']);
             }
+        }
+
+        if (isset(static::$structure[$name]) && static::$structure[$name]['type'] == 'file') {
+            return Files::find()->where(['id' => parent::__get($name)])->one();
         }
 
         return parent::__get($name);
