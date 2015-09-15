@@ -366,8 +366,8 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static $defaultSort = [];
 
-    public static $detailModels = false;
-    public static $childModel = false;
+    public static $detailModels = [];
+    public static $childModel = [];
 
     protected static $haveRightsRules = true;
 
@@ -785,6 +785,10 @@ class ActiveRecord extends db\ActiveRecord
     public static function getChildModel()
     {
         $className = '\\'.static::className();
+        if (array_key_exists($className, static::$childModel)) {
+            return static::$childModel[$className];
+        }
+
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
         $files = scandir(Yii::getAlias($classPath));
@@ -795,7 +799,7 @@ class ActiveRecord extends db\ActiveRecord
                     if (is_callable([$modelName, 'getParentModel'])) {
                         $parentModel = call_user_func([$modelName, 'getParentModel']);
                         if ($parentModel == $className) {
-                            static::$childModel = $modelName;
+                            static::$childModel[$className] = $modelName;
                             return $modelName;
                         }
                     }
@@ -814,6 +818,11 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getDetailModels() {
         $className = trim(static::className(), '\\');
+
+        if (array_key_exists($className, static::$detailModels)) {
+            return static::$detailModels[$className];
+        }
+
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
         $files = scandir(Yii::getAlias($classPath));
@@ -833,6 +842,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
+        static::$detailModels[$className] = $result;
         return $result;
     }
 
