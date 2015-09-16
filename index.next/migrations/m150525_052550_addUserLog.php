@@ -10,7 +10,7 @@ class m150525_052550_addUserLog extends Migration
         $this->createTable('s_users_log', [
             "id" => "pk",
             "user_id" => "int(11) NOT NULL",
-            "time" => "datetime NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "time" => "datetime DEFAULT NULL",
             "event" => "varchar(1024) default null",
         ]);
         $this->addForeignKey("s_users_log__user_id", "s_users_log", "user_id", "s_users", "id", "CASCADE", "CASCADE");

@@ -1,7 +1,6 @@
 <?php
 namespace app\base\db;
 
-use yii\base\Behavior;
 use \Yii;
 
 class AdditionsFieldsBehavior extends Behavior

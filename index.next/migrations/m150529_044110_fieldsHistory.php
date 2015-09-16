@@ -9,7 +9,7 @@ class m150529_044110_fieldsHistory extends Migration
     {
         $this->createTable("s_data_history_events", [
             "id" => "pk",
-            "time" => "datetime NOT NULL DEFAULT CURRENT_TIMESTAMP",
+            "time" => "datetime DEFAULT NULL",
             "user_id" => "int(11) default null",
             "ip" => "varchar(1024) not null default ''",
             "event" => "varchar(1024) not null default ''",

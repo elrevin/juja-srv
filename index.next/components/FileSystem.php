@@ -76,10 +76,13 @@ class FileSystem
         if (!file_exists($path) && $mkDir) {
             // Папки нет, создаем
 
-            if (!mkdir($path, 0766, true)) {
+            $umask = umask(0);
+            if (!mkdir($path, 0755, true)) {
+                umask($umask);
                 \Yii::error('Не удается создать папку "' . $path . '"');
                 return false;
             }
+            umask($umask);
         }
 
         return [
@@ -103,10 +106,13 @@ class FileSystem
         if (!file_exists($filePath['path'])) {
             // Папки нет, создаем
 
-            if (!mkdir($filePath['path'], 0766, true)) {
+            $umask = umask(0);
+            if (!mkdir($filePath['path'], 0755, true)) {
+                umask($umask);
                 \Yii::error('Не удается создать папку "' . $filePath['path'] . '"');
                 return false;
             }
+            umask($umask);
         }
         if (!copy($sourceFileName, $filePath['path'] . '/' . $filePath['fileName'])) {
             \Yii::error('Не удается скопировать файл ' . $sourceFileName . ' в ' . $filePath['path'] . '/' . $filePath['fileName']);
@@ -148,7 +154,9 @@ class FileSystem
     {
         $path = dirname(static::getFilePath($fileHash, $dir));
         if (!file_exists($path)) {
-            return mkdir($path, 0777, true);
+            $umask = umask(0);
+            return mkdir($path, 0755, true);
+            umask($umask);
         }
         return true;
     }
