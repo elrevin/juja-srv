@@ -1536,7 +1536,7 @@ class ActiveRecord extends db\ActiveRecord
     {
         static::addAdditionFields();
         if (static::$masterModel) {
-            $this->master_table_id = $masterId;
+            $this->{static::$masterModelRelFieldName} = $masterId;
         }
 
         $this->mapJson($data);
