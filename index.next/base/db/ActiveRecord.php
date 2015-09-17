@@ -236,6 +236,12 @@ class ActiveRecord extends db\ActiveRecord
     protected static $singleRoot = false;
 
     /**
+     * Если true, то модель всегда содержит только одну запись
+     * @var bool
+     */
+    protected static $singleRecord = false;
+
+    /**
      * Имя класса "master" модели с пространством имен
      * @var string
      */
@@ -1954,7 +1960,14 @@ class ActiveRecord extends db\ActiveRecord
         $editor = "SingleModelEditor";
         $recursive = static::$recursive;
 
-        if ($recursive && !$childModel) {
+        if (static::$singleRecord) {
+            $editor = 'SingleRecordEditor';
+            $data = static::getList([
+                'limit' => 1
+            ])['data'];
+            $data = ($data ? $data[0] : null);
+            $conf['data'] = $data;
+        } elseif ($recursive && !$childModel) {
             $editor = 'SimpleEditor';
             $data = null;
             if (array_key_exists('recordId', $params) && $params['recordId']) {
