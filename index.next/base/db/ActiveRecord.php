@@ -62,6 +62,19 @@ class ActiveRecord extends db\ActiveRecord
      *          'width' - ширина столбца,
      *          ...
      *
+     *      'mask' - для полей типа string и tinystring можно указывать маску, в которой маркерами обозначаются вводимые символы:
+     *          9 - любая цифра
+     *          a - любая буква русского или латинского алфавитов
+     *          * - любая буква русского или латинского алфавитов или любая цифра
+     *
+     *      'includeMaskInValue' - если true, то символы маски будут добавлены в значение (по умолчанию), например, если маска
+     *        "8(999) 999-99-99", то при вводе в значение попадут так же восмерка, пробелы и прочие символы, а если в
+     *        includeMaskInValue будет false, то значение будет очищена от этих символов
+     *
+     *      'regexp' - регалярное выражение для проверки значения поля
+     *
+     *      'regexpError' - сообщение об ошибке, если значение не соответствует указанному регулярному выражению
+     *
      *      'editInGrid' - если установлено true, то разрешено редактирование прямо в списке (кроме файлов и полей типа pointer)
      *
      *      'group' - Название группы полей,
@@ -677,12 +690,24 @@ class ActiveRecord extends db\ActiveRecord
                     'max' => (isset($field['maxLength']) ? $field['maxLength'] : 1024),
                     'tooLong' => 'Поле "' . $field['title'] . '" не может быть длинее 1024 символа.'
                 ];
+                if (isset($field['regexp']) && $field['regexp']) {
+                    $rules[] = [
+                        [$name], 'match', 'pattern' => $field['regexp'],
+                        'message' => (isset($field['regexpError']) ? $field['regexpError'] : 'Поле "' . $field['title'] . '" имеет не верный формат.1'),
+                    ];
+                }
             } elseif ($field['type'] == 'tinystring') {
                 $rules[] = [
                     [$name], 'string', 'min' => (isset($field['minLength']) ? $field['minLength'] : null),
                     'max' => (isset($field['maxLength']) ? $field['maxLength'] : 256),
                     'tooLong' => 'Поле "' . $field['title'] . '" не может быть длинее 1024 символа.'
                 ];
+                if (isset($field['regexp']) && $field['regexp']) {
+                    $rules[] = [
+                        [$name], 'match', 'pattern' => $field['regexp'],
+                        'message' => (isset($field['regexpError']) ? $field['regexpError'] : 'Поле "' . $field['title'] . '" имеет не верный формат.2'),
+                    ];
+                }
             } elseif ($field['type'] == 'int') {
                 $rules[] = [
                     [$name], 'integer', 'integerOnly' => true, 'min' => (isset($field['min']) ? $field['min'] : null),
