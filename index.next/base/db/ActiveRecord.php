@@ -1203,11 +1203,11 @@ class ActiveRecord extends db\ActiveRecord
             $select[] = "`".static::tableName()."`.`".$fieldName."`";
         }
 
-        if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$parentModel) {
+        if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && (static::$parentModel || static::$masterModel)) {
             $parentModelName = static::getParentModel();
 
             $fieldName = static::$masterModelRelFieldName;
-            $relatedModelClass = $parentModelName;
+            $relatedModelClass = (static::$parentModel ? static::$parentModel : static::$masterModel);
             $relatedIdentifyFieldConf = call_user_func([$parentModelName, 'getIdentifyFieldConf']);
             if ($relatedIdentifyFieldConf) {
                 $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
@@ -1874,7 +1874,7 @@ class ActiveRecord extends db\ActiveRecord
                 'type' => 'pointer',
                 'extra' => true
             ];
-        } elseif ($parentModelName) {
+        } elseif ($parentModelName || static::$masterModel) {
             $fields[] = [
                 'name' => static::$masterModelRelFieldName,
                 'type' => 'pointer',
