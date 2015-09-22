@@ -822,22 +822,25 @@ class ActiveRecord extends db\ActiveRecord
 
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
-        $files = scandir(Yii::getAlias($classPath));
-        foreach ($files as $file) {
-            if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
-                $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
-                if ($modelName != $className) {
-                    if (is_callable([$modelName, 'getParentModel'])) {
-                        $parentModel = call_user_func([$modelName, 'getParentModel']);
-                        if ($parentModel == $className) {
-                            static::$childModel[$className] = $modelName;
-                            return $modelName;
+        $classPath = Yii::getAlias($classPath);
+        if (file_exists($classPath)) {
+            $files = scandir($classPath);
+            foreach ($files as $file) {
+                if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
+                    $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
+                    if ($modelName != $className) {
+                        if (is_callable([$modelName, 'getParentModel'])) {
+                            $parentModel = call_user_func([$modelName, 'getParentModel']);
+                            if ($parentModel == $className) {
+                                static::$childModel[$className] = $modelName;
+                                return $modelName;
+                            }
                         }
                     }
                 }
             }
         }
-
+        static::$childModel[$className] = null;
         return null;
     }
 
@@ -854,19 +857,23 @@ class ActiveRecord extends db\ActiveRecord
             return static::$detailModels[$className];
         }
 
+        $result = [];
         $classPath = "@app/modules/".static::getModuleName()."/models";
         $classNameSpace = '\app\modules\\'.static::getModuleName().'\\models';
-        $files = scandir(Yii::getAlias($classPath));
-        $result = [];
-        foreach ($files as $file) {
-            if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
-                $modelName = str_replace(".php", "", $file);
-                if ($modelName != $className) {
-                    $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
-                    if (is_callable([$modelName, 'getMasterModel'])) {
-                        $masterModel = call_user_func([$modelName, 'getMasterModel']);
-                        if (trim($masterModel, '\\') == $className) {
-                            $result[] = $modelName;
+        $classPath = Yii::getAlias($classPath);
+
+        if (file_exists($classPath)) {
+            $files = scandir($classPath);
+            foreach ($files as $file) {
+                if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
+                    $modelName = str_replace(".php", "", $file);
+                    if ($modelName != $className) {
+                        $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
+                        if (is_callable([$modelName, 'getMasterModel'])) {
+                            $masterModel = call_user_func([$modelName, 'getMasterModel']);
+                            if (trim($masterModel, '\\') == $className) {
+                                $result[] = $modelName;
+                            }
                         }
                     }
                 }

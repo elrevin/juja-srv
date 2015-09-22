@@ -155,8 +155,9 @@ class FileSystem
         $path = dirname(static::getFilePath($fileHash, $dir));
         if (!file_exists($path)) {
             $umask = umask(0);
-            return mkdir($path, 0755, true);
+            $result = mkdir($path, 0755, true);
             umask($umask);
+            return $result;
         }
         return true;
     }
