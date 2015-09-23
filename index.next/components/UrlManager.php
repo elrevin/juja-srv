@@ -13,7 +13,11 @@ class UrlManager extends \yii\web\UrlManager
         foreach (\Yii::$app->modules as $name => $moduleConf) {
             $file = \Yii::getAlias("@app/modules/{$name}/urlRules.php");
             if (is_file($file)) {
-                $this->addRules(require_once($file));
+                $rules = require_once($file);
+                foreach ($rules as $key => $item) {
+                    $rules[$key]['class'] = '\app\components\UrlRule';
+                }
+                $this->addRules($rules);
             }
         }
 
