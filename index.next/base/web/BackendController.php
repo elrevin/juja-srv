@@ -328,9 +328,29 @@ class BackendController extends Controller
                 "filter" => $filterParams,
                 "all" => (Yii::$app->request->get('all', 0) ? true : false),
                 "parentId" => Yii::$app->request->get('parentId', null),
+                'query' => Yii::$app->request->post('query', ''),
             ];
 
             $list = call_user_func([$modelName, 'getList'], $params);
+
+            $defaultId = intval(Yii::$app->request->post('defaultId', 0));
+            if ($defaultId) {
+                foreach ($list['data'] as $item) {
+                    if ($item['id'] == $defaultId) {
+                        $defaultId = 0;
+                        break;
+                    }
+                }
+                if ($defaultId) {
+                    $listAdd = call_user_func([$modelName, 'getList'], array_merge($params, [
+                        'where' => ['id' => $defaultId],
+                    ]));
+                    if ($listAdd['data']) {
+                        array_pop($list['data']);
+                        array_unshift($list['data'], $listAdd['data'][0]);
+                    }
+                }
+            }
 
             return $list;
         }

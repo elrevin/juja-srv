@@ -498,10 +498,11 @@ class ActiveRecord extends db\ActiveRecord
                 $relatedModelClass = $field['relativeModel'];
             }
             $tmp = call_user_func([$relatedModelClass, 'tableName']);
-            Yii::$app->db->createCommand("
-                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL,
-                    ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE SET NULL ON UPDATE CASCADE
-            ")->execute();
+            $command = ["ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL"];
+            if (strpos($tmp, '.') === false) {
+                $command[] = "ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE SET NULL ON UPDATE CASCADE";
+            }
+            Yii::$app->db->createCommand(implode(", ", $command))->execute();
         } elseif ($field['type'] == 'file') {
             Yii::$app->db->createCommand("
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL,
@@ -934,6 +935,8 @@ class ActiveRecord extends db\ActiveRecord
 
     protected static function getSimpleFilterCondition($type, $field, $comparison, $value, $expression = '')
     {
+        $tableName = static::tableName();
+        $tableName = str_replace('.', '_', $tableName);
         $res = [];
 
         if ($field == static::$masterModelRelFieldName) {
@@ -969,7 +972,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        $condField = !$expression ? "`" . static::tableName() . "`.`" . $field . "`" : $expression;
+        $condField = !$expression ? "`" . $tableName . "`.`" . $field . "`" : $expression;
         if ($type == 'string' || $type == 'tinystring') {
             if ($comparison == 'end') {
                 $res = ['like', $condField, "%".$value, false];
@@ -1011,7 +1014,8 @@ class ActiveRecord extends db\ActiveRecord
             $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
             if ($relatedIdentifyFieldConf) {
                 $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $relatedTableName = $relatedTableName."_".$field;
+                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
+                $relatedTableName = $relatedTableClearName."_".$field;
                 $relatedFieldName = $relatedIdentifyFieldConf['name'];
                 $res = ['like', ($relatedTableName.".".$relatedFieldName), $value];
             }
@@ -1069,10 +1073,26 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getList($params)
     {
+        $tableName = static::tableName();
+        $tableName = str_replace('.', '_', $tableName);
         static::checkStructure();
         static::addAdditionFields();
+
+        if (isset($params['query']) && $params['query']) {
+            // Быстрый фильтр по identyfy полю
+            $identifyFieldConf = static::getIdentifyFieldConf();
+            $params['filter'] = ($params['filter'] ? $params['filter'] : []);
+            $params['filter'] = array_merge($params['filter'], [
+                [
+                    'type' => 'string',
+                    'value' => $params['query'],
+                    'field' => $identifyFieldConf['name'],
+                ],
+            ]);
+        }
+
         $params = static::beforeList($params);
-        $select = ["`".static::tableName()."`.`id`"];
+        $select = ["`".$tableName."`.`id`"];
         $selectParams = [];
         $join = [];
         $pointers = [];
@@ -1081,6 +1101,7 @@ class ActiveRecord extends db\ActiveRecord
         $additionTables = [];
 
         $structure = static::getStructure();
+
         foreach ($structure as $fieldName => $fieldConf) {
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
                 if ((isset($fieldConf['identify']) && !$fieldConf['identify']) || (!isset($fieldConf['identify']))) {
@@ -1120,19 +1141,20 @@ class ActiveRecord extends db\ActiveRecord
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 if ($relatedIdentifyFieldConf) {
                     $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                    $select[] = "`".$relatedTableName."_".$fieldName."`.`id` AS `".$fieldName."`";
-                    $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                    $relatedTableClearName = str_replace('.', '_', $relatedTableName);
+                    $select[] = "`".$relatedTableClearName."_".$fieldName."`.`id` AS `".$fieldName."`";
+                    $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
                     $pointers[$fieldName] = [
-                        "table" => $relatedTableName."_".$fieldName,
+                        "table" => $relatedTableClearName."_".$fieldName,
                         "field" => $relatedIdentifyFieldConf['name']
                     ];
                     $join[] = [
-                        'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
-                        'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
+                        'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
+                        'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
                     ];
                 }
             } elseif ($fieldConf['type'] == 'select' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-                $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                $select[] = "`".$tableName."`.`".$fieldName."`";
                 $options = [];
                 $keyIndex = 1;
                 foreach ($fieldConf['selectOptions'] as $key => $value) {
@@ -1141,7 +1163,7 @@ class ActiveRecord extends db\ActiveRecord
                     $selectParams[":option".$keyIndex."_".$fieldName."_value"] = $value;
                     $keyIndex++;
                 }
-                $select[] = "(CASE `".static::tableName()."`.`".$fieldName."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
+                $select[] = "(CASE `".$tableName."`.`".$fieldName."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
                 $selectFields[$fieldName] = [
                     "valField" => "valof_".$fieldName
                 ];
@@ -1149,17 +1171,18 @@ class ActiveRecord extends db\ActiveRecord
                 $relatedModelClass = '\app\modules\files\models\Files';
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $select[] = "`".static::tableName()."`.`".$fieldName."`";
-                $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-                $select[] = "`".$relatedTableName."_".$fieldName."`.`name` as `fileof_".$fieldName."`";
+                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
+                $select[] = "`".$tableName."`.`".$fieldName."`";
+                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`name` as `fileof_".$fieldName."`";
                 $pointers[$fieldName] = [
-                    "table" => $relatedTableName."_".$fieldName,
+                    "table" => $relatedTableClearName."_".$fieldName,
                     "field" => $relatedIdentifyFieldConf['name'],
                     "file_field" => 'name'
                 ];
                 $join[] = [
-                    'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
-                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
+                    'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
+                    'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
                 ];
             } elseif ($fieldConf['type'] != 'file' && $fieldConf['type'] != 'pointer') {
                 // Простые типы данных
@@ -1171,12 +1194,12 @@ class ActiveRecord extends db\ActiveRecord
                         $additionTables[] = $fieldConf['additionTable'];
                         $join[] = [
                             'name' => $fieldConf['additionTable'],
-                            'on' => "`".$fieldConf['additionTable']."`.`master_table_id` = `".static::tableName()."`.id AND `".$fieldConf['additionTable']."`.`master_table_name` = '".static::tableName()."'"
+                            'on' => "`".$fieldConf['additionTable']."`.`master_table_id` = `".$tableName."`.id AND `".$fieldConf['additionTable']."`.`master_table_name` = '".$tableName."'"
                         ];
                     }
                     $select[] = "`".$fieldConf['additionTable']."`.`".$fieldName."`";
                 } else {
-                    $select[] = "`".static::tableName()."`.`".$fieldName."`";
+                    $select[] = "`".$tableName."`.`".$fieldName."`";
                 }
             }
         }
@@ -1187,41 +1210,43 @@ class ActiveRecord extends db\ActiveRecord
             $relatedIdentifyFieldConf = static::getIdentifyFieldConf();
             if ($relatedIdentifyFieldConf) {
                 $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $select[] = "`".static::tableName()."`.`".$fieldName."`";
-                $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
+                $select[] = "`".$tableName."`.`".$fieldName."`";
+                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
                 $pointers[$fieldName] = [
-                    "table" => $relatedTableName."_".$fieldName,
+                    "table" => $relatedTableClearName."_".$fieldName,
                     "field" => $relatedIdentifyFieldConf['name']
                 ];
                 $join[] = [
-                    'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
-                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
+                    'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
+                    'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
                 ];
             }
         }
 
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$hiddable) {
             $fieldName = 'hidden';
-            $select[] = "`".static::tableName()."`.`".$fieldName."`";
+            $select[] = "`".$tableName."`.`".$fieldName."`";
         }
 
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && (static::$parentModel || static::$masterModel)) {
-            $parentModelName = static::getParentModel();
+            $parentModelName = (static::$parentModel ? static::$parentModel : static::$masterModel);
 
             $fieldName = static::$masterModelRelFieldName;
             $relatedModelClass = (static::$parentModel ? static::$parentModel : static::$masterModel);
             $relatedIdentifyFieldConf = call_user_func([$parentModelName, 'getIdentifyFieldConf']);
             if ($relatedIdentifyFieldConf) {
                 $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $select[] = "`".static::tableName()."`.`".$fieldName."`";
-                $select[] = "`".$relatedTableName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
+                $select[] = "`".$tableName."`.`".$fieldName."`";
+                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
                 $pointers[$fieldName] = [
-                    "table" => $relatedTableName."_".$fieldName,
+                    "table" => $relatedTableClearName."_".$fieldName,
                     "field" => $relatedIdentifyFieldConf['name']
                 ];
                 $join[] = [
-                    'name' => $relatedTableName." as ".$relatedTableName."_".$fieldName,
-                    'on' => "`".static::tableName()."`.`".$fieldName."` = `".$relatedTableName."_".$fieldName."`.id"
+                    'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
+                    'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
                 ];
             }
         }
@@ -1245,26 +1270,36 @@ class ActiveRecord extends db\ActiveRecord
 
             //Вызываем рак мозга у запроса - нам надо в секцию FROM запроса затолкать таблицу, которую мы подключаем, а основную сджоинить
             $relatedTableName = call_user_func([static::$linkModelName, 'tableName']);
-            $query->from($relatedTableName." as __link_model_table");
-            $select[] = "IF((`".static::tableName()."`.`id` IS NOT NULL AND `".
-                static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']."), 1, 0) AS `check`";
 
-            $query->leftJoin("`".static::tableName()."`", "`__link_model_table`.`id` = `".static::tableName()."`.`".static::getLinkTableIdField()."` AND `".static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
+            $query->from($relatedTableName." as __link_model_table");
+            $select[] = "IF((`".$tableName."`.`id` IS NOT NULL AND `".
+                $tableName."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']."), 1, 0) AS `check`";
+
+            $query->leftJoin("`".$tableName."`", "`__link_model_table`.`id` = `".$tableName."`.`".static::getLinkTableIdField()."` AND `".$tableName."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
             if (!call_user_func([static::$linkModelName, 'getPermanentlyDelete'])) {
                 $query->andWhere("`__link_model_table`.del = 0");
             }
         } elseif (static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_BUTTON) {
             $relatedTableName = call_user_func([static::$linkModelName, 'tableName']);
-            $query->leftJoin("`".$relatedTableName."` as __link_model_table", "`".static::tableName()."`.`".static::getLinkTableIdField()."` = `__link_model_table`.`id`");
-            $query->andWhere("`".static::tableName()."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
+            $query->leftJoin("`".$relatedTableName."` as __link_model_table", "`".$tableName."`.`".static::getLinkTableIdField()."` = `__link_model_table`.`id`");
+            $query->andWhere("`".$tableName."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
             if (!call_user_func([static::$linkModelName, 'getPermanentlyDelete'])) {
                 $query->andWhere("`__link_model_table`.del = 0");
             }
         } else {
 
             if (isset($params['masterId']) && $params['masterId'] && (static::$masterModel || static::$parentModel)) {
-                $query->andWhere('`'.static::tableName().'`.'.static::$masterModelRelFieldName.' = ' . intval($params['masterId']));
+                $query->andWhere('`'.$tableName.'`.'.static::$masterModelRelFieldName.' = ' . intval($params['masterId']));
             }
+
+            $tbName = static::tableName();
+            if (strpos($tbName, '.') !== false) {
+                $tbName = explode('.', $tbName);
+                $tbName = "`{$tbName[0]}`.`{$tbName[1]}`";
+            } else {
+                $tbName = "`{$tbName}`";
+            }
+            $query->from("{$tbName} as `{$tableName}`");
         }
 
         foreach ($join as $item) {
@@ -1307,7 +1342,7 @@ class ActiveRecord extends db\ActiveRecord
                     } elseif (isset($calcFields[$sort['property']])) {
                         $orderBy["`".$sort['property']."`"] = $dir;
                     } else {
-                        $orderBy["`".static::tableName()."`.`".$sort['property']."`"] = $dir;
+                        $orderBy["`".$tableName."`.`".$sort['property']."`"] = $dir;
                     }
                 }
             }
@@ -1318,7 +1353,7 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         if (static::$sortable) {
-            $orderBy = array_merge($orderBy, ["`".static::tableName()."`.`sort_priority`" => SORT_ASC]);
+            $orderBy = array_merge($orderBy, ["`".$tableName."`.`sort_priority`" => SORT_ASC]);
         }
 
         if (static::$defaultSort && !static::$sortable) {
