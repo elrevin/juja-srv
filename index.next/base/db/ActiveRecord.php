@@ -396,6 +396,17 @@ class ActiveRecord extends db\ActiveRecord
 
     public function __get($name)
     {
+        if (method_exists($this, 'get' . $name)) {
+            return $this->{'get' . $name}();
+        } elseif (method_exists($this, 'get_' . $name)) {
+            return $this->{'get_' . $name}();
+        }
+        $getter = str_replace('_', '', 'get' . $name);
+        if (method_exists($this, $getter)) {
+            return $this->{$getter}();
+        }
+
+
         $structure = static::getStructure();
         if (strncmp($name, 'valof_', 6) == 0 && array_key_exists($key = str_replace('valof_', '', $name), $structure)) {
             if ($structure[$key]['type'] == 'select') {
