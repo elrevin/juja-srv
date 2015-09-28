@@ -1143,7 +1143,19 @@ class ActiveRecord extends db\ActiveRecord
                     $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
                     $relatedTableClearName = str_replace('.', '_', $relatedTableName);
                     $select[] = "`".$relatedTableClearName."_".$fieldName."`.`id` AS `".$fieldName."`";
-                    $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                    if ($relatedIdentifyFieldConf['type'] == 'select') {
+                        $options = [];
+                        $keyIndex = 1;
+                        foreach ($relatedIdentifyFieldConf['selectOptions'] as $key => $value) {
+                            $options[] = "WHEN :option".$keyIndex."_".$fieldName."_key THEN :option".$keyIndex."_".$fieldName."_value";
+                            $selectParams[":option".$keyIndex."_".$fieldName."_key"] = $key;
+                            $selectParams[":option".$keyIndex."_".$fieldName."_value"] = $value;
+                            $keyIndex++;
+                        }
+                        $select[] = "(CASE `".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
+                    } else {
+                        $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                    }
                     $pointers[$fieldName] = [
                         "table" => $relatedTableClearName."_".$fieldName,
                         "field" => $relatedIdentifyFieldConf['name']
