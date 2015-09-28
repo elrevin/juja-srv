@@ -1553,6 +1553,7 @@ class ActiveRecord extends db\ActiveRecord
     private function saveToHistory($event, $id)
     {
         $history = new SDataHistoryEvents();
+        $history->time = date('Y-m-d H:i:s');
         $history->user_id = Yii::$app->user->id;
         $history->event = $event;
         $history->model = static::className();
