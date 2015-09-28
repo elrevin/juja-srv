@@ -425,6 +425,24 @@ class ActiveRecord extends db\ActiveRecord
             return null;
         }
 
+        if (array_key_exists($name, $structure) && $structure[$name]['type'] == 'pointer') {
+            $val = $this->getAttribute($name);
+            if (is_array($structure[$name]['relativeModel'])) {
+                $relatedModelClass = '\app\modules\\'. $structure[$name]['relativeModel']['moduleName'].'\models\\'. $structure[$name]['relativeModel']['name'];
+            } else {
+                $relatedModelClass = $structure[$name]['relativeModel'];
+            }
+
+            $hiddable = call_user_func([$relatedModelClass, 'getHiddable']);
+
+            $val = call_user_func([$relatedModelClass, 'find'])->andWhere(['id' => $val]);
+            if ($hiddable) {
+                $val->andWhere(['hidden' => 0]);
+            }
+
+            return $val->one();
+        }
+
         $detailsModel = static::getDetailModels();
         foreach ($detailsModel as $model) {
             $modelClassNameParts = explode('\\', $model);
