@@ -508,6 +508,8 @@ class ActiveRecord extends db\ActiveRecord
                     static::$structure[$name]['type'] == 'float') && !$val
             ) {
                 $val = 0;
+            } elseif ((static::$structure[$name]['type'] == 'pointer' || static::$structure[$name]['type'] == 'select') && !$val) {
+                $val = null;
             } elseif (static::$structure[$name]['type'] == 'bool' && !$val) {
                 $val = 0;
             }
