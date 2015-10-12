@@ -486,7 +486,34 @@ class ActiveRecord extends db\ActiveRecord
             return Files::find()->where(['id' => parent::__get($name)])->one();
         }
 
+        if (isset(static::$structure[$name]) && static::$structure[$name]['type'] == 'linked' && !method_exists($this, 'get'.$name) && preg_match("/\\Files$/", static::$linkModelName)) {
+            return Files::find()->where(['id' => parent::__get($name)])->one();
+        }
+
         return parent::__get($name);
+    }
+
+    public function __set($name, $val)
+    {
+        if (array_key_exists($name, static::$structure)) {
+            if (
+                (static::$structure[$name]['type'] == 'string' ||
+                    static::$structure[$name]['type'] == 'tinystring' ||
+                    static::$structure[$name]['type'] == 'text' ||
+                    static::$structure[$name]['type'] == 'html') && !$val
+            ) {
+                $val = '';
+            } elseif (
+                (static::$structure[$name]['type'] == 'int' ||
+                    static::$structure[$name]['type'] == 'float') && !$val
+            ) {
+                $val = 0;
+            } elseif (static::$structure[$name]['type'] == 'bool' && !$val) {
+                $val = 0;
+            }
+            return $this->setAttribute($name, $val);
+        }
+        return parent::__set($name, $val);
     }
 
     protected static function createTableCol($fieldName, $field) {
