@@ -201,4 +201,27 @@ class FileSystem
         return false;
     }
 
+    /**
+     * Создает файл и записывает в него контент из аргумента
+     * @param $content
+     * @param $originalFileName
+     * @return bool
+     */
+    public static function filePutContents ($content, $originalFileName)
+    {
+        $filePath = static::getFilePathByOriginalName($originalFileName, '', 'sources');
+        if (!file_exists($filePath['path'])) {
+            // Папки нет, создаем
+            $umask = umask(0);
+            if (!mkdir($filePath['path'], 0777, true)) {
+                umask($umask);
+                \Yii::error('Не удается создать папку "' . $filePath['path'] . '"');
+                return false;
+            }
+            umask($umask);
+        }
+        file_put_contents($filePath['path'] . '/' . $filePath['fileName'], $content);
+
+        return $filePath['hash'];
+    }
 }
