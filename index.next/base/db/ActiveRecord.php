@@ -52,6 +52,7 @@ class ActiveRecord extends db\ActiveRecord
      *          'select' - одно из предустановленных значений, значения указываются в selectOptions
      *          'file' - файл, в mysql - int(11) с внешним ключем на модель s_files
      *          'bool' - флаг, в mysql tinyint(1)
+     *          'color' - цвет, в mysql это varchar(11), цвет может быть в двух форматах (см. описание параметра colorFormat)
      *
      *      'settings' - Дополнительные настройки (ассоциативный массив):
      *          'maxLength' - максимальная длина (для строк)
@@ -80,6 +81,10 @@ class ActiveRecord extends db\ActiveRecord
      *      'group' - Название группы полей,
      *
      *      'keepHistory' - Если true, то автоматически будет сохраняться история значений поля,
+     *
+     *      'colorFormat' - Формат цвета:
+     *          'hex' - шестнадцатиричный формат ("#ffffff")
+     *          'dec' - десятичный формат ("255,255,255")
      *
      *      'relativeModel' - имя связанной модели (полное имя класса, включая namespace) или ассоциативный массив:
      *          'classname' - полное имя класса,
@@ -499,6 +504,7 @@ class ActiveRecord extends db\ActiveRecord
             if (
                 (static::$structure[$name]['type'] == 'string' ||
                     static::$structure[$name]['type'] == 'tinystring' ||
+                    static::$structure[$name]['type'] == 'color' ||
                     static::$structure[$name]['type'] == 'text' ||
                     static::$structure[$name]['type'] == 'html') && !$val
             ) {
@@ -513,7 +519,6 @@ class ActiveRecord extends db\ActiveRecord
             } elseif (static::$structure[$name]['type'] == 'bool' && !$val) {
                 $val = 0;
             }
-            return $this->setAttribute($name, $val);
         }
         return parent::__set($name, $val);
     }
@@ -527,6 +532,10 @@ class ActiveRecord extends db\ActiveRecord
         } elseif ($field['type'] == 'tinystring') {
             Yii::$app->db->createCommand("
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` VARCHAR(256) NOT NULL DEFAULT ''
+            ")->execute();
+        } elseif ($field['type'] == 'color') {
+            Yii::$app->db->createCommand("
+                ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` VARCHAR(11) NOT NULL DEFAULT ''
             ")->execute();
         } elseif ($field['type'] == 'text' || $field['type'] == 'html') {
             Yii::$app->db->createCommand("
@@ -1164,6 +1173,7 @@ class ActiveRecord extends db\ActiveRecord
         $selectFields = [];
         $calcFields = [];
         $additionTables = [];
+        $colorFields = [];
 
         $structure = static::getStructure();
 
@@ -1261,6 +1271,11 @@ class ActiveRecord extends db\ActiveRecord
                     'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
                     'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
                 ];
+            } elseif ($fieldConf['type'] == 'color' && !$fieldConf['calc'] && !$fieldConf['addition']) {
+                if ($fieldConf['colorFormat'] == 'dec') {
+                    $colorFields[] = $fieldName;
+                }
+                $select[] = "`".$tableName."`.`".$fieldName."`";
             } elseif ($fieldConf['type'] != 'file' && $fieldConf['type'] != 'pointer') {
                 // Простые типы данных
                 if ($fieldConf['calc'] && isset($fieldConf['expression']) && $fieldConf['expression']) {
@@ -1480,6 +1495,16 @@ class ActiveRecord extends db\ActiveRecord
                 }
             }
         }
+        if ($colorFields) {
+            foreach ($list as $key => $item) {
+                if ($list[$key][$fieldName]) {
+                    foreach ($colorFields as $fieldName) {
+                        $some = explode(',', $list[$key][$fieldName]);
+                        $list[$key][$fieldName] = "#".str_pad(dechex(intval($some[0])), 2, STR_PAD_LEFT).str_pad(dechex(intval($some[1])), 2, STR_PAD_LEFT).str_pad(dechex(intval($some[2])), 2, STR_PAD_LEFT);
+                    }
+                }
+            }
+        }
 
         if ($selectFields) {
             foreach ($list as $key => $item) {
@@ -1534,6 +1559,16 @@ class ActiveRecord extends db\ActiveRecord
             return floatval($value);
         } elseif ($type == 'string' || $type == 'tinystring' || $type == 'text' || $type == 'html') {
             return strval($value);
+        } elseif ($type == 'color') {
+            if ($structure[$fieldName]['colorFormat'] == 'dec') {
+                $val = str_replace("#", "", $value);
+                $val = str_split($val, 2);
+                foreach ($val as $i => $v) {
+                    $val[$i] = hexdec($v);
+                }
+                $value = implode(',', $val);
+            }
+            return $value;
         } elseif ($type == 'date') {
             $value = strval($value);
             if (preg_match("/^\\d\\d\\d\\d-\\d\\d-\\d\\d$/", $value)) {
