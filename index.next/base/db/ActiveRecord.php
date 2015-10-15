@@ -1271,6 +1271,23 @@ class ActiveRecord extends db\ActiveRecord
                     'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
                     'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
                 ];
+            } elseif ($fieldConf['type'] == 'file' && !$fieldConf['calc'] && !$fieldConf['addition']) {
+                $relatedModelClass = '\app\modules\files\models\Files';
+                $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
+                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
+                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
+                $select[] = "(" . $fieldConf['expression'] . ")" . " AS `" . $fieldName . "`";
+                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`name` as `fileof_".$fieldName."`";
+                $pointers[$fieldName] = [
+                    "table" => $relatedTableClearName."_".$fieldName,
+                    "field" => $relatedIdentifyFieldConf['name'],
+                    "file_field" => 'name'
+                ];
+                $join[] = [
+                    'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
+                    'on' => "(" . $fieldConf['expression'] . ")"." = `".$relatedTableClearName."_".$fieldName."`.id"
+                ];
             } elseif ($fieldConf['type'] == 'color' && !$fieldConf['calc'] && !$fieldConf['addition']) {
                 if ($fieldConf['colorFormat'] == 'dec') {
                     $colorFields[] = $fieldName;
