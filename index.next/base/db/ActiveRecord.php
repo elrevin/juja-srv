@@ -206,6 +206,8 @@ class ActiveRecord extends db\ActiveRecord
      */
     protected static $structure = [];
 
+    protected $pointerAttributes = [];
+
     /**
      * Если true - записи удаляются перманентно, если false, метятся, как удаленные путем установки del=1
      * @var bool
@@ -429,6 +431,9 @@ class ActiveRecord extends db\ActiveRecord
                 return null;
             }
             if ($structure[$key]['type'] == 'pointer') {
+                if (array_key_exists($key, $this->pointerAttributes)) {
+                    return $this->pointerAttributes[$key];
+                }
                 $val = $this->{$key};
                 if (is_array($structure[$key]['relativeModel'])) {
                     $relatedModelClass = '\app\modules\\'. $structure[$key]['relativeModel']['moduleName'].'\models\\'. $structure[$key]['relativeModel']['name'];
@@ -443,7 +448,9 @@ class ActiveRecord extends db\ActiveRecord
                     $val->andWhere(['hidden' => 0]);
                 }
 
-                return $val->one();
+                $val = $val->one();
+                $this->pointerAttributes[$key] = $val;
+                return $val;
             }
             return null;
         }
@@ -472,7 +479,16 @@ class ActiveRecord extends db\ActiveRecord
             $countOfModelClassNameParts = count($modelClassNameParts);
             if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !method_exists($this, 'get'.$name)) {
                 $masterModelRelFieldName = call_user_func([$model, 'getMasterModelRelFieldName']);
-                return $this->hasMany($model, [$masterModelRelFieldName => 'id'])->all();
+                $permanentlyDelete = call_user_func([$model, 'getPermanentlyDelete']);
+                $hiddable = call_user_func([$model, 'getHiddable']);
+                $where = [];
+                if (!$permanentlyDelete) {
+                    $where["del"] = 0;
+                }
+                if ($hiddable) {
+                    $where["hidden"] = 0;
+                }
+                return $this->hasMany($model, [$masterModelRelFieldName => 'id'])->where($where)->all();
             }
         }
 
@@ -483,7 +499,16 @@ class ActiveRecord extends db\ActiveRecord
 
             if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !method_exists($this, 'get'.$name)) {
                 $masterModelRelFieldName = call_user_func([$childModel, 'getMasterModelRelFieldName']);
-                return $this->hasMany($childModel, [$masterModelRelFieldName => 'id']);
+                $permanentlyDelete = call_user_func([$childModel, 'getPermanentlyDelete']);
+                $hiddable = call_user_func([$childModel, 'getHiddable']);
+                $where = [];
+                if (!$permanentlyDelete) {
+                    $where["del"] = 0;
+                }
+                if ($hiddable) {
+                    $where["hidden"] = 0;
+                }
+                return $this->hasMany($childModel, [$masterModelRelFieldName => 'id'])->where($where)->all();
             }
         }
 
@@ -1868,6 +1893,7 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getUserInterface($configOnly = false, $masterId = 0, $modal = false, $params = [])
     {
+        static::checkStructure();
         static::addAdditionFields();
         $modelStructure = static::getStructure();
         $fields = [];

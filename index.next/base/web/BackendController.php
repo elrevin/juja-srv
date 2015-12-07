@@ -383,11 +383,10 @@ class BackendController extends Controller
                         if ($result = $model->saveData($item, true, $masterId)) {
                             $results[] = $result;
                         } else {
-                            $errors = [];
+                            $errors = "";
                             foreach ($model->errors as $error) {
-                                $errors[] = implode("<br/>", $error);
+                                $errors .= implode("<br/>", $error);
                             }
-                            $errors = implode('<br/>', $errors);
                             $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName.'&add=1', 'Ошибка сохранения данных:<br/>'.$errors);
                             return null;
                         }
@@ -406,11 +405,10 @@ class BackendController extends Controller
                         ];
                         return $data;
                     } else {
-                        $errors = [];
+                        $errors = "";
                         foreach ($model->errors as $error) {
-                            $errors[] = implode("<br/>", $error);
+                            $errors .= implode("<br/>", $error);
                         }
-                        $errors = implode('<br/>', $errors);
                         $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName.'&add=1', 'Ошибка сохранения данных:<br/>'.$errors);
                         return null;
                     }
@@ -424,11 +422,10 @@ class BackendController extends Controller
                     ];
                     return $data;
                 } else {
-                    $errors = [];
+                    $errors = "";
                     foreach ($model->errors as $error) {
-                        $errors[] = implode("<br/>", $error);
+                        $errors .= implode("<br/>", $error);
                     }
-                    $errors = implode('<br/>', $errors);
                     $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName.'&id='.$data['id'], 'Ошибка сохранения данных:<br/>'.$errors);
                     return null;
                 }
