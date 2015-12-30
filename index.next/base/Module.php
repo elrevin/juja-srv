@@ -1,6 +1,8 @@
 <?php
 namespace app\base;
-class Module extends \yii\base\Module
+use yii\base\BootstrapInterface;
+
+class Module extends \yii\base\Module implements BootstrapInterface
 {
     static protected $inSiteStructure = true;
     static protected $moduleTitle = '';
@@ -18,5 +20,39 @@ class Module extends \yii\base\Module
     static public function getSiteSectionTypes ()
     {
         return static::$siteSectionTypes;
+    }
+
+    public function init()
+    {
+        parent::init();
+    }
+
+    /**
+     * @param \yii\base\Application $app
+     */
+    public function webBootstrap($app)
+    {
+
+    }
+
+    /**
+     * @param \yii\base\Application $app
+     */
+    public function consoleBootstrap($app)
+    {
+
+    }
+
+    /**
+     * @param \yii\base\Application $app
+     */
+    public function bootstrap($app)
+    {
+        if ($app instanceof \yii\console\Application) {
+            $this->controllerNamespace = 'app\modules\\'.$this->id.'\commands';
+            $this->consoleBootstrap($app);
+        } else {
+            $this->webBootstrap($app);
+        }
     }
 }

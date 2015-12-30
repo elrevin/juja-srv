@@ -3,84 +3,90 @@
     <div class="row">
         <div class="col-xs-12"><h1>{{ data.title }}</h1></div>
     </div>
-    <div class="row">
-        <div class="col-xs-12 col-md-8">
-            <div class="row">
-                {% for item in data.goodsList %}
-                    <div class="col-xs-12 col-sm-6 col-lg-4 goods-list-item">
-                        <div class="goods-inner">
-                            <div>
-                                <a href="{{ url('/catalog/default/goods', {url: item.url}) }}" class="goods-title">{{ item.title }}</a>
-                            </div>
-                            <a href="{{ url('/catalog/default/goods', {url: item.url}) }}">
-                                <img src="{{ item.image.getImageUrl(300, 300, '#FFFFFF') }}"/>
-                            </a>
+    {% if data.goodsList %}
+        <div class="row">
+            <div class="col-xs-12 col-md-8">
+                <div class="row">
+                    {% for item in data.goodsList %}
+                        <div class="col-xs-12 col-sm-6 col-lg-4 goods-list-item">
+                            <div class="goods-inner">
+                                <div>
+                                    <a href="{{ url('/catalog/default/goods', {url: item.url}) }}" class="goods-title">{{ item.title }}</a>
+                                </div>
+                                <a href="{{ url('/catalog/default/goods', {url: item.url}) }}">
+                                    <img src="{{ item.image.getImageUrl(300, 300, '#FFFFFF') }}"/>
+                                </a>
 
-                            <div class="row">
-                                {% for paramItem in item.getShortDescriptionParams() %}
-                                    <div class="col-xs-6">
-                                        {{ paramItem.param.title }}
-                                    </div>
-                                    <div class="col-xs-6">
-                                        {{ paramItem.value }}
-                                    </div>
-                                {% endfor %}
-                            </div>
+                                <div class="row">
+                                    {% for paramItem in item.getShortDescriptionParams() %}
+                                        <div class="col-xs-6">
+                                            {{ paramItem.param.title }}
+                                        </div>
+                                        <div class="col-xs-6">
+                                            {{ paramItem.value }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
 
-                            <div class="row price-row">
-                                <div class="col-xs-6 text-success price">{{ item.price|number_format(0, '', ' ') }} &#8399;</div>
-                                <div class="col-xs-6"><a href="#" class="btn btn-success btn-md pull-right">Купить</a></div>
+                                <div class="row price-row">
+                                    <div class="col-xs-6 text-success price">{{ item.price|number_format(0, '', ' ') }} &#8399;</div>
+                                    <div class="col-xs-6"><a href="#" class="btn btn-success btn-md pull-right">Купить</a></div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-        <div class="col-md-offset-1 col-md-3 hidden-xs hidden-sm">
-            <form class="form-horizontal">
-                <div class="form-group">
-                    <label class="control-label">Цена</label>
-                    <div>
-                        <input catalogFilter="property" name="price" class="rangeSlider" value="" data-slider-min="{{ data.minPrice }}" data-slider-max="{{ data.maxPrice }}" data-slider-step="{{ ((data.maxPrice - data.minPrice) / 20)|round}}" data-slider-value="[{% if not data.minPriceInFilter %}{{ data.minPrice }}{% else %}{{ data.minPriceInFilter }}{% endif %},{% if not data.maxPriceInFilter %}{{ data.maxPrice }}{% else %}{{ data.maxPriceInFilter }}{% endif %}]"/>
-                    </div>
-                    <label class="control-label">Производитель</label>
-                    {% for item in data.brands %}
-                        <div class="checkbox">
-                            <label>
-                                <input type="checkbox" catalogFilter="property" name="brand" url="{{ item.url }}" {% if data.isBrandSelectInFilter(item.url) %} checked="checked" {% endif %}> {{ item.title }}
-                            </label>
                         </div>
                     {% endfor %}
                 </div>
-                {% for item in data.filterParams %}
+            </div>
+            <div class="col-md-offset-1 col-md-3 hidden-xs hidden-sm">
+                <form class="form-horizontal">
                     <div class="form-group">
-                        <label class="control-label">{{ item.title }}</label>
+                        <label class="control-label">Цена</label>
                         <div>
-                            {% if item.type == 'int' or item.type == 'float' %}
-                                <input catalogFilter="param" paramType="{{ item.type }}" name="{{ item.url }}" class="rangeSlider" value="" data-slider-min="{{ item.minValue }}" data-slider-max="{{ item.maxValue }}" data-slider-step="{{ ((item.minValue - item.maxValue) / 20)|round(2)}}" data-slider-value="[{{ data.getMinParamValueInFilter(item) ? data.getMinParamValueInFilter(item) : item.minValue }},{{ data.getMaxParamValueInFilter(item) ? data.getMaxParamValueInFilter(item) : item.maxValue }}]"/>
-                            {% elseif item.type == 'string' %}
-                                {% for paramValue in item.allStringValues %}
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" catalogFilter="param" paramType="{{ item.type }}" url="{{ paramValue.val_string }}" name="{{ item.url }}" {{ data.isParamSelectInFilter(item, paramValue.val_string) ? 'checked="checked"' : '' }}> {{ paramValue.val_string }}
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            {% elseif item.type == 'select' %}
-                                {% for paramValue in item.allSelectValues %}
-                                    <div class="checkbox">
-                                        <label>
-                                            <input type="checkbox" catalogFilter="param" paramType="{{ item.type }}" url="{{ paramValue.valof_val_select.url }}" name="{{ item.url }}" {{ data.isParamSelectInFilter(item, paramValue.valof_val_select.url) ? 'checked="checked"' : '' }}> {{ paramValue.valof_val_select.title }}
-                                        </label>
-                                    </div>
-                                {% endfor %}
-                            {% endif %}
+                            <input catalogFilter="property" name="price" class="rangeSlider" value="" data-slider-min="{{ data.minPrice }}" data-slider-max="{{ data.maxPrice }}" data-slider-step="{{ ((data.maxPrice - data.minPrice) / 20)|round}}" data-slider-value="[{% if not data.minPriceInFilter %}{{ data.minPrice }}{% else %}{{ data.minPriceInFilter }}{% endif %},{% if not data.maxPriceInFilter %}{{ data.maxPrice }}{% else %}{{ data.maxPriceInFilter }}{% endif %}]"/>
                         </div>
+                        <label class="control-label">Производитель</label>
+                        {% for item in data.brands %}
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" catalogFilter="property" name="brand" url="{{ item.url }}" {% if data.isBrandSelectInFilter(item.url) %} checked="checked" {% endif %}> {{ item.title }}
+                                </label>
+                            </div>
+                        {% endfor %}
                     </div>
-                {% endfor %}
+                    {% for item in data.filterParams %}
+                        <div class="form-group">
+                            <label class="control-label">{{ item.title }}</label>
+                            <div>
+                                {% if item.type == 'int' or item.type == 'float' %}
+                                    <input catalogFilter="param" paramType="{{ item.type }}" name="{{ item.url }}" class="rangeSlider" value="" data-slider-min="{{ item.minValue }}" data-slider-max="{{ item.maxValue }}" data-slider-step="{{ ((item.minValue - item.maxValue) / 20)|round(2)}}" data-slider-value="[{{ data.getMinParamValueInFilter(item) ? data.getMinParamValueInFilter(item) : item.minValue }},{{ data.getMaxParamValueInFilter(item) ? data.getMaxParamValueInFilter(item) : item.maxValue }}]"/>
+                                {% elseif item.type == 'string' %}
+                                    {% for paramValue in item.allStringValues %}
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" catalogFilter="param" paramType="{{ item.type }}" url="{{ paramValue.val_string }}" name="{{ item.url }}" {{ data.isParamSelectInFilter(item, paramValue.val_string) ? 'checked="checked"' : '' }}> {{ paramValue.val_string }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                {% elseif item.type == 'select' %}
+                                    {% for paramValue in item.allSelectValues %}
+                                        <div class="checkbox">
+                                            <label>
+                                                <input type="checkbox" catalogFilter="param" paramType="{{ item.type }}"
+                                                       url="{{ paramValue.valof_val_select.url }}"
+                                                       name="{{ item.url }}"
+                                                    {{ data.isParamSelectInFilter(item, paramValue.valof_val_select.url) ? 'checked="checked"' : '' }}>
+                                                        {{ paramValue.valof_val_select.title }}
+                                            </label>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
 
-                <a href="#" class="btn btn-default" id="apply-goods-params" url="{{ url('/catalog/default/category', {'url': data.fullUrl}) }}">Подобрать</a>
-            </form>
+                    <a href="#" class="btn btn-default" id="apply-goods-params" url="{{ url('/catalog/default/category', {'url': data.fullUrl}) }}">Подобрать</a>
+                </form>
+            </div>
         </div>
-    </div>
+    {% endif %}
 {% endblock %}

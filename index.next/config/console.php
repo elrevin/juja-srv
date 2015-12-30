@@ -2,7 +2,11 @@
 
 Yii::setAlias('@tests', dirname(__DIR__) . '/tests');
 
-$rootDirPath = realpath(dirname(__DIR__) . "../../").'/';
+$params = require(__DIR__ . '/params.php');
+$db = require(__DIR__ . '/db.php');
+$dbfias = require(__DIR__ . '/db-fias.php');
+
+$rootDirPath = realpath(__DIR__ . "/../../").'/';
 if (file_exists($rootDirPath."www")) {
     $wwwDir = $rootDirPath."www";
 } else {
@@ -28,18 +32,16 @@ $wwwDir = str_replace('\\', '/', $wwwDir);
 Yii::setAlias("web", "/");
 Yii::setAlias("webroot", $wwwDir);
 
-
-$params = require(__DIR__ . '/params.php');
-$db = require(__DIR__ . '/db.php');
+$modules = require_once(__DIR__ . '/modules.php');
 
 return [
     'id' => 'basic-console',
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log', 'gii'],
+    'bootstrap' => array_merge($modulesNames, ['log', 'gii']),
     'controllerNamespace' => 'app\commands',
-    'modules' => [
+    'modules' => array_merge($modules, [
         'gii' => 'yii\gii\Module',
-    ],
+    ]),
     'components' => [
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -49,6 +51,15 @@ return [
                 [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
+                ],
+                [
+                    'class' => 'yii\log\EmailTarget',
+                    'levels' => ['error'],
+                    'message' => [
+                        'from' => ['log@gkh-site.ru'],
+                        'to' => ['admin@test.ru'],
+                        'subject' => 'Ошибки на сайте ЖКХ',
+                    ],
                 ],
             ],
         ],
@@ -69,6 +80,18 @@ return [
                         'uses' => ['yii\bootstrap'],
                         'options' => ['auto_reload' => true, 'autoescape' => ''],
                     ],
+                ],
+            ],
+        ],
+        'view' => [
+            'defaultExtension' => 'twig',
+            'class' => 'app\components\View',
+            'renderers' => [
+                'twig' => [
+                    'class' => 'app\components\TwigViewRenderer',
+                    'globals' => ['html' => '\yii\helpers\Html'],
+                    'uses' => ['yii\bootstrap'],
+                    'options' => ['auto_reload' => true, 'autoescape' => '', 'strict_variables' => false],
                 ],
             ],
         ],

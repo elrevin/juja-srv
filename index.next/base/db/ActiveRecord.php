@@ -434,7 +434,7 @@ class ActiveRecord extends db\ActiveRecord
                 if (array_key_exists($key, $this->pointerAttributes)) {
                     return $this->pointerAttributes[$key];
                 }
-                $val = $this->{$key};
+                $val = $this->getAttribute($key);
                 if (is_array($structure[$key]['relativeModel'])) {
                     $relatedModelClass = '\app\modules\\'. $structure[$key]['relativeModel']['moduleName'].'\models\\'. $structure[$key]['relativeModel']['name'];
                 } else {
@@ -512,12 +512,32 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        if (isset(static::$structure[$name]) && static::$structure[$name]['type'] == 'file' && !method_exists($this, 'get'.$name)) {
+        if (isset($structure[$name]) && $structure[$name]['type'] == 'file') {
             return Files::find()->where(['id' => parent::__get($name)])->one();
         }
 
-        if (isset(static::$structure[$name]) && static::$structure[$name]['type'] == 'linked' && !method_exists($this, 'get'.$name) && preg_match("/\\Files$/", static::$linkModelName)) {
+        if (isset($structure[$name]) && $structure[$name]['type'] == 'pointer') {
+            if (is_array($structure[$name]['relativeModel'])) {
+                $relatedModelClass = '\app\modules\\'.$structure[$name]['relativeModel']['moduleName'].'\models\\'.$structure[$name]['relativeModel']['name'];
+            } else {
+                $relatedModelClass = $structure[$name]['relativeModel'];
+            }
+
+            return call_user_func([$relatedModelClass, "find"])->andWhere(['id' => parent::__get($name)])->one();
+        }
+
+        if (isset($structure[$name]) && $structure[$name]['type'] == 'linked' && !method_exists($this, 'get'.$name) && preg_match("/\\Files$/", static::$linkModelName)) {
             return Files::find()->where(['id' => parent::__get($name)])->one();
+        }
+
+        if (isset($structure[$name]) && $structure[$name]['type'] == 'linked') {
+            $relatedModelClass = static::$linkModelName;
+
+            return call_user_func([$relatedModelClass, "find"])->andWhere(['id' => parent::__get($name)])->one();
+        }
+
+        if ($name == 'parent' && static::$recursive) {
+            return static::find()->andWhere(['id' => $this->parent_id])->one();
         }
 
         return parent::__get($name);
@@ -525,23 +545,24 @@ class ActiveRecord extends db\ActiveRecord
 
     public function __set($name, $val)
     {
-        if (array_key_exists($name, static::$structure)) {
+        $structure = static::getStructure();
+        if (array_key_exists($name, $structure)) {
             if (
-                (static::$structure[$name]['type'] == 'string' ||
-                    static::$structure[$name]['type'] == 'tinystring' ||
-                    static::$structure[$name]['type'] == 'color' ||
-                    static::$structure[$name]['type'] == 'text' ||
-                    static::$structure[$name]['type'] == 'html') && !$val
+                ($structure[$name]['type'] == 'string' ||
+                    $structure[$name]['type'] == 'tinystring' ||
+                    $structure[$name]['type'] == 'color' ||
+                    $structure[$name]['type'] == 'text' ||
+                    $structure[$name]['type'] == 'html') && !$val
             ) {
                 $val = '';
             } elseif (
-                (static::$structure[$name]['type'] == 'int' ||
-                    static::$structure[$name]['type'] == 'float') && !$val
+                ($structure[$name]['type'] == 'int' ||
+                    $structure[$name]['type'] == 'float') && !$val
             ) {
                 $val = 0;
-            } elseif ((static::$structure[$name]['type'] == 'pointer' || static::$structure[$name]['type'] == 'select') && !$val) {
+            } elseif (($structure[$name]['type'] == 'pointer' || $structure[$name]['type'] == 'select') && !$val) {
                 $val = null;
-            } elseif (static::$structure[$name]['type'] == 'bool' && !$val) {
+            } elseif ($structure[$name]['type'] == 'bool' && !$val) {
                 $val = 0;
             }
         }
@@ -842,8 +863,9 @@ class ActiveRecord extends db\ActiveRecord
 
     public function validateSelectValue($field, $params)
     {
-        if (!array_key_exists($this->{$field}, static::$structure[$field]['selectOptions'])) {
-            $this->addError($field, 'Недопустимое значение поля "'.static::$structure[$field]['title'].'", необходимо выбрать одно из предложенных значений');
+        $structure = static::getStructure();
+        if (!array_key_exists($this->{$field}, $structure[$field]['selectOptions'])) {
+            $this->addError($field, 'Недопустимое значение поля "'. $structure[$field]['title'].'", необходимо выбрать одно из предложенных значений');
         }
     }
 
