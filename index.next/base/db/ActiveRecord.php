@@ -783,11 +783,15 @@ class ActiveRecord extends db\ActiveRecord
 
     public static function find()
     {
+        $query = parent::find();
         $cond = static::defaultWhere();
         if ($cond) {
-            return parent::find()->andWhere(static::defaultWhere());
+            $query->andWhere(static::defaultWhere());
         }
-        return parent::find();
+        if (static::$sortable) {
+            $query->orderBy(['sort_priority' => SORT_ASC]);
+        }
+        return $query;
     }
 
     protected  static function defaultWhere()

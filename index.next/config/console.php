@@ -4,7 +4,6 @@ Yii::setAlias('@tests', dirname(__DIR__) . '/tests');
 
 $params = require(__DIR__ . '/params.php');
 $db = require(__DIR__ . '/db.php');
-$dbfias = require(__DIR__ . '/db-fias.php');
 
 $rootDirPath = realpath(__DIR__ . "/../../").'/';
 if (file_exists($rootDirPath."www")) {
@@ -58,7 +57,7 @@ return [
                     'message' => [
                         'from' => ['log@gkh-site.ru'],
                         'to' => ['admin@test.ru'],
-                        'subject' => 'Ошибки на сайте ЖКХ',
+                        'subject' => 'Ошибки на сайте',
                     ],
                 ],
             ],
