@@ -4,6 +4,7 @@
  */
 
 namespace app\base\web;
+use app\base\db\ActiveRecord;
 use Yii;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
@@ -311,6 +312,9 @@ class BackendController extends Controller
      */
     public function actionList()
     {
+        /**
+         * @var $modelName ActiveRecord
+         */
         $modelName = Yii::$app->request->get('modelName', '');
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
@@ -343,7 +347,7 @@ class BackendController extends Controller
                 }
                 if ($defaultId) {
                     $listAdd = call_user_func([$modelName, 'getList'], array_merge($params, [
-                        'where' => ['id' => $defaultId],
+                        'where' => ["`".$modelName::tableName()."`.id" => $defaultId],
                     ]));
                     if ($listAdd['data']) {
                         array_pop($list['data']);

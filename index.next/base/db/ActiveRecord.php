@@ -1,10 +1,12 @@
 <?php
 namespace app\base\db;
 
+use app\helpers\Utils;
 use app\models\SDataHistory;
 use app\models\SDataHistoryEvents;
 use app\modules\files\models\Files;
 use Yii;
+use yii\base\Exception;
 use yii\db;
 use yii\helpers\Json;
 
@@ -48,7 +50,12 @@ class ActiveRecord extends db\ActiveRecord
      *          'pointer' - ссылка на запись в другой модели, в mysql - int(11) и внешний ключ ссылающийся на другую модель, имя
      *              которой указано в relativeModel
      *          'linked' - ссылка на запись в связанной модели (ее имя указано в $linkModelName), в mysql - int(11) и внешний ключ ссылающийся на другую модель, имя
-     *              которой указано в relativeModel
+     *              которой указано в relativeModel,
+     *                  +---------------------------------------------------------------------------------------------------+
+     *                  | Тип linked устарел и оставлен только для совместимости с более ранними релизами, предпочтительнее |
+     *                  | указывать имя поля в свойстве $linkFieldlName модели                                              |
+     *                  +---------------------------------------------------------------------------------------------------+
+     *          'fromlinked' - ссылка на одноименное поле связанной модели
      *          'select' - одно из предустановленных значений, значения указываются в selectOptions
      *          'file' - файл, в mysql - int(11) с внешним ключем на модель s_files
      *          'bool' - флаг, в mysql tinyint(1)
@@ -202,6 +209,13 @@ class ActiveRecord extends db\ActiveRecord
      *
      *      'allowGroupEdit' - если равно false, то разрешено групповое редактирование
      *
+     *      'autoNumber' - если true и поле типа int и пришло пустое значение, будет сгенерирован номер, автоматически
+     *      'autoNumberReset' - параметры сброса автонумерации:
+     *          Utils::AUTONUMBER_RESET_NEVER (0) - Номер не сбрасывается никогда
+     *          Utils::AUTONUMBER_RESET_DAY (1) - Сброс происходит каждый день, то есть каждый день новый номер
+     *          Utils::AUTONUMBER_RESET_MONTH (2) - Сброс происходит каждый месц
+     *          Utils::AUTONUMBER_RESET_YEAR (3) - Сброс каждый год
+     *
      * @var array
      */
     protected static $structure = [];
@@ -326,6 +340,12 @@ class ActiveRecord extends db\ActiveRecord
     protected static $linkModelName = '';
 
     /**
+     * Имя поля для связи с подчиненной моделью, которая связывается с родительской через данную
+     * @var string
+     */
+    protected static $linkFieldlName = 'link_table_id';
+
+    /**
      * Имя модуля, которой принадлежит модель
      * @var string
      */
@@ -421,57 +441,77 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        $structure = static::getStructure();
-        if (strncmp($name, 'valof_', 6) == 0 && array_key_exists($key = str_replace('valof_', '', $name), $structure)) {
-            if ($structure[$key]['type'] == 'select') {
-                $val = $this->{$key};
-                if (array_key_exists($val, $structure[$key]['selectOptions'])) {
-                    return $structure[$key]['selectOptions'][$val];
+        $field = static::getStructure($name);
+
+        if ($field) {
+            if ($field['calc']) {
+                $list = static::getList([
+                    'limit' => 1,
+                    'where' => "`".static::tableName()."`.id = {$this->id}",
+                    'dataKey' => 'data'
+                ]);
+                if ($list['data']) {
+                    return $list['data'][0][$name];
                 }
-                return null;
-            }
-            if ($structure[$key]['type'] == 'pointer') {
-                if (array_key_exists($key, $this->pointerAttributes)) {
-                    return $this->pointerAttributes[$key];
-                }
-                $val = $this->getAttribute($key);
-                if (is_array($structure[$key]['relativeModel'])) {
-                    $relatedModelClass = '\app\modules\\'. $structure[$key]['relativeModel']['moduleName'].'\models\\'. $structure[$key]['relativeModel']['name'];
+            } elseif ($field['type'] == 'pointer') {
+                $val = $this->getAttribute($name);
+                /**
+                 * @var $relatedModelClass ActiveRecord
+                 */
+                if (is_array($field['relativeModel'])) {
+                    $relatedModelClass = '\app\modules\\'. $field['relativeModel']['moduleName'].'\models\\'. $field['relativeModel']['name'];
                 } else {
-                    $relatedModelClass = $structure[$key]['relativeModel'];
+                    $relatedModelClass = $field['relativeModel'];
                 }
 
-                $hiddable = call_user_func([$relatedModelClass, 'getHiddable']);
+                $hiddable = $relatedModelClass::getHiddable();
 
-                $val = call_user_func([$relatedModelClass, 'find'])->andWhere(['id' => $val]);
+                $val = $relatedModelClass::find()->andWhere(["`".$relatedModelClass::tableName()."`.id" => $val]);
                 if ($hiddable) {
                     $val->andWhere(['hidden' => 0]);
                 }
 
-                $val = $val->one();
-                $this->pointerAttributes[$key] = $val;
-                return $val;
+                return $val->one();
+            } elseif ($field['type'] == 'select') {
+                $id = $this->getAttribute($name);
+
+                if (array_key_exists($id, $field['selectOptions'])) {
+                    return new SelectField(['id' => $id, 'value' => $field['selectOptions'][$id]]) ;
+                }
+                return null;
+            } elseif ($field['type'] == 'file') {
+                return Files::find()->where(['id' => $this->getAttribute($name)])->one();
+            } elseif ($field['type'] == 'linked' && preg_match("/\\Files$/", static::$linkModelName)) {
+                return Files::find()->where(['id' => $this->getAttribute($name)])->one();
+            } elseif ($field['type'] == 'linked') {
+                /**
+                 * @var $relatedModelClass ActiveRecord
+                 */
+                $relatedModelClass = static::$linkModelName;
+                return  $relatedModelClass::find()->andWhere(['id' => $this->getAttribute($name)])->one();
             }
-            return null;
+        } elseif ($name == 'parent') {
+            return static::find()->andWhere(['id' => $this->parent_id])->one();
         }
 
-        if (array_key_exists($name, $structure) && $structure[$name]['type'] == 'pointer') {
+        if ($name == static::$masterModelRelFieldName) {
             $val = $this->getAttribute($name);
-            if (is_array($structure[$name]['relativeModel'])) {
-                $relatedModelClass = '\app\modules\\'. $structure[$name]['relativeModel']['moduleName'].'\models\\'. $structure[$name]['relativeModel']['name'];
-            } else {
-                $relatedModelClass = $structure[$name]['relativeModel'];
+            /**
+             * @var $relatedModelClass ActiveRecord
+             */
+            $relatedModelClass = (static::$masterModel ? static::$masterModel : (static::$parentModel ? static::$parentModel : ''));
+            if ($relatedModelClass) {
+                $hiddable = call_user_func([$relatedModelClass, 'getHiddable']);
+
+                $val = $relatedModelClass::find()->andWhere(['id' => $val]);
+                if ($hiddable) {
+                    $val->andWhere(['hidden' => 0]);
+                }
+
+                return $val->one();
             }
-
-            $hiddable = call_user_func([$relatedModelClass, 'getHiddable']);
-
-            $val = call_user_func([$relatedModelClass, 'find'])->andWhere(['id' => $val]);
-            if ($hiddable) {
-                $val->andWhere(['hidden' => 0]);
-            }
-
-            return $val->one();
         }
+
 
         $detailsModel = static::getDetailModels();
         foreach ($detailsModel as $model) {
@@ -510,34 +550,6 @@ class ActiveRecord extends db\ActiveRecord
                 }
                 return $this->hasMany($childModel, [$masterModelRelFieldName => 'id'])->where($where)->all();
             }
-        }
-
-        if (isset($structure[$name]) && $structure[$name]['type'] == 'file') {
-            return Files::find()->where(['id' => parent::__get($name)])->one();
-        }
-
-        if (isset($structure[$name]) && $structure[$name]['type'] == 'pointer') {
-            if (is_array($structure[$name]['relativeModel'])) {
-                $relatedModelClass = '\app\modules\\'.$structure[$name]['relativeModel']['moduleName'].'\models\\'.$structure[$name]['relativeModel']['name'];
-            } else {
-                $relatedModelClass = $structure[$name]['relativeModel'];
-            }
-
-            return call_user_func([$relatedModelClass, "find"])->andWhere(['id' => parent::__get($name)])->one();
-        }
-
-        if (isset($structure[$name]) && $structure[$name]['type'] == 'linked' && !method_exists($this, 'get'.$name) && preg_match("/\\Files$/", static::$linkModelName)) {
-            return Files::find()->where(['id' => parent::__get($name)])->one();
-        }
-
-        if (isset($structure[$name]) && $structure[$name]['type'] == 'linked') {
-            $relatedModelClass = static::$linkModelName;
-
-            return call_user_func([$relatedModelClass, "find"])->andWhere(['id' => parent::__get($name)])->one();
-        }
-
-        if ($name == 'parent' && static::$recursive) {
-            return static::find()->andWhere(['id' => $this->parent_id])->one();
         }
 
         return parent::__get($name);
@@ -747,6 +759,26 @@ class ActiveRecord extends db\ActiveRecord
         }
     }
 
+    public static function getMasterModelRelationsType()
+    {
+        return static::$masterModelRelationsType;
+    }
+
+    public static function getSlaveModelAddMethod()
+    {
+        return static::$slaveModelAddMethod;
+    }
+
+    public static function getLinkModelName ()
+    {
+        return static::$linkModelName;
+    }
+
+    public static function getDefaultSort()
+    {
+        return static::$defaultSort;
+    }
+
     public static function getLinkTableIdField ()
     {
         if (static::$masterModel && static::$masterModelRelationsType == self::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY) {
@@ -755,10 +787,9 @@ class ActiveRecord extends db\ActiveRecord
                 if ($field['type'] == 'linked') {
                     return $name;
                 }
-                return 'link_table_id';
             }
         }
-        return '';
+        return static::$linkFieldlName;
     }
 
     public static function isSortable()
@@ -868,7 +899,7 @@ class ActiveRecord extends db\ActiveRecord
     public function validateSelectValue($field, $params)
     {
         $structure = static::getStructure();
-        if (!array_key_exists($this->{$field}, $structure[$field]['selectOptions'])) {
+        if (!array_key_exists($this->getAttribute($field), $structure[$field]['selectOptions'])) {
             $this->addError($field, 'Недопустимое значение поля "'. $structure[$field]['title'].'", необходимо выбрать одно из предложенных значений');
         }
     }
@@ -1026,7 +1057,18 @@ class ActiveRecord extends db\ActiveRecord
     public static function getStructure($fieldName = '')
     {
         if ($fieldName) {
-            return (isset(static::$structure[$fieldName]) ? static::$structure[$fieldName] : null);
+            $field = null;
+            if (isset(static::$structure[$fieldName])) {
+                $field = static::$structure[$fieldName];
+                $field['calc'] = (isset($field['calc']) ? $field['calc'] : false);
+                $field['addition'] = (isset($field['addition']) ? $field['addition'] : false);
+                $field['expression'] = (isset($field['expression']) ? $field['expression'] : false);
+                $field['selectOptions'] = (isset($field['selectOptions']) ? $field['selectOptions'] : []);
+                $field['required'] = (isset($field['required']) ? $field['required'] : false);
+                $field['autoNumber'] = (isset($field['autoNumber']) ? $field['autoNumber'] : false);
+                $field['autoNumberReset'] = (isset($field['autoNumberReset']) ? $field['autoNumberReset'] : Utils::AUTONUMBER_RESET_NEVER);
+            }
+            return $field;
         }
         return static::$structure;
     }
@@ -1048,132 +1090,14 @@ class ActiveRecord extends db\ActiveRecord
         return null;
     }
 
-    protected static function beforeList($params)
+    public static function beforeList($params)
     {
         return $params;
     }
 
-    protected static function afterList($list)
+    public static function afterList($list)
     {
         return $list;
-    }
-
-    protected static function getSimpleFilterCondition($type, $field, $comparison, $value, $expression = '')
-    {
-        $tableName = static::tableName();
-        $tableName = str_replace('.', '_', $tableName);
-        $res = [];
-
-        if ($field == static::$masterModelRelFieldName) {
-            $type = 'numeric';
-        }
-
-        $fieldConf = static::getStructure($field);
-        if (!$type) {
-            switch($fieldConf['type']) {
-                case 'int':
-                case 'float':
-                case 'file':
-                    $type = 'numeric';
-                    break;
-                case 'text':
-                case 'html':
-                case 'string':
-                case 'tinystring':
-                    $type = 'string';
-                    break;
-                case 'select':
-                    $type = 'list';
-                    break;
-                case 'pinter':
-                    $type = 'pointer';
-                    break;
-                case 'date':
-                    $type = 'date';
-                    break;
-                case 'datetype':
-                    $type = 'datetime';
-                    break;
-            }
-        }
-
-        $condField = !$expression ? "`" . $tableName . "`.`" . $field . "`" : $expression;
-        if ($type == 'string' || $type == 'tinystring') {
-            if ($comparison == 'end') {
-                $res = ['like', $condField, "%".$value, false];
-            } elseif ($comparison == 'start') {
-                $res = ['like', ($condField), $value."%", false];
-            } elseif ($comparison == 'eq' || $comparison == '==') {
-                $res = ['=', ($condField), $value];
-            } else {
-                $res = ['like', ($condField), $value];
-            }
-        } elseif ($type == 'numeric') {
-            if ($comparison == 'lt' || $comparison == '<') {
-                $res = ['<', ($condField), $value];
-            } elseif ($comparison == 'gt' || $comparison == '>') {
-                $res = ['>', ($condField), $value];
-            } elseif ($comparison == 'eq' || $comparison == '==') {
-                $res = ['=', ($condField), $value];
-            } elseif ($comparison == 'noteq' || $comparison == '!=') {
-                $res = ['<>', ($condField), $value];
-            }
-        } elseif ($type == 'date' || $type == 'datetime') {
-            if ($comparison == 'lt' || $comparison == '<') {
-                $res = ['<', ($condField), $value];
-            } elseif ($comparison == 'gt' || $comparison == '>') {
-                $res = ['>', ($condField), $value];
-            } elseif ($comparison == 'eq' || $comparison == '==') {
-                $res = ['=', ($condField), $value];
-            } elseif ($comparison == 'noteq' || $comparison == '!=') {
-                $res = ['<>', ($condField), $value];
-            }
-        } elseif ($type == 'list') {
-            $res = ['=', ($condField), $value];
-        } elseif ($type == 'pointer') {
-            if (is_array($fieldConf['relativeModel'])) {
-                $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
-            } else {
-                $relatedModelClass = $fieldConf['relativeModel'];
-            }
-            $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
-            if ($relatedIdentifyFieldConf) {
-                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
-                $relatedTableName = $relatedTableClearName."_".$field;
-                $relatedFieldName = $relatedIdentifyFieldConf['name'];
-                $res = ['like', ($relatedTableName.".".$relatedFieldName), $value];
-            }
-        }
-        return $res;
-    }
-
-    protected static function getFilterCondition($filter, $expression = '')
-    {
-        $condition = [];
-        if (!isset($filter['value'])) {
-            return ['=', 'id',-8];
-        }
-        if (!is_array($filter['value'])) {
-            $filter['value'] = [$filter['value']];
-        }
-
-        foreach ($filter['value'] as $value) {
-            $condition[] = static::getSimpleFilterCondition(
-                (isset($filter['type']) ? $filter['type'] : null),
-                $filter['field'],
-                (isset($filter['comparison']) ? $filter['comparison'] : ''),
-                $value,
-                $expression
-            );
-        }
-        $count = count($condition);
-        if ($count > 1) {
-            array_unshift($condition, 'or');
-        } elseif ($count == 1) {
-            $condition = $condition[0];
-        }
-        return $condition;
     }
 
     /**
@@ -1198,416 +1122,7 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getList($params)
     {
-        $tableName = static::tableName();
-        $tableName = str_replace('.', '_', $tableName);
-        static::checkStructure();
-        static::addAdditionFields();
-
-        if (isset($params['query']) && $params['query']) {
-            // Быстрый фильтр по identyfy полю
-            $identifyFieldConf = static::getIdentifyFieldConf();
-            $params['filter'] = ($params['filter'] ? $params['filter'] : []);
-            $params['filter'] = array_merge($params['filter'], [
-                [
-                    'type' => 'string',
-                    'value' => $params['query'],
-                    'field' => $identifyFieldConf['name'],
-                ],
-            ]);
-        }
-
-        $params = static::beforeList($params);
-        $select = ["`".$tableName."`.`id`"];
-        $selectParams = [];
-        $join = [];
-        $pointers = [];
-        $selectFields = [];
-        $calcFields = [];
-        $additionTables = [];
-        $colorFields = [];
-
-        $structure = static::getStructure();
-
-        foreach ($structure as $fieldName => $fieldConf) {
-            if (isset($params['identifyOnly']) && $params['identifyOnly']) {
-                if ((isset($fieldConf['identify']) && !$fieldConf['identify']) || (!isset($fieldConf['identify']))) {
-                    continue;
-                }
-            }
-
-            if (!isset($fieldConf['calc'])) {
-                $fieldConf['calc'] = false;
-            }
-
-            if (!isset($fieldConf['addition'])) {
-                $fieldConf['addition'] = false;
-            }
-
-            if ($fieldConf['type'] == 'linked' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-                $relatedIdentifyFieldConf = call_user_func([static::$linkModelName, 'getIdentifyFieldConf']);
-                if ($relatedIdentifyFieldConf) {
-                    $select[] = "`__link_model_table`.`id` AS `".$fieldName."`";
-                    $select[] = "`__link_model_table`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-                    $pointers[$fieldName] = [
-                        "table" => '__link_model_table',
-                        "field" => $relatedIdentifyFieldConf['name']
-                    ];
-
-                    if (strtolower(call_user_func([static::$linkModelName, 'tableName'])) == 's_files') {
-                        $select[] = "`__link_model_table`.`name` as `fileof_".$fieldName."`";
-                        $pointers[$fieldName]['file_field'] = 'name';
-                    }
-                }
-            } elseif ($fieldConf['type'] == 'pointer' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-                if (is_array($fieldConf['relativeModel'])) {
-                    $relatedModelClass = '\app\modules\\'.$fieldConf['relativeModel']['moduleName'].'\models\\'.$fieldConf['relativeModel']['name'];
-                } else {
-                    $relatedModelClass = $fieldConf['relativeModel'];
-                }
-                $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
-                if ($relatedIdentifyFieldConf) {
-                    $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                    $relatedTableClearName = str_replace('.', '_', $relatedTableName);
-                    $select[] = "`".$relatedTableClearName."_".$fieldName."`.`id` AS `".$fieldName."`";
-                    if ($relatedIdentifyFieldConf['type'] == 'select') {
-                        $options = [];
-                        $keyIndex = 1;
-                        foreach ($relatedIdentifyFieldConf['selectOptions'] as $key => $value) {
-                            $options[] = "WHEN :option".$keyIndex."_".$fieldName."_key THEN :option".$keyIndex."_".$fieldName."_value";
-                            $selectParams[":option".$keyIndex."_".$fieldName."_key"] = $key;
-                            $selectParams[":option".$keyIndex."_".$fieldName."_value"] = $value;
-                            $keyIndex++;
-                        }
-                        $select[] = "(CASE `".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
-                    } else {
-                        $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-                    }
-                    $pointers[$fieldName] = [
-                        "table" => $relatedTableClearName."_".$fieldName,
-                        "field" => $relatedIdentifyFieldConf['name']
-                    ];
-                    $join[] = [
-                        'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
-                        'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
-                    ];
-                }
-            } elseif ($fieldConf['type'] == 'select' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-                $select[] = "`".$tableName."`.`".$fieldName."`";
-                $options = [];
-                $keyIndex = 1;
-                foreach ($fieldConf['selectOptions'] as $key => $value) {
-                    $options[] = "WHEN :option".$keyIndex."_".$fieldName."_key THEN :option".$keyIndex."_".$fieldName."_value";
-                    $selectParams[":option".$keyIndex."_".$fieldName."_key"] = $key;
-                    $selectParams[":option".$keyIndex."_".$fieldName."_value"] = $value;
-                    $keyIndex++;
-                }
-                $select[] = "(CASE `".$tableName."`.`".$fieldName."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
-                $selectFields[$fieldName] = [
-                    "valField" => "valof_".$fieldName
-                ];
-            } elseif ($fieldConf['type'] == 'file' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-                $relatedModelClass = '\app\modules\files\models\Files';
-                $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
-                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
-                $select[] = "`".$tableName."`.`".$fieldName."`";
-                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`name` as `fileof_".$fieldName."`";
-                $pointers[$fieldName] = [
-                    "table" => $relatedTableClearName."_".$fieldName,
-                    "field" => $relatedIdentifyFieldConf['name'],
-                    "file_field" => 'name'
-                ];
-                $join[] = [
-                    'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
-                    'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
-                ];
-            } elseif ($fieldConf['type'] == 'file' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-                $relatedModelClass = '\app\modules\files\models\Files';
-                $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
-                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
-                $select[] = "(" . $fieldConf['expression'] . ")" . " AS `" . $fieldName . "`";
-                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`name` as `fileof_".$fieldName."`";
-                $pointers[$fieldName] = [
-                    "table" => $relatedTableClearName."_".$fieldName,
-                    "field" => $relatedIdentifyFieldConf['name'],
-                    "file_field" => 'name'
-                ];
-                $join[] = [
-                    'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
-                    'on' => "(" . $fieldConf['expression'] . ")"." = `".$relatedTableClearName."_".$fieldName."`.id"
-                ];
-            } elseif ($fieldConf['type'] == 'color' && !$fieldConf['calc'] && !$fieldConf['addition']) {
-                if ($fieldConf['colorFormat'] == 'dec') {
-                    $colorFields[] = $fieldName;
-                }
-                $select[] = "`".$tableName."`.`".$fieldName."`";
-            } elseif ($fieldConf['type'] != 'file' && $fieldConf['type'] != 'pointer') {
-                // Простые типы данных
-                if ($fieldConf['calc'] && isset($fieldConf['expression']) && $fieldConf['expression']) {
-                    $select[] = "(" . $fieldConf['expression'] . ")" . " AS `" . $fieldName . "`";
-                    $calcFields[$fieldName] = "(" . $fieldConf['expression'] . ")";
-                } elseif (array_key_exists('addition', $fieldConf) && $fieldConf['addition']) {
-                    if (!in_array($fieldConf['additionTable'], $additionTables)) {
-                        $additionTables[] = $fieldConf['additionTable'];
-                        $join[] = [
-                            'name' => $fieldConf['additionTable'],
-                            'on' => "`".$fieldConf['additionTable']."`.`master_table_id` = `".$tableName."`.id AND `".$fieldConf['additionTable']."`.`master_table_name` = '".$tableName."'"
-                        ];
-                    }
-                    $select[] = "`".$fieldConf['additionTable']."`.`".$fieldName."`";
-                } else {
-                    $select[] = "`".$tableName."`.`".$fieldName."`";
-                }
-            }
-        }
-
-        if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$recursive) {
-            $fieldName = 'parent_id';
-            $relatedModelClass = static::className();
-            $relatedIdentifyFieldConf = static::getIdentifyFieldConf();
-            if ($relatedIdentifyFieldConf) {
-                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
-                $select[] = "`".$tableName."`.`".$fieldName."`";
-                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-                $pointers[$fieldName] = [
-                    "table" => $relatedTableClearName."_".$fieldName,
-                    "field" => $relatedIdentifyFieldConf['name']
-                ];
-                $join[] = [
-                    'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
-                    'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
-                ];
-            }
-        }
-
-        if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && static::$hiddable) {
-            $fieldName = 'hidden';
-            $select[] = "`".$tableName."`.`".$fieldName."`";
-        }
-
-        if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && (static::$parentModel || static::$masterModel)) {
-            $parentModelName = (static::$parentModel ? static::$parentModel : static::$masterModel);
-
-            $fieldName = static::$masterModelRelFieldName;
-            $relatedModelClass = (static::$parentModel ? static::$parentModel : static::$masterModel);
-            $relatedIdentifyFieldConf = call_user_func([$parentModelName, 'getIdentifyFieldConf']);
-            if ($relatedIdentifyFieldConf) {
-                $relatedTableName = call_user_func([$relatedModelClass, 'tableName']);
-                $relatedTableClearName = str_replace('.', '_', $relatedTableName);
-                $select[] = "`".$tableName."`.`".$fieldName."`";
-                $select[] = "`".$relatedTableClearName."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
-                $pointers[$fieldName] = [
-                    "table" => $relatedTableClearName."_".$fieldName,
-                    "field" => $relatedIdentifyFieldConf['name']
-                ];
-                $join[] = [
-                    'name' => $relatedTableName." as ".$relatedTableClearName."_".$fieldName,
-                    'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableClearName."_".$fieldName."`.id"
-                ];
-            }
-        }
-
-        $query = static::find();
-
-        $filteredFields = [];
-
-        if (isset($params['filter'])) {
-            foreach ($params['filter'] as $filter) {
-                $filteredFields[] = $filter['field'];
-                if (isset($calcFields[$filter['field']])) {
-                    $query->andWhere(static::getFilterCondition($filter, $calcFields[$filter['field']]));
-                } else {
-                    $query->andWhere(static::getFilterCondition($filter));
-                }
-            }
-        }
-
-        if(static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_CHECK) {
-
-            //Вызываем рак мозга у запроса - нам надо в секцию FROM запроса затолкать таблицу, которую мы подключаем, а основную сджоинить
-            $relatedTableName = call_user_func([static::$linkModelName, 'tableName']);
-
-            $query->from($relatedTableName." as __link_model_table");
-            $select[] = "IF((`".$tableName."`.`id` IS NOT NULL AND `".
-                $tableName."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']."), 1, 0) AS `check`";
-
-            $query->leftJoin("`".$tableName."`", "`__link_model_table`.`id` = `".$tableName."`.`".static::getLinkTableIdField()."` AND `".$tableName."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
-            if (!call_user_func([static::$linkModelName, 'getPermanentlyDelete'])) {
-                $query->andWhere("`__link_model_table`.del = 0");
-            }
-        } elseif (static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_BUTTON) {
-            $relatedTableName = call_user_func([static::$linkModelName, 'tableName']);
-            $query->leftJoin("`".$relatedTableName."` as __link_model_table", "`".$tableName."`.`".static::getLinkTableIdField()."` = `__link_model_table`.`id`");
-            $query->andWhere("`".$tableName."`.`".static::$masterModelRelFieldName."` = ".$params['masterId']);
-            if (!call_user_func([static::$linkModelName, 'getPermanentlyDelete'])) {
-                $query->andWhere("`__link_model_table`.del = 0");
-            }
-        } else {
-
-            if (isset($params['masterId']) && $params['masterId'] && (static::$masterModel || static::$parentModel)) {
-                $query->andWhere('`'.$tableName.'`.'.static::$masterModelRelFieldName.' = ' . intval($params['masterId']));
-            }
-
-            $tbName = static::tableName();
-            if (strpos($tbName, '.') !== false) {
-                $tbName = explode('.', $tbName);
-                $tbName = "`{$tbName[0]}`.`{$tbName[1]}`";
-            } else {
-                $tbName = "`{$tbName}`";
-            }
-            $query->from("{$tbName} as `{$tableName}`");
-        }
-
-        foreach ($join as $item) {
-            $query->leftJoin($item['name'], $item['on']);
-        }
-
-        if (isset($params['where'])) {
-            $query->andWhere($params['where']);
-        }
-
-        if (static::$recursive && array_key_exists('parentId', $params)) {
-            $query->andWhere(['parent_id' => $params['parentId']]);
-        }
-
-        // Начало говнокода, который надо будет извести
-        $totalCount = false;
-        if (!static::$sortable) {
-            $tmpQuery = clone $query;
-            $totalCount = intval($tmpQuery->count());
-        }
-        // Конец говнокода, который надо будет извести
-
-        $query->select($select);
-        if ($selectParams) {
-            $query->addParams($selectParams);
-        }
-
-        $orderBy = [];
-        if (isset($params['sort']) && $params['sort']) {
-            foreach ($params['sort'] as $sort) {
-
-                if (isset($sort['property'])) {
-                    $dir = SORT_ASC;
-
-                    if (isset($sort['direction'])) {
-                        $dir = (strtolower($sort['direction']) == 'desc' ? SORT_DESC : SORT_ASC);
-                    }
-                    if (isset($pointers[$sort['property']])) {
-                        $orderBy["`".$pointers[$sort['property']]['table']."`.`".$pointers[$sort['property']]['field']."`"] = $dir;
-                    } elseif (isset($calcFields[$sort['property']])) {
-                        $orderBy["`".$sort['property']."`"] = $dir;
-                    } else {
-                        $orderBy["`".$tableName."`.`".$sort['property']."`"] = $dir;
-                    }
-                }
-            }
-        }
-
-        if(static::$masterModelRelationsType == static::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$slaveModelAddMethod == static::SLAVE_MODEL_ADD_METHOD_CHECK) {
-            $orderBy = array_merge($orderBy, ["`__link_model_table`.id" => SORT_ASC]);
-        }
-
-        if (static::$sortable) {
-            $orderBy = array_merge($orderBy, ["`".$tableName."`.`sort_priority`" => SORT_ASC]);
-        }
-
-        if (static::$defaultSort && !static::$sortable) {
-            $orderBy = array_merge($orderBy, static::$defaultSort);
-        }
-
-        $query->orderBy(($orderBy ? $orderBy : null));
-
-        if (!static::$sortable) {
-            if (isset($params['limit']) && $params['limit']) {
-                $query->limit($params['limit']);
-            }
-            if (isset($params['start']) && $params['limit']) {
-                $query->offset($params['start']);
-            }
-        }
-
-//        if (!static::$sortable) {
-//            $query->selectOption = 'SQL_CALC_FOUND_ROWS';
-//        }
-
-        $list = $query->asArray()->all();
-
-
-//        $totalCount = false;
-//        if (!static::$sortable) {
-//            $command = Yii::$app->db->createCommand('SELECT FOUND_ROWS() as rowCount');
-//            $totalCount = intval($command->queryScalar());
-//        }
-
-        if ($pointers) {
-            foreach ($list as $key => $item) {
-                foreach ($pointers as $fieldName => $some) {
-                    if (isset($some['file_field'])) {
-                        // Файл или изображение
-                        $list[$key][$fieldName] = Json::encode([
-                            'id' => $item[$fieldName],
-                            'value' => $item['valof_'.$fieldName],
-                            'fileName' => $item['fileof_'.$fieldName],
-                        ]);
-                    } else {
-                        $list[$key][$fieldName] = Json::encode([
-                            'id' => $item[$fieldName],
-                            'value' => $item['valof_'.$fieldName]
-                        ]);
-                    }
-                }
-            }
-        }
-        if ($colorFields) {
-            foreach ($list as $key => $item) {
-                if ($list[$key][$fieldName]) {
-                    foreach ($colorFields as $fieldName) {
-                        $some = explode(',', $list[$key][$fieldName]);
-                        $list[$key][$fieldName] = "#".str_pad(dechex(intval($some[0])), 2, STR_PAD_LEFT).str_pad(dechex(intval($some[1])), 2, STR_PAD_LEFT).str_pad(dechex(intval($some[2])), 2, STR_PAD_LEFT);
-                    }
-                }
-            }
-        }
-
-        if ($selectFields) {
-            foreach ($list as $key => $item) {
-                foreach ($selectFields as $fieldName => $some) {
-                    $list[$key][$fieldName] = Json::encode([
-                        'id' => $item[$fieldName],
-                        'value' => $item['valof_'.$fieldName]
-                    ]);
-                }
-            }
-        }
-
-        $dataKey = (isset($params['dataKey']) ? $params['dataKey'] : 'data');
-        $res = [$dataKey => static::afterList($list)];
-
-        if (static::$recursive && isset($params['all']) && $params['all']) {
-            // Получаем все дерево
-            // todo me: Надо бы это как-то оптимизировать
-            foreach ($res[$dataKey] as $i => $data) {
-                $children = static::getList(array_merge($params, [
-                    'parentId' => $data['id']
-                ]));
-                if ($children[$dataKey]) {
-                    $res[$dataKey][$i][$dataKey] = $children[$dataKey];
-                    $res[$dataKey][$i]['leaf'] = false;
-                } else {
-                    $res[$dataKey][$i]['leaf'] = true;
-                }
-            }
-        }
-
-        if ($totalCount !== false) {
-            $res['total'] = $totalCount;
-        }
-        return $res;
+        return (new ActiveQuery(static::className()))->getList($params);
     }
 
     /**
@@ -1695,6 +1210,16 @@ class ActiveRecord extends db\ActiveRecord
 
         if ($data) {
             foreach ($data as $key => $val) {
+                if ($this->isNewRecord && isset($structure[$key]) && $structure[$key]['type'] == 'int' && isset($structure[$key]['autoNumber']) && $structure[$key]['autoNumber']) {
+                    $module = static::getModuleName();
+                    $registryKey = static::getModelName();
+                    $reset = Utils::AUTONUMBER_RESET_NEVER;
+                    if (isset($structure[$key]['autoNumberReset'])) {
+                        $reset = $structure[$key]['autoNumberReset'];
+                    }
+
+                    $val = Utils::getAutoNumber($module, $registryKey, $reset, intval($val));
+                }
                 if (isset($structure[$key]) && $structure[$key]['type'] != 'linked' &&
                     $structure[$key]['type'] != 'file' && $structure[$key]['type'] != 'bool' &&
                     (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) &&
@@ -1766,6 +1291,7 @@ class ActiveRecord extends db\ActiveRecord
     public function saveData($data, $add = false, $masterId = 0)
     {
         static::addAdditionFields();
+        $data[static::$masterModelRelFieldName] = $masterId;
         if (static::$masterModel) {
             $this->{static::$masterModelRelFieldName} = $masterId;
         }
@@ -1834,7 +1360,7 @@ class ActiveRecord extends db\ActiveRecord
      * @param array $params
      * @return array
      */
-    protected static function beforeDeleteRecords($condition = '', $params = [])
+    public static function beforeDeleteRecords($condition = '', $params = [])
     {
         return [$condition, $params];
     }
@@ -1875,7 +1401,7 @@ class ActiveRecord extends db\ActiveRecord
         return $config;
     }
 
-    protected static function addAdditionFields()
+    public static function addAdditionFields()
     {
         if (!static::$processedAdditionFieldsBehaviors) {
             if (static::$behaviorsList) {
@@ -1916,6 +1442,7 @@ class ActiveRecord extends db\ActiveRecord
      * @param bool $modal
      * @param array $params
      * @return string
+     * @throws Exception
      */
     public static function getUserInterface($configOnly = false, $masterId = 0, $modal = false, $params = [])
     {
@@ -1923,9 +1450,36 @@ class ActiveRecord extends db\ActiveRecord
         static::addAdditionFields();
         $modelStructure = static::getStructure();
         $fields = [];
+
+        if (!$modelStructure && static::$linkModelName) {
+            /**
+             * @var $modelClass ActiveRecord
+             */
+            $modelClass = static::$linkModelName;
+            $modelStructure = $modelClass::getStructure();
+
+            $modelStructure[static::getLinkTableIdField()] = [
+                'title' => '',
+                'type' => 'linked',
+            ];
+
+        }
+
         foreach ($modelStructure as $fieldName => $config) {
             $linkedSubType = '';
             $relativeModel = [];
+
+            if ($config['type'] == 'fromlinked' && static::$linkModelName) {
+                /**
+                 * @var $modelClass ActiveRecord
+                 */
+                $modelClass = static::$linkModelName;
+                $config = $modelClass::getStructure($fieldName);
+                if (!$config) {
+                    throw new Exception("Field {$fieldName} not found in ".static::className());
+                }
+            }
+
             if ($config['type'] == 'pointer') {
                 // Для полей типа pointer получаем конфигурацию связанной модели
 
@@ -1941,7 +1495,7 @@ class ActiveRecord extends db\ActiveRecord
                 } else {
                     $relativeModel['classname'] = $config['relativeModel'];
                 }
-
+                $relativeModelPath = '';
                 if (!isset($relativeModel['moduleName']) || !isset($relativeModel['name'])) {
                     $relativeModelFullName = $relativeModel['classname'];
                     $relativeModelPath = str_replace('\app\modules\\', '', str_replace('\models', '', $relativeModelFullName));
@@ -2225,5 +1779,15 @@ class ActiveRecord extends db\ActiveRecord
         return ("
           var module = Ext.create('App.core.".$editor."', ". Json::encode($conf).");
         ");
+    }
+
+    function getAllErrors()
+    {
+        $errors = [];
+        foreach ($this->errors as $error) {
+            $errors[] = implode("<br/>", $error);
+        }
+        $errors = implode('<br/>', $errors);
+        return $errors;
     }
 }
