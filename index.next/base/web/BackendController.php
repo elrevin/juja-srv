@@ -4,8 +4,10 @@
  */
 
 namespace app\base\web;
+use app\base\components\PrintForm;
 use app\base\db\ActiveRecord;
 use Yii;
+use yii\base\Exception;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 use yii\web\Controller;
@@ -595,5 +597,32 @@ class BackendController extends Controller
         }
         $this->ajaxError('\app\base\web\BackendController\actionDeleteRecord?modelName='.$modelName, 'Справочник не найден.');
         return null;
+    }
+
+    public function actionPrintItem()
+    {
+        $form = Yii::$app->request->get('form', '');
+        $recordID = intval(Yii::$app->request->get('id'));
+
+        if (!preg_match("/^[a-z0-9_]+$/i", $form)) {
+            throw new Exception("Print form not found");
+        }
+
+        $formFile = Yii::getAlias("@app/modules/".$this->module->id."/printforms/{$form}.php");
+
+        /**
+         * @var $formClass PrintForm
+         */
+        $formClass = '\app\modules\\'.$this->module->id.'\printforms\\'.$form;
+
+        if (!file_exists($formFile) || !method_exists($formClass, 'printItem')) {
+            throw new Exception("Print form not found");
+        }
+
+        /**
+         * @var $form PrintForm
+         */
+        $form = new $formClass($this->module, $recordID, []);
+        return $form->printItem();
     }
 }

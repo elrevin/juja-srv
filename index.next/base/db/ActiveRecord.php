@@ -1,6 +1,7 @@
 <?php
 namespace app\base\db;
 
+use app\base\components\PrintForm;
 use app\helpers\Utils;
 use app\models\SDataHistory;
 use app\models\SDataHistoryEvents;
@@ -1667,6 +1668,7 @@ class ActiveRecord extends db\ActiveRecord
         $conf = [
             'fields' => $fields,
             'getDataAction' => $getDataAction,
+            'printItemAction' => [static::getModuleName(), 'main', 'print-item'],
             'linkModelRunAction' => $linkModelRunAction,
             'linkModelName' => $linkModelName,
             'modelName' => $modelName,
@@ -1687,6 +1689,7 @@ class ActiveRecord extends db\ActiveRecord
             'parentModelName' => $parentModelName,
             'masterModelRelFieldName' => static::$masterModelRelFieldName,
             'historyAccess' => Yii::$app->user->getIdentity(true)->isSU,
+            "printForms" => null,
         ];
 
         if ($configOnly) {
@@ -1719,6 +1722,32 @@ class ActiveRecord extends db\ActiveRecord
 
             if ($configOnly) {
                 return static::beforeReturnUserInterface($conf);
+            } else {
+                $printFormDir = Yii::getAlias("@app/modules/" . static::getModuleName() . "/printforms/");
+                if (file_exists($printFormDir)) {
+                    $printForms = scandir($printFormDir);
+                    foreach ($printForms as $item) {
+                        $printFormFile = $printFormDir . $item;
+                        if ($item == '.' || $item == '..' || !is_file($printFormFile)) {
+                            continue;
+                        }
+
+                        $className = str_ireplace(".php", "", $item);
+                        /**
+                         * @var $class PrintForm
+                         */
+                        $class = '\app\modules\\'.static::getModuleName().'\printforms\\'. $className;
+                        if (method_exists($class, "printItem")) {
+                            if (!$conf['printForms']) {
+                                $conf['printForms'] = [];
+                            }
+                            $conf['printForms'][$className] = [
+                                'title' => $class::getTitle(),
+                                'format' => $class::getFormat(),
+                            ];
+                        }
+                    }
+                }
             }
         }
 
