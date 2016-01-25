@@ -158,6 +158,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         $fieldName = ($fieldName ? $fieldName : $modelClass::getIdentifyFieldConf()['name']);
 
         $tableName = $this->tableName($modelClass);
+
         $tableAlias = ( $tableAlias ? $tableAlias : $tableName.($postfix ? "__{$postfix}" : '' ) );
 
         $fieldAlias = ($fieldAlias ? $fieldAlias : $fieldName);
@@ -233,12 +234,12 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 if (!in_array($relatedTableName." as ".$relatedTableAlias, ArrayHelper::getColumn($this->join, 'name'))) {
                     $this->join[] = [
                         'name' => $relatedTableName." as ".$relatedTableAlias,
-                        'on' => "`{$tableAlias}.{$fieldName}` = `{$relatedTableAlias}`.id"
+                        'on' => "{$tableAlias}.`{$fieldName}` = `{$relatedTableAlias}`.id"
                     ];
                 }
 
-                $this->select[] = "`{$relatedTableAlias}`.`{$relatedIdentifyFieldConf['name']}` as `valof_{$fieldAlias}`";
-                $this->select[] = "`{$relatedTableAlias}`.`name` as `fileof_{$fieldAlias}`";
+                $this->select[] = "{$relatedTableAlias}.`{$relatedIdentifyFieldConf['name']}` as `valof_{$fieldAlias}`";
+                $this->select[] = "{$relatedTableAlias}.`name` as `fileof_{$fieldAlias}`";
             }
         } elseif ($field['type'] != 'pointer' && $field['type'] != 'file' && $field['type'] != 'select' && $field['type'] != 'linked' && $field['type'] != 'color') {
             if (array_key_exists('addition', $field) && $field['addition']) {
@@ -246,18 +247,18 @@ class ActiveQuery extends \yii\db\ActiveQuery
                     $this->additionTables[] = $field['additionTable'];
                     $this->join[] = [
                         'name' => $field['additionTable'],
-                        'on' => "`".$field['additionTable']."`.`master_table_id` = `".$tableName."`.id AND `".$field['additionTable']."`.`master_table_name` = '".$tableName."'"
+                        'on' => "`".$field['additionTable']."`.`master_table_id` = ".$tableAlias.".id AND `".$field['additionTable']."`.`master_table_name` = '".$tableName."'"
                     ];
                 }
                 $this->select[] = "`{$field['additionTable']}`.`{$fieldName}` AS `{$fieldAlias}`";
             } else {
-                $this->select[] = "`{$tableAlias}`.`{$fieldName}` AS `{$fieldAlias}`";
+                $this->select[] = "{$tableAlias}.`{$fieldName}` AS `{$fieldAlias}`";
             }
         } elseif ($field['type'] == 'color') {
             if ($field['colorFormat'] == 'dec') {
                 $this->colorFields[] = $fieldName;
             }
-            $this->select[] = "`{$tableAlias}`.`{$fieldName}` AS `{$fieldAlias}`";
+            $this->select[] = "{$tableAlias}.`{$fieldName}` AS `{$fieldAlias}`";
         } elseif ($field['type'] == 'pointer') {
             if (is_array($field['relativeModel'])) {
                 $relatedModelClass = '\app\modules\\'.$field['relativeModel']['moduleName'].'\models\\'.$field['relativeModel']['name'];
@@ -267,16 +268,21 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
             $relatedTableName = $this->tableName($relatedModelClass);
             $relatedTableAlias = str_replace('.', '_', $relatedTableName)."__".($postfix+1);
+            $relatedTableName = explode('.', $relatedTableName);
+            foreach ($relatedTableName as $i => $v) {
+                $relatedTableName[$i] = "`{$v}`";
+            }
+            $relatedTableName = implode(".", $relatedTableName);
             if (!$this->join || !in_array($relatedTableName." as ".$relatedTableAlias, ArrayHelper::getColumn($this->join, 'name'))) {
                 $this->join[] = [
                     'name' => $relatedTableName." as ".$relatedTableAlias,
-                    'on' => "`{$tableAlias}`.`{$fieldName}` = `{$relatedTableAlias}`.id"
+                    'on' => "{$tableAlias}.`{$fieldName}` = `{$relatedTableAlias}`.id"
                 ];
             }
 
             if (!$joinOnly) {
-                $this->select[] = "`{$tableAlias}`.`{$fieldName}` AS `{$fieldAlias}`";
-                $this->getField('', $relatedModelClass, "valof_{$fieldAlias}", $postfix + 1);
+                $this->select[] = "{$tableAlias}.`{$fieldName}` AS `{$fieldAlias}`";
+                $this->getField('', $relatedModelClass, "valof_{$fieldAlias}", $postfix + 1, $relatedTableAlias);
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 $this->pointers[$fieldName] = [
                     "table" => $relatedTableAlias,
@@ -299,18 +305,18 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
             $this->join[] = [
                 'name' => $relatedTableName." as ".$relatedTableAlias,
-                'on' => "`{$tableAlias}`.`{$fieldName}` = `{$relatedTableAlias}`.id"
+                'on' => "{$tableAlias}.`{$fieldName}` = `{$relatedTableAlias}`.id"
             ];
 
-            $this->select[] = "`{$tableAlias}`.`{$fieldName}` AS `{$fieldAlias}`";
-            $this->select[] = "`{$relatedTableAlias}`.`{$relatedIdentifyFieldConf['name']}` as `valof_{$fieldAlias}`";
-            $this->select[] = "`{$relatedTableAlias}`.`name` as `fileof_{$fieldAlias}`";
+            $this->select[] = "{$tableAlias}.`{$fieldName}` AS `{$fieldAlias}`";
+            $this->select[] = "{$relatedTableAlias}.`{$relatedIdentifyFieldConf['name']}` as `valof_{$fieldAlias}`";
+            $this->select[] = "{$relatedTableAlias}.`name` as `fileof_{$fieldAlias}`";
             $this->pointers[$fieldName] = [
                 "table" => $relatedTableAlias,
                 "field" => $relatedIdentifyFieldConf['name']
             ];
         } elseif ($field['type'] == 'select') {
-            $this->select[] = "`{$tableAlias}`.`{$fieldName}` AS `{$fieldAlias}`";
+            $this->select[] = "{$tableAlias}.`{$fieldName}` AS `{$fieldAlias}`";
             $options = [];
             $keyIndex = 1;
             foreach ($field['selectOptions'] as $key => $value) {
@@ -319,7 +325,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 $this->params[":option{$keyIndex}_{$fieldAlias}_value"] = $value;
                 $keyIndex++;
             }
-            $this->select[] = "(CASE `".$tableName."`.`".$fieldName."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
+            $this->select[] = "(CASE ".$tableAlias.".`".$fieldName."` ".implode(' ', $options)." END) AS `valof_".$fieldName."`";
             $this->selectFields[$fieldName] = [
                 "valField" => "valof_".$fieldName
             ];
@@ -353,6 +359,13 @@ class ActiveQuery extends \yii\db\ActiveQuery
          */
         $modelClass = $this->modelClass;
         $tableName = $this->tableName();
+        if (strpos($tableName, '.') !== false) {
+            $tableName = explode('.', $tableName);
+            $tableName = "`{$tableName[0]}`.`{$tableName[1]}`";
+        } else {
+            $tableName = "`{$tableName}`";
+        }
+        $tableAlias = str_replace(".", "_", $tableName);
         $modelClass::checkStructure();
         $modelClass::addAdditionFields();
         $structure = $modelClass::getStructure();
@@ -371,7 +384,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             ]);
         }
 
-        $this->select[] = "`{$tableName}`.id";
+        $this->select[] = "{$tableAlias}.id";
 
         $_tmpModelClass = $modelClass;
         if (!$structure && $modelClass::getLinkModelName()) {
@@ -401,7 +414,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 $fieldConf['addition'] = false;
             }
 
-            $this->getField($fieldName);
+            $this->getField($fieldName, $modelClass, '', 0, $tableAlias);
         }
 
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && $modelClass::getRecursive()) {
@@ -411,22 +424,22 @@ class ActiveQuery extends \yii\db\ActiveQuery
             if ($relatedIdentifyFieldConf) {
                 $relatedTableName = $this->tableName($relatedModelClass);
                 $relatedTableAlias = str_replace('.', '_', $relatedTableName);
-                $this->select[] = "`".$tableName."`.`".$fieldName."`";
-                $this->select[] = "`".$relatedTableAlias."_".$fieldName."`.`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
+                $this->select[] = $tableAlias.".`".$fieldName."`";
+                $this->select[] = $relatedTableAlias."_".$fieldName.".`".$relatedIdentifyFieldConf['name']."` as `valof_".$fieldName."`";
                 $this->pointers[$fieldName] = [
                     "table" => $relatedTableAlias."_".$fieldName,
                     "field" => $relatedIdentifyFieldConf['name']
                 ];
                 $this->join[] = [
                     'name' => $relatedTableName." as ".$relatedTableAlias."_".$fieldName,
-                    'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableAlias."_".$fieldName."`.id"
+                    'on' => $tableAlias.".`".$fieldName."` = ".$relatedTableAlias."_".$fieldName.".id"
                 ];
             }
         }
 
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && $modelClass::getHiddable()) {
             $fieldName = 'hidden';
-            $this->select[] = "`".$tableName."`.`".$fieldName."`";
+            $this->select[] = $tableAlias.".`".$fieldName."`";
         }
 
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && $modelClass::getParentModel()) {
@@ -437,7 +450,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             if ($relatedIdentifyFieldConf) {
                 $relatedTableName = $this->tableName($parentModelName);
                 $relatedTableAlias = str_replace('.', '_', $relatedTableName)."_".$fieldName;
-                $this->select[] = "`".$tableName."`.`".$fieldName."`";
+                $this->select[] = $tableAlias.".`".$fieldName."`";
 
                 $this->getField('', $parentModelName, "valof_{$fieldName}", 0, $relatedTableAlias);
 
@@ -448,7 +461,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 ];
                 $this->join[] = [
                     'name' => $relatedTableName." as ".$relatedTableAlias,
-                    'on' => "`".$tableName."`.`".$fieldName."` = `".$relatedTableAlias."`.id"
+                    'on' => $tableAlias.".`".$fieldName."` = `".$relatedTableAlias."`.id"
                 ];
             }
         }
@@ -475,12 +488,12 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $relatedTableName = $this->tableName($modelClass::getLinkModelName());
 
             $this->from($relatedTableName." as __link_model_table");
-            $this->select[] = "IF((`".$tableName."`.`id` IS NOT NULL AND `".
-                $tableName."`.`".$modelClass::getMasterModelRelFieldName()."` = ".$params['masterId']."), 1, 0) AS `check`";
+            $this->select[] = "IF((".$tableAlias.".`id` IS NOT NULL AND `".
+                $tableAlias.".`".$modelClass::getMasterModelRelFieldName()."` = ".$params['masterId']."), 1, 0) AS `check`";
 
             array_unshift($this->join, [
-                "name" => "`".$tableName."`",
-                "on"   => "`__link_model_table`.`id` = `".$tableName."`.`".$modelClass::getLinkTableIdField()."` AND `".$tableName."`.`".$modelClass::getMasterModelRelFieldName()."` = ".$params['masterId'],
+                "name" => $tableName." ".$tableAlias,
+                "on"   => "`__link_model_table`.`id` = ".$tableAlias.".`".$modelClass::getLinkTableIdField()."` AND ".$tableAlias.".`".$modelClass::getMasterModelRelFieldName()."` = ".$params['masterId'],
             ]);
             if (!call_user_func([$modelClass::getLinkModelName(), 'getPermanentlyDelete'])) {
                 $this->andWhere("`__link_model_table`.del = 0");
@@ -492,27 +505,19 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $relatedTableName = $relatedTableName = $this->tableName($modelClass::getLinkModelName());
             array_unshift($this->join, [
                 "name" => "`".$relatedTableName."` as __link_model_table",
-                "on"   => "`".$tableName."`.`".$modelClass::getLinkTableIdField()."` = `__link_model_table`.`id`",
+                "on"   => $tableAlias.".`".$modelClass::getLinkTableIdField()."` = `__link_model_table`.`id`",
             ]);
 
-            $this->andWhere("`".$tableName."`.`".$modelClass::getMasterModelRelFieldName()."` = ".$params['masterId']);
+            $this->andWhere($tableAlias.".`".$modelClass::getMasterModelRelFieldName()."` = ".$params['masterId']);
             if (!call_user_func([$modelClass::getLinkModelName(), 'getPermanentlyDelete'])) {
                 $this->andWhere("`__link_model_table`.del = 0");
             }
         } else {
 
             if (isset($params['masterId']) && $params['masterId'] && ($modelClass::getMasterModel() || $modelClass::getParentModel())) {
-                $this->andWhere('`'.$tableName.'`.'.$modelClass::getMasterModelRelFieldName().' = ' . intval($params['masterId']));
+                $this->andWhere($tableAlias.'.'.$modelClass::getMasterModelRelFieldName().' = ' . intval($params['masterId']));
             }
-
-            $tbName = static::tableName();
-            if (strpos($tbName, '.') !== false) {
-                $tbName = explode('.', $tbName);
-                $tbName = "`{$tbName[0]}`.`{$tbName[1]}`";
-            } else {
-                $tbName = "`{$tbName}`";
-            }
-            $this->from("{$tbName} as `{$tableName}`");
+            $this->from("{$tableName} as {$tableAlias}");
         }
 
         if ($this->join) {
@@ -532,7 +537,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         }
 
         if (!$modelClass::getPermanentlyDelete()) {
-            $this->andWhere(["`{$tableName}`.del" => 0]);
+            $this->andWhere(["{$tableAlias}.del" => 0]);
         }
 
         // Начало говнокода, который надо будет извести
@@ -546,7 +551,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
         $orderBy = [];
         if ($modelClass::isSortable()) {
-            $orderBy["`{$tableName}`.sort_priority"] = SORT_ASC;
+            $orderBy["{$tableAlias}.sort_priority"] = SORT_ASC;
         } elseif (isset($params['sort']) && $params['sort']) {
             foreach ($params['sort'] as $sort) {
 
@@ -561,7 +566,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
                     } elseif (isset($calcFields[$sort['property']])) {
                         $orderBy["`".$sort['property']."`"] = $dir;
                     } else {
-                        $orderBy["`".$tableName."`.`".$sort['property']."`"] = $dir;
+                        $orderBy[$tableAlias.".`".$sort['property']."`"] = $dir;
                     }
                 }
             }
@@ -575,7 +580,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         }
 
         if ($modelClass::isSortable()) {
-            $orderBy = array_merge($orderBy, ["`".$tableName."`.`sort_priority`" => SORT_ASC]);
+            $orderBy = array_merge($orderBy, [$tableAlias.".`sort_priority`" => SORT_ASC]);
         }
 
         if (!$orderBy && $modelClass::getDefaultSort() && !$modelClass::isSortable()) {

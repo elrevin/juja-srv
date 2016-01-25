@@ -467,7 +467,19 @@ class ActiveRecord extends db\ActiveRecord
 
                 $hiddable = $relatedModelClass::getHiddable();
 
-                $val = $relatedModelClass::find()->andWhere(["`".$relatedModelClass::tableName()."`.id" => $val]);
+                $tableName = $relatedModelClass::tableName();
+
+                if (strpos($tableName, ".")) {
+                    $tableName = explode(".", $tableName);
+                    foreach ($tableName as $i => $v) {
+                        $tableName[$i] = "`{$v}`";
+                    }
+                    $tableName = implode(".", $tableName);
+                } else {
+                    $tableName = "`{$tableName}`";
+                }
+
+                $val = $relatedModelClass::find()->andWhere([$tableName.".id" => $val]);
                 if ($hiddable) {
                     $val->andWhere(['hidden' => 0]);
                 }
