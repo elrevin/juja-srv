@@ -146,7 +146,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         $tableName = str_replace('.', '_', $tableName);
         $tableAlias = ( $tableAlias ? $tableAlias : $tableName.($postfix ? "__{$postfix}" : '' ) );
 
-        if ($postfix && in_array($tableAlias, $this->tableAliases)) {
+        if (!$tableAlias && $postfix && in_array($tableAlias, $this->tableAliases)) {
             $n = 1;
 
             while (in_array($tableAlias."_".$n, $this->tableAliases)) {
@@ -188,6 +188,10 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
         $field = false;
 
+        /**
+         * @var $linkModelName ActiveRecord
+         */
+        $linkModelName = $modelClass::getLinkModelName();
         if ($structure) {
             $field = $structure[$fieldName];
         } elseif ($fieldName == $modelClass::getLinkTableIdField()) {
@@ -195,8 +199,8 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 'title' => '',
                 'type' => 'linked',
             ];
-        } elseif ($modelClass::getLinkModelName()) {
-            $modelClass = $modelClass::getLinkModelName();
+        } elseif ($linkModelName) {
+            $modelClass = $linkModelName;
             $structure = $modelClass::getStructure();
             $field = $structure[$fieldName];
             $tableAlias = '__link_model_table';
@@ -207,7 +211,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         }
 
         if ($field['type'] == 'fromlinked') {
-            $modelClass = $modelClass::getLinkModelName();
+            $modelClass = $linkModelName;
             $structure = $modelClass::getStructure();
             $field = $structure[$fieldName];
         }
@@ -316,13 +320,34 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 ];
             }
         } elseif ($field['type'] == 'linked') {
-            $relatedIdentifyFieldConf = call_user_func([$modelClass::getLinkModelName(), 'getIdentifyFieldConf']);
-            $this->select[] = "`__link_model_table`.`id` AS `{$fieldAlias}`";
-            $this->getField('', $modelClass::getLinkModelName(), "valof_{$fieldAlias}", $postfix + 1, '__link_model_table');
-            $this->pointers[$fieldName] = [
-                "table" => $modelClass::getLinkModelName(),
-                "field" => $relatedIdentifyFieldConf['name']
-            ];
+            $relatedIdentifyFieldConf = call_user_func([$linkModelName, 'getIdentifyFieldConf']);
+            if (trim($linkModelName, '\\') == 'app\modules\files\models\Files') {
+                $relatedModelClass = '\app\modules\files\models\Files';
+                $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
+                $relatedTableName = $this->tableName($relatedModelClass);
+                $relatedTableAlias = $this->getTableAlias("", $relatedTableName, $postfix+1);
+
+                $this->join[] = [
+                    'name' => $relatedTableName." as ".$relatedTableAlias,
+                    'on' => "{$tableAlias}.`{$fieldName}` = `{$relatedTableAlias}`.id"
+                ];
+
+                $this->select[] = "{$tableAlias}.`{$fieldName}` AS `{$fieldAlias}`";
+                $this->select[] = "{$relatedTableAlias}.`{$relatedIdentifyFieldConf['name']}` as `valof_{$fieldAlias}`";
+                $this->select[] = "{$relatedTableAlias}.`name` as `fileof_{$fieldAlias}`";
+                $this->pointers[$fieldName] = [
+                    "table" => $relatedTableAlias,
+                    "field" => $relatedIdentifyFieldConf['name'],
+                    "file_field" => 'name'
+                ];
+            } else {
+                $this->select[] = "`__link_model_table`.`id` AS `{$fieldAlias}`";
+                $this->getField('', $linkModelName, "valof_{$fieldAlias}", $postfix + 1, '__link_model_table');
+                $this->pointers[$fieldName] = [
+                    "table" => $linkModelName,
+                    "field" => $relatedIdentifyFieldConf['name']
+                ];
+            }
         } elseif ($field['type'] == 'file') {
             $relatedModelClass = '\app\modules\files\models\Files';
             $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
@@ -398,6 +423,8 @@ class ActiveQuery extends \yii\db\ActiveQuery
         $structure = $modelClass::getStructure();
         $identifyFieldName = '';
 
+        $this->join = [];
+
         if (isset($params['query']) && $params['query']) {
             // Быстрый фильтр по identyfy полю
             $identifyFieldConf = $modelClass::getIdentifyFieldConf();
@@ -413,6 +440,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
         $this->select[] = "{$tableAlias}.id";
 
+        $params = $modelClass::beforeList($params);
         $_tmpModelClass = $modelClass;
         if (!$structure && $modelClass::getLinkModelName()) {
             /**
@@ -515,7 +543,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $relatedTableName = $this->tableName($modelClass::getLinkModelName());
 
             $this->from($relatedTableName." as __link_model_table");
-            $this->select[] = "IF((".$tableAlias.".`id` IS NOT NULL AND `".
+            $this->select[] = "IF((".$tableAlias.".`id` IS NOT NULL AND ".
                 $tableAlias.".`".$modelClass::getMasterModelRelFieldName()."` = ".$params['masterId']."), 1, 0) AS `check`";
 
             array_unshift($this->join, [
