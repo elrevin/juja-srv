@@ -67,6 +67,10 @@ class UrlManager extends \yii\web\UrlManager
                     \Yii::$app->response->format = 'tjson';
                 } elseif ($type == 'js') {
                     \Yii::$app->response->format = 'js';
+                } elseif ($type == 'xlsx') {
+                    \Yii::$app->response->format = 'xlsx';
+                } elseif ($type == 'pdf') {
+                    \Yii::$app->response->format = 'pdf';
                 }
 
                 $route[0] = str_replace($matches[0], '', $route[0]);

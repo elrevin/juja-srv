@@ -599,10 +599,12 @@ class BackendController extends Controller
         return null;
     }
 
-    public function actionPrintItem()
+    public function actionGetPrintFormInterface()
     {
-        $form = Yii::$app->request->get('form', '');
-        $recordID = intval(Yii::$app->request->get('id'));
+        $params = Json::decode(Yii::$app->request->post("params", '[]'));
+
+        $form = (isset($params['form']) ? $params['form'] : '');
+        $recordID = (isset($params['id']) ? intval($params['id']) : 0);
 
         if (!preg_match("/^[a-z0-9_]+$/i", $form)) {
             throw new Exception("Print form not found");
@@ -623,6 +625,35 @@ class BackendController extends Controller
          * @var $form PrintForm
          */
         $form = new $formClass($this->module, $recordID, []);
-        return $form->printItem();
+
+        return $form->getUserInterface();
+    }
+
+    public function actionPrintItem()
+    {
+        $form = Yii::$app->request->get('form', '');
+        $recordID = intval(Yii::$app->request->get('id'));
+        $options = Json::decode(Yii::$app->request->get('options', '[]'));
+
+        if (!preg_match("/^[a-z0-9_]+$/i", $form)) {
+            throw new Exception("Print form not found");
+        }
+
+        $formFile = Yii::getAlias("@app/modules/".$this->module->id."/printforms/{$form}.php");
+
+        /**
+         * @var $formClass PrintForm
+         */
+        $formClass = '\app\modules\\'.$this->module->id.'\printforms\\'.$form;
+
+        if (!file_exists($formFile) || !method_exists($formClass, 'printItem')) {
+            throw new Exception("Print form not found");
+        }
+
+        /**
+         * @var $form PrintForm
+         */
+        $form = new $formClass($this->module, $recordID, []);
+        return $form->printItem($options);
     }
 }

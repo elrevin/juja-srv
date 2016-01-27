@@ -1756,7 +1756,14 @@ class ActiveRecord extends db\ActiveRecord
                             $conf['printForms'][$className] = [
                                 'title' => $class::getTitle(),
                                 'format' => $class::getFormat(),
+                                "runAction" => null,
                             ];
+
+                            if ($class::getForm()) {
+                                $conf['printForms'][$className]['runAction'] = [
+                                    static::getModuleName(), 'main', 'get-print-form-interface'
+                                ];
+                            }
                         }
                     }
                 }

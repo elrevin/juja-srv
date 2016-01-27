@@ -240,6 +240,11 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
                 $this->select[] = "{$relatedTableAlias}.`{$relatedIdentifyFieldConf['name']}` as `valof_{$fieldAlias}`";
                 $this->select[] = "{$relatedTableAlias}.`name` as `fileof_{$fieldAlias}`";
+                $this->pointers[$fieldName] = [
+                    "table" => $relatedTableAlias,
+                    "field" => $relatedIdentifyFieldConf['name'],
+                    "file_field" => 'name'
+                ];
             }
         } elseif ($field['type'] != 'pointer' && $field['type'] != 'file' && $field['type'] != 'select' && $field['type'] != 'linked' && $field['type'] != 'color') {
             if (array_key_exists('addition', $field) && $field['addition']) {
@@ -313,7 +318,8 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $this->select[] = "{$relatedTableAlias}.`name` as `fileof_{$fieldAlias}`";
             $this->pointers[$fieldName] = [
                 "table" => $relatedTableAlias,
-                "field" => $relatedIdentifyFieldConf['name']
+                "field" => $relatedIdentifyFieldConf['name'],
+                "file_field" => 'name'
             ];
         } elseif ($field['type'] == 'select') {
             $this->select[] = "{$tableAlias}.`{$fieldName}` AS `{$fieldAlias}`";
@@ -524,7 +530,11 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $join = $this->join;
             $this->join = [];
             foreach ($join as $item) {
-                $this->leftJoin($item['name'], $item['on']);
+                if (isset($item['name']) && isset($item['on'])) {
+                    $this->leftJoin($item['name'], $item['on']);
+                } else {
+                    $this->join[] = $item;
+                }
             }
         }
 
@@ -664,7 +674,8 @@ class ActiveQuery extends \yii\db\ActiveQuery
             // Получаем все дерево
             // todo me: Надо бы это как-то оптимизировать
             foreach ($res[$dataKey] as $i => $data) {
-                $children = static::getList(array_merge($params, [
+                $subQuery = new ActiveQuery($this->modelClass);
+                $children = $subQuery->getList(array_merge($params, [
                     'parentId' => $data['id']
                 ]));
                 if ($children[$dataKey]) {
