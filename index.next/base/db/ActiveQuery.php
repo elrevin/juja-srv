@@ -1,7 +1,6 @@
 <?php
 namespace app\base\db;
 use yii\base\Exception;
-use yii\db\Expression;
 use yii\helpers\ArrayHelper;
 use yii\helpers\Json;
 
@@ -12,6 +11,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
     public $colorFields = [];
     public $selectFields = [];
     public $calcFields = [];
+    private $tableAliases = [];
 
     protected function tableName($modelClass = '')
     {
@@ -141,6 +141,27 @@ class ActiveQuery extends \yii\db\ActiveQuery
         return $condition;
     }
 
+    protected function getTableAlias($tableAlias, $tableName, $postfix)
+    {
+        $tableName = str_replace('.', '_', $tableName);
+        $tableAlias = ( $tableAlias ? $tableAlias : $tableName.($postfix ? "__{$postfix}" : '' ) );
+
+        if ($postfix && in_array($tableAlias, $this->tableAliases)) {
+            $n = 1;
+
+            while (in_array($tableAlias."_".$n, $this->tableAliases)) {
+                $n++;
+            }
+
+            $tableAlias .= "_".$n;
+        }
+
+        if (!in_array($tableAlias, $this->tableAliases)) {
+            $this->tableAliases[] = $tableAlias;
+        }
+        return $tableAlias;
+    }
+
     /**
      * @param string $fieldName
      * @param string $modelClass
@@ -159,7 +180,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
         $tableName = $this->tableName($modelClass);
 
-        $tableAlias = ( $tableAlias ? $tableAlias : $tableName.($postfix ? "__{$postfix}" : '' ) );
+        $tableAlias = $this->getTableAlias($tableAlias, $tableName, $postfix);
 
         $fieldAlias = ($fieldAlias ? $fieldAlias : $fieldName);
 
@@ -229,7 +250,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 $relatedModelClass = '\app\modules\files\models\Files';
                 $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
                 $relatedTableName = $this->tableName($relatedModelClass);
-                $relatedTableAlias = str_replace('.', '_', $relatedTableName)."__".($postfix+1);
+                $relatedTableAlias = $this->getTableAlias("", $relatedTableName, $postfix+1);
 
                 if (!in_array($relatedTableName." as ".$relatedTableAlias, ArrayHelper::getColumn($this->join, 'name'))) {
                     $this->join[] = [
@@ -272,7 +293,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             }
 
             $relatedTableName = $this->tableName($relatedModelClass);
-            $relatedTableAlias = str_replace('.', '_', $relatedTableName)."__".($postfix+1);
+            $relatedTableAlias = $this->getTableAlias("", $relatedTableName, $postfix+1);
             $relatedTableName = explode('.', $relatedTableName);
             foreach ($relatedTableName as $i => $v) {
                 $relatedTableName[$i] = "`{$v}`";
@@ -306,7 +327,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $relatedModelClass = '\app\modules\files\models\Files';
             $relatedIdentifyFieldConf = call_user_func([$relatedModelClass, 'getIdentifyFieldConf']);
             $relatedTableName = $this->tableName($relatedModelClass);
-            $relatedTableAlias = str_replace('.', '_', $relatedTableName)."__".($postfix+1);
+            $relatedTableAlias = $this->getTableAlias("", $relatedTableName, $postfix+1);
 
             $this->join[] = [
                 'name' => $relatedTableName." as ".$relatedTableAlias,
