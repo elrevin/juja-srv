@@ -1333,12 +1333,7 @@ class ActiveRecord extends db\ActiveRecord
             if ($add) {
                 $result = static::getList([
                     "limit" => 1,
-                    "sort" => [
-                        [
-                            "property" => 'id',
-                            "direction" => 'desc'
-                        ]
-                    ],
+                    "where" => "`".static::tableName()."`.id = '{$this->id}'",
                     "masterId" => $masterId
                 ]);
 
