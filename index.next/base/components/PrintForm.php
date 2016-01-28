@@ -5,9 +5,10 @@ use app\base\db\ActiveRecord;
 use app\base\Module;
 use yii\base\Component;
 use yii\base\Exception;
+use yii\base\ViewContextInterface;
 use yii\helpers\Json;
 
-class PrintForm extends Component
+class PrintForm extends Component implements ViewContextInterface
 {
     private $_view;
     private $_viewPath;
@@ -18,6 +19,7 @@ class PrintForm extends Component
     protected $record = null;
 
     protected static $form = [];
+    protected $id;
 
     /**
      * @var Module
@@ -43,6 +45,14 @@ class PrintForm extends Component
             throw new \yii\web\HttpException(404, 'Not found');
         }
 
+        $className = static::className();
+        $className = explode('\\', $className);
+        $className = $className[count($className) - 1];
+
+        $this->id =$className;
+
+        \Yii::$app->view->setActiveTheme(\Yii::$app->params['themeName']);
+
         parent::__construct($config);
     }
 
@@ -67,7 +77,7 @@ class PrintForm extends Component
     public function getViewPath()
     {
         if ($this->_viewPath === null) {
-            $this->_viewPath = $this->module->getViewPath() . DIRECTORY_SEPARATOR . "print" . DIRECTORY_SEPARATOR .$this->id;
+            $this->_viewPath = $this->module->getBasePath() . DIRECTORY_SEPARATOR . "print" . DIRECTORY_SEPARATOR .$this->id;
         }
         return $this->_viewPath;
     }
@@ -88,6 +98,11 @@ class PrintForm extends Component
     public static function getForm()
     {
         return static::$form;
+    }
+
+    public static function getModel()
+    {
+        return static::$model;
     }
 
     function getUserInterface()

@@ -1744,7 +1744,7 @@ class ActiveRecord extends db\ActiveRecord
                          * @var $class PrintForm
                          */
                         $class = '\app\modules\\'.static::getModuleName().'\printforms\\'. $className;
-                        if (method_exists($class, "printItem")) {
+                        if (method_exists($class, "printItem") && $class::getModel() == $modelName) {
                             if (!$conf['printForms']) {
                                 $conf['printForms'] = [];
                             }
