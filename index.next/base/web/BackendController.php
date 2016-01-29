@@ -335,6 +335,7 @@ class BackendController extends Controller
                 "all" => (Yii::$app->request->get('all', 0) ? true : false),
                 "parentId" => Yii::$app->request->get('parentId', null),
                 'query' => Yii::$app->request->post('query', ''),
+                'defaultId' => intval(Yii::$app->request->post('defaultId', 0)),
             ];
 
             $list = call_user_func([$modelName, 'getList'], $params);
@@ -347,15 +348,15 @@ class BackendController extends Controller
                         break;
                     }
                 }
-                if ($defaultId) {
-                    $listAdd = call_user_func([$modelName, 'getList'], array_merge($params, [
-                        'where' => ["`".$modelName::tableName()."`.id" => $defaultId],
-                    ]));
-                    if ($listAdd['data']) {
-                        array_pop($list['data']);
-                        array_unshift($list['data'], $listAdd['data'][0]);
-                    }
-                }
+//                if ($defaultId) {
+//                    $listAdd = call_user_func([$modelName, 'getList'], array_merge($params, [
+//                        'where' => ["`".$modelName::tableName()."`.id" => $defaultId],
+//                    ]));
+//                    if ($listAdd['data']) {
+//                        array_pop($list['data']);
+//                        array_unshift($list['data'], $listAdd['data'][0]);
+//                    }
+//                }
             }
 
             return $list;

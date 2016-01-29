@@ -411,13 +411,14 @@ class ActiveQuery extends \yii\db\ActiveQuery
          */
         $modelClass = $this->modelClass;
         $tableName = $this->tableName();
+        $tableName_ = $tableName;
         if (strpos($tableName, '.') !== false) {
             $tableName = explode('.', $tableName);
             $tableName = "`{$tableName[0]}`.`{$tableName[1]}`";
         } else {
             $tableName = "`{$tableName}`";
         }
-        $tableAlias = str_replace(".", "_", $tableName);
+        $tableAlias = str_replace(".", "_", $tableName_);
         $modelClass::checkStructure();
         $modelClass::addAdditionFields();
         $structure = $modelClass::getStructure();
@@ -597,6 +598,10 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
         if (!$modelClass::getPermanentlyDelete()) {
             $this->andWhere(["{$tableAlias}.del" => 0]);
+        }
+
+        if (isset($params['defaultId']) && $params['defaultId']) {
+            $this->orWhere([$tableAlias.'.id' => $params['defaultId']]);
         }
 
         // Начало говнокода, который надо будет извести
