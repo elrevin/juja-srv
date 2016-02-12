@@ -57,20 +57,8 @@ class UrlManager extends \yii\web\UrlManager
         if ($actionCount > 1) {
             if (preg_match('/\.([a-zA-Z]+)$/', $action, $matches)) {
                 $type = strtolower($matches[1]);
-                if ($type == 'json') {
-                    \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-                } elseif ($type == 'xml') {
-                    \Yii::$app->response->format = \yii\web\Response::FORMAT_XML;
-                } elseif ($type == 'html') {
-                    \Yii::$app->response->format = \yii\web\Response::FORMAT_HTML;
-                } elseif ($type == 'tjson') {
-                    \Yii::$app->response->format = 'tjson';
-                } elseif ($type == 'js') {
-                    \Yii::$app->response->format = 'js';
-                } elseif ($type == 'xlsx') {
-                    \Yii::$app->response->format = 'xlsx';
-                } elseif ($type == 'pdf') {
-                    \Yii::$app->response->format = 'pdf';
+                if (array_key_exists($type, \Yii::$app->response->formatters)) {
+                    \Yii::$app->response->format = $type;
                 }
 
                 $route[0] = str_replace($matches[0], '', $route[0]);

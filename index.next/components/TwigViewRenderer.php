@@ -8,6 +8,7 @@
  */
 
 namespace app\components;
+use app\helpers\Utils;
 use app\modules\backend\models\Constants;
 use yii\helpers\Url;
 
@@ -49,63 +50,17 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
 
     public static function getMonthName($m, $case = "base")
     {
-        $case = strtolower($case);
-
-        switch ($case) {
-            case 'base': $case = Morpher::CASE_BASE; break;
-            case 'prepositional': $case = Morpher::CASE_PREPOSITIONAL; break;
-            case 'instrumental': $case = Morpher::CASE_INSTRUMENTAL; break;
-            case 'accusative': $case = Morpher::CASE_ACCUSATIVE; break;
-            case 'dative': $case = Morpher::CASE_DATIVE; break;
-            case 'genitive': $case = Morpher::CASE_GENITIVE; break;
-        }
-
-        $m = intval($m);
-        switch ($m){
-            case 1: $m='январь'; break;
-            case 2: $m='февраль'; break;
-            case 3: $m='март'; break;
-            case 4: $m='апрель'; break;
-            case 5: $m='май'; break;
-            case 6: $m='июнь'; break;
-            case 7: $m='июль'; break;
-            case 8: $m='август'; break;
-            case 9: $m='сентябрь'; break;
-            case 10: $m='октябрь'; break;
-            case 11: $m='ноябрь'; break;
-            case 12: $m='декабрь'; break;
-        }
-
-        if ($case != Morpher::CASE_BASE) {
-            /**
-             * @var $morpher Morpher
-             */
-            $morpher = \Yii::$app->morpher;
-            $m = $morpher->inflect($m, $case);
-        }
-
-        return $m;
+        return Utils::getMonthName($m, $case);
     }
 
     public static function numToStr($num, $unit, $case = "base")
     {
-        $case = strtolower($case);
+        return Utils::numToStr($num, $unit, $case);
+    }
 
-        switch ($case) {
-            case 'base': $case = Morpher::CASE_BASE; break;
-            case 'prepositional': $case = Morpher::CASE_PREPOSITIONAL; break;
-            case 'instrumental': $case = Morpher::CASE_INSTRUMENTAL; break;
-            case 'accusative': $case = Morpher::CASE_ACCUSATIVE; break;
-            case 'dative': $case = Morpher::CASE_DATIVE; break;
-            case 'genitive': $case = Morpher::CASE_GENITIVE; break;
-        }
-
-        /**
-         * @var $morpher Morpher
-         */
-        $morpher = \Yii::$app->morpher;
-        $m = $morpher->getStrNum($num, $unit, $case);
-        return $m;
+    public static function getRuDate($date, $format = "d M Y", $case = "base")
+    {
+        return Utils::getRuDate($date, $format, $case);
     }
 
     public function init()
@@ -118,6 +73,7 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         $this->functions['getCsrfToken'] = '\app\components\TwigViewRenderer::getCsrfToken';
         $this->functions['getMonthName'] = '\app\components\TwigViewRenderer::getMonthName';
         $this->functions['numToStr'] = '\app\components\TwigViewRenderer::numToStr';
+        $this->functions['getRuDate'] = '\app\components\TwigViewRenderer::getRuDate';
         parent::init();
     }
 

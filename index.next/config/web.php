@@ -9,7 +9,7 @@ if (file_exists(__DIR__ . '/params.php')) {
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log'],
+    'bootstrap' => array_merge($modulesNames, ['log']),
     'modules' => $modules,
     'components' => [
         'request' => [
@@ -89,12 +89,27 @@ $config = [
                 'tjson' => [
                     'class' => '\app\components\TjsonResponseFormatter'
                 ],
+                'xlsx' => [
+                    'class' => '\app\components\XlsxResponseFormatter'
+                ],
+                'docx' => [
+                    'class' => '\app\components\DocxResponseFormatter'
+                ],
+                'pdf' => [
+                    'class' => '\app\components\PdfResponseFormatter'
+                ],
             ]
         ],
         'authManager' => [
             'class' => 'yii\rbac\PhpManager',
             'defaultRoles' => ['manager', 'admin'],
         ],
+        'dadata' => [
+            'class' => '\app\components\Dadata',
+        ],
+        'morpher' => [
+            'class' => '\app\components\Morpher',
+        ]
     ],
     'params' => array_merge(['breadCrumbs' => []], [
         'passwordRestoreLetterSubject' => 'Востановление доступа к панели управления сайта '.$_SERVER['SERVER_NAME'],

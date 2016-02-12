@@ -1,6 +1,7 @@
 <?php
 namespace app\helpers;
 
+use app\components\Morpher;
 use app\models\Registry;
 
 class Utils
@@ -143,5 +144,73 @@ class Utils
                 static::chmod($path."/".$item, $mod);
             }
         }
+    }
+
+    public static function getMonthName($m, $case = "base")
+    {
+        $case = strtolower($case);
+
+        switch ($case) {
+            case 'base': $case = Morpher::CASE_BASE; break;
+            case 'prepositional': $case = Morpher::CASE_PREPOSITIONAL; break;
+            case 'instrumental': $case = Morpher::CASE_INSTRUMENTAL; break;
+            case 'accusative': $case = Morpher::CASE_ACCUSATIVE; break;
+            case 'dative': $case = Morpher::CASE_DATIVE; break;
+            case 'genitive': $case = Morpher::CASE_GENITIVE; break;
+        }
+
+        $m = intval($m);
+        switch ($m){
+            case 1: $m='январь'; break;
+            case 2: $m='февраль'; break;
+            case 3: $m='март'; break;
+            case 4: $m='апрель'; break;
+            case 5: $m='май'; break;
+            case 6: $m='июнь'; break;
+            case 7: $m='июль'; break;
+            case 8: $m='август'; break;
+            case 9: $m='сентябрь'; break;
+            case 10: $m='октябрь'; break;
+            case 11: $m='ноябрь'; break;
+            case 12: $m='декабрь'; break;
+        }
+
+        if ($case != Morpher::CASE_BASE) {
+            /**
+             * @var $morpher Morpher
+             */
+            $morpher = \Yii::$app->morpher;
+            $m = $morpher->inflect($m, $case);
+        }
+
+        return $m;
+    }
+
+    public static function numToStr($num, $unit, $case = "base")
+    {
+        $case = strtolower($case);
+
+        switch ($case) {
+            case 'base': $case = Morpher::CASE_BASE; break;
+            case 'prepositional': $case = Morpher::CASE_PREPOSITIONAL; break;
+            case 'instrumental': $case = Morpher::CASE_INSTRUMENTAL; break;
+            case 'accusative': $case = Morpher::CASE_ACCUSATIVE; break;
+            case 'dative': $case = Morpher::CASE_DATIVE; break;
+            case 'genitive': $case = Morpher::CASE_GENITIVE; break;
+        }
+
+        /**
+         * @var $morpher Morpher
+         */
+        $morpher = \Yii::$app->morpher;
+        $m = $morpher->getStrNum($num, $unit, $case);
+        return $m;
+    }
+
+    public static function getRuDate($date, $format = "d M Y", $case = "base")
+    {
+        $date = explode("-", $date);
+        $date = str_replace("d", $date[2], str_replace("M", static::getMonthName($date[1], $case), str_replace("Y", $date[0], $format)));
+        return $date;
     }
 }
