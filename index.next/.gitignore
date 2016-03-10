@@ -1,4 +1,7 @@
-/config/db.php
+/config/app-db.php
+/config/app-console.php
+/config/app-web.php
+/config/app-params.php
 
 # composer vendor dir
 /vendor

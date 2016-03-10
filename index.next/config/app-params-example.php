@@ -1,5 +1,10 @@
 <?php
 
+/*
+ *
+ * Скрипт возвращает массив параметров приложения
+ *
+ */
 return [
     'cmsEmail' => 'admin@localhost',
     'cmsEmailName' => 'index.next CMS',

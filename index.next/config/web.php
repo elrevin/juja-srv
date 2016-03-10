@@ -2,8 +2,8 @@
 
 $params = [];
 $modules = require_once(__DIR__ . '/modules.php');
-if (file_exists(__DIR__ . '/params.php')) {
-    $params = require(__DIR__ . '/params.php');
+if (file_exists(__DIR__ . '/app-params.php')) {
+    $params = require(__DIR__ . '/app-params.php');
 }
 
 $config = [
@@ -50,7 +50,7 @@ $config = [
                 ],
             ],
         ],
-        'db' => require(__DIR__ . '/db.php'),
+        'db' => require(__DIR__ . '/app-db.php'),
         'view' => [
             'defaultExtension' => 'twig',
             'class' => 'app\components\View',
@@ -104,12 +104,6 @@ $config = [
             'class' => 'yii\rbac\PhpManager',
             'defaultRoles' => ['manager', 'admin'],
         ],
-        'dadata' => [
-            'class' => '\app\components\Dadata',
-        ],
-        'morpher' => [
-            'class' => '\app\components\Morpher',
-        ]
     ],
     'params' => array_merge(['breadCrumbs' => []], [
         'passwordRestoreLetterSubject' => 'Востановление доступа к панели управления сайта '.$_SERVER['SERVER_NAME'],
@@ -135,9 +129,24 @@ if (YII_ENV_DEV) {
     $config['modules']['gii'] = 'yii\gii\Module';
 }
 
-if (file_exists(__DIR__ . '/web-project.php')) {
-    $overrideConfig = require_once(__DIR__ . '/web-project.php');
-    $config = array_merge($config, $overrideConfig);
+$incConfig = require(__DIR__ . '/app-web.php');
+
+foreach ($incConfig as $key => $item) {
+    if (strncmp("del-", $key, 4) == 0) {
+        $key = substr($key, 4);
+        foreach ($item as $subKey => $subItem) {
+            if (isset($config[$key]) && isset($config[$key][$subKey])) {
+                unset($config[$key][$subKey]);
+            }
+        }
+    } elseif (strncmp("upd-", $key, 4) == 0) {
+        $key = substr($key, 4);
+        foreach ($item as $subKey => $subItem) {
+            $config[$key][$subKey] = $subItem;
+        }
+    } else {
+        $config[$key] = $item;
+    }
 }
 
 return $config;

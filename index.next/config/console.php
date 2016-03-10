@@ -2,8 +2,8 @@
 
 Yii::setAlias('@tests', dirname(__DIR__) . '/tests');
 
-$params = require(__DIR__ . '/params.php');
-$db = require(__DIR__ . '/db.php');
+$params = require(__DIR__ . '/app-params.php');
+$db = require(__DIR__ . '/app-db.php');
 
 $rootDirPath = realpath(__DIR__ . "/../../").'/';
 if (file_exists($rootDirPath."www")) {
@@ -33,8 +33,8 @@ Yii::setAlias("webroot", $wwwDir);
 
 $modules = require_once(__DIR__ . '/modules.php');
 
-return [
-    'id' => 'basic-console',
+$config = [
+    'id' => 'index.next-console',
     'basePath' => dirname(__DIR__),
     'bootstrap' => array_merge($modulesNames, ['log', 'gii']),
     'controllerNamespace' => 'app\commands',
@@ -97,3 +97,25 @@ return [
     ],
     'params' => $params,
 ];
+
+$incConfig = require(__DIR__ . '/app-console.php');
+
+foreach ($incConfig as $key => $item) {
+    if (strncmp("del-", $key, 4) == 0) {
+        $key = substr($key, 4);
+        foreach ($item as $subKey) {
+            if (isset($config[$key]) && isset($config[$key][$subKey])) {
+                unset($config[$key][$subKey]);
+            }
+        }
+    } elseif (strncmp("upd-", $key, 4) == 0) {
+        $key = substr($key, 4);
+        foreach ($item as $subKey => $subItem) {
+            $config[$key][$subKey] = $subItem;
+        }
+    } else {
+        $config[$key] = $item;
+    }
+}
+
+return $config;

@@ -20,6 +20,7 @@ class PrintForm extends Component implements ViewContextInterface
 
     protected static $form = [];
     protected $id;
+    public $layout = false;
 
     /**
      * @var Module

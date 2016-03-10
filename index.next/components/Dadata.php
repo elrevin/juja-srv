@@ -31,6 +31,38 @@ class BankData extends Object
     public $correspondentAccount = '';
 }
 
+class AddressData extends Object
+{
+    public $postalCode = '';
+    public $country = '';
+    public $region = '';
+    public $regionType = '';
+    public $regionTypeFull = '';
+    public $area = '';
+    public $areaType = '';
+    public $areaTypeFull = '';
+    public $settlement = '';
+    public $settlementType = '';
+    public $settlementTypeFull = '';
+    public $street = '';
+    public $streetType = '';
+    public $streetTypeFull = '';
+    public $house = '';
+    public $houseType = '';
+    public $houseTypeFull = '';
+    public $block = '';
+    public $blockType = '';
+    public $blockTypeFull = '';
+    public $fiasId = '';
+    public $fiasLevel = '';
+    public $kladrId = '';
+    public $taxOffice = '';
+    public $okato = '';
+    public $oktmo = '';
+    public $geoLat = '';
+    public $geoLon = '';
+}
+
 class Dadata extends Component
 {
     private $url,
@@ -132,4 +164,66 @@ class Dadata extends Component
         }
         return $ret;
     }
+
+    public function address($data, $first = true) {
+        $options = [
+            'http' => [
+                'method'  => 'POST',
+                'header'  => [
+                    'Content-type: application/json',
+                    'Accept: application/json',
+                    'Authorization: Token ' . $this->token,
+                ],
+                'content' => Json::encode([
+                    "query" => $data,
+                ]),
+            ],
+        ];
+        $context = stream_context_create($options);
+        $result = file_get_contents($this->url."address", false, $context);
+        $data = json_decode($result);
+        $ret = null;
+        if ($data->suggestions) {
+            $ret = [];
+            foreach ($data->suggestions as $item) {
+                $item = $item->data;
+                $retItem['postalCode'] = $item->postal_code;
+                $retItem['country'] = $item->country;
+                $retItem['region'] = $item->region;
+                $retItem['regionType'] = $item->region_type;
+                $retItem['regionTypeFull'] = $item->region_type_full;
+                $retItem['area'] = $item->area;
+                $retItem['areaType'] = $item->area_type;
+                $retItem['areaTypeFull'] = $item->area_type_full;
+                $retItem['settlement'] = $item->settlement;
+                $retItem['settlementType'] = $item->settlement_type;
+                $retItem['settlementTypeFull'] = $item->settlement_type_full;
+                $retItem['street'] = $item->street;
+                $retItem['streetType'] = $item->street_type;
+                $retItem['streetTypeFull'] = $item->street_type_full;
+                $retItem['house'] = $item->house;
+                $retItem['houseType'] = $item->house_type;
+                $retItem['houseTypeFull'] = $item->house_type_full;
+                $retItem['block'] = $item->block;
+                $retItem['blockType'] = $item->block_type;
+                $retItem['blockTypeFull'] = $item->block_type_full;
+                $retItem['fiasId'] = $item->fias_id;
+                $retItem['fiasLevel'] = $item->fias_level;
+                $retItem['kladrId'] = $item->kladr_id;
+                $retItem['taxOffice'] = $item->tax_office;
+                $retItem['okato'] = $item->okato;
+                $retItem['oktmo'] = $item->oktmo;
+                $retItem['geoLat'] = $item->geo_lat;
+                $retItem['geoLon'] = $item->geo_lon;
+
+                if ($first) {
+                    return new AddressData($retItem);
+                } else {
+                    $ret[] = new AddressData($retItem);
+                }
+            }
+        }
+        return $ret;
+    }
+
 }

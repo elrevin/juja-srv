@@ -213,4 +213,10 @@ class Utils
         $date = str_replace("d", $date[2], str_replace("M", static::getMonthName($date[1], $case), str_replace("Y", $date[0], $format)));
         return $date;
     }
+
+    public static function formatDate($date, $format)
+    {
+        $dt = new \DateTime($date);
+        return $dt->format($format);
+    }
 }

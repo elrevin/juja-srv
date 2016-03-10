@@ -827,6 +827,7 @@ class ActiveRecord extends db\ActiveRecord
 
     public static function find()
     {
+        static::checkStructure();
         $query = parent::find();
         $cond = static::defaultWhere();
         if ($cond) {
@@ -1224,16 +1225,6 @@ class ActiveRecord extends db\ActiveRecord
 
         if ($data) {
             foreach ($data as $key => $val) {
-                if ($this->isNewRecord && isset($structure[$key]) && $structure[$key]['type'] == 'int' && isset($structure[$key]['autoNumber']) && $structure[$key]['autoNumber']) {
-                    $module = static::getModuleName();
-                    $registryKey = static::getModelName();
-                    $reset = Utils::AUTONUMBER_RESET_NEVER;
-                    if (isset($structure[$key]['autoNumberReset'])) {
-                        $reset = $structure[$key]['autoNumberReset'];
-                    }
-
-                    $val = Utils::getAutoNumber($module, $registryKey, $reset, intval($val));
-                }
                 if (isset($structure[$key]) && $structure[$key]['type'] != 'linked' &&
                     $structure[$key]['type'] != 'file' && $structure[$key]['type'] != 'bool' &&
                     (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) &&
@@ -1293,6 +1284,24 @@ class ActiveRecord extends db\ActiveRecord
                 }
             }
         }
+    }
+
+    function beforeSave($insert)
+    {
+        $structure = static::getStructure();
+        foreach ($structure as $key => $field) {
+            if ($insert && isset($structure[$key]) && $structure[$key]['type'] == 'int' && isset($structure[$key]['autoNumber']) && $structure[$key]['autoNumber']) {
+                $module = static::getModuleName();
+                $registryKey = static::getModelName();
+                $reset = Utils::AUTONUMBER_RESET_NEVER;
+                if (isset($structure[$key]['autoNumberReset'])) {
+                    $reset = $structure[$key]['autoNumberReset'];
+                }
+
+                $this->{$key} = Utils::getAutoNumber($module, $registryKey, $reset, intval($this->{$key}));
+            }
+        }
+        return parent::beforeSave($insert);
     }
 
     /**
