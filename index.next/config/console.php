@@ -2,7 +2,18 @@
 
 Yii::setAlias('@tests', dirname(__DIR__) . '/tests');
 
-$params = require(__DIR__ . '/app-params.php');
+$params = [
+    'cmsEmail' => 'admin@localhost',
+    'cmsEmailName' => 'index.next CMS',
+    'defaultImageBgColor' => '#FFFFFF',
+    'themeName' => 'base',
+];
+
+if (file_exists(__DIR__ . '/app-params.php')) {
+    $params = require(__DIR__ . '/app-params.php');
+}
+
+
 $db = require(__DIR__ . '/app-db.php');
 
 $rootDirPath = realpath(__DIR__ . "/../../").'/';
@@ -98,23 +109,25 @@ $config = [
     'params' => $params,
 ];
 
-$incConfig = require(__DIR__ . '/app-console.php');
+if (file_exists(__DIR__ . '/app-console.php')) {
+    $incConfig = require(__DIR__ . '/app-console.php');
 
-foreach ($incConfig as $key => $item) {
-    if (strncmp("del-", $key, 4) == 0) {
-        $key = substr($key, 4);
-        foreach ($item as $subKey) {
-            if (isset($config[$key]) && isset($config[$key][$subKey])) {
-                unset($config[$key][$subKey]);
+    foreach ($incConfig as $key => $item) {
+        if (strncmp("del-", $key, 4) == 0) {
+            $key = substr($key, 4);
+            foreach ($item as $subKey) {
+                if (isset($config[$key]) && isset($config[$key][$subKey])) {
+                    unset($config[$key][$subKey]);
+                }
             }
+        } elseif (strncmp("upd-", $key, 4) == 0) {
+            $key = substr($key, 4);
+            foreach ($item as $subKey => $subItem) {
+                $config[$key][$subKey] = $subItem;
+            }
+        } else {
+            $config[$key] = $item;
         }
-    } elseif (strncmp("upd-", $key, 4) == 0) {
-        $key = substr($key, 4);
-        foreach ($item as $subKey => $subItem) {
-            $config[$key][$subKey] = $subItem;
-        }
-    } else {
-        $config[$key] = $item;
     }
 }
 

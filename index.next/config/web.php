@@ -1,7 +1,13 @@
 <?php
 
-$params = [];
 $modules = require_once(__DIR__ . '/modules.php');
+$params = [
+    'cmsEmail' => 'admin@localhost',
+    'cmsEmailName' => 'index.next CMS',
+    'defaultImageBgColor' => '#FFFFFF',
+    'themeName' => 'base',
+];
+
 if (file_exists(__DIR__ . '/app-params.php')) {
     $params = require(__DIR__ . '/app-params.php');
 }
@@ -129,23 +135,25 @@ if (YII_ENV_DEV) {
     $config['modules']['gii'] = 'yii\gii\Module';
 }
 
-$incConfig = require(__DIR__ . '/app-web.php');
+if (file_exists(__DIR__ . '/app-web.php')) {
+    $incConfig = require(__DIR__ . '/app-web.php');
 
-foreach ($incConfig as $key => $item) {
-    if (strncmp("del-", $key, 4) == 0) {
-        $key = substr($key, 4);
-        foreach ($item as $subKey => $subItem) {
-            if (isset($config[$key]) && isset($config[$key][$subKey])) {
-                unset($config[$key][$subKey]);
+    foreach ($incConfig as $key => $item) {
+        if (strncmp("del-", $key, 4) == 0) {
+            $key = substr($key, 4);
+            foreach ($item as $subKey => $subItem) {
+                if (isset($config[$key]) && isset($config[$key][$subKey])) {
+                    unset($config[$key][$subKey]);
+                }
             }
+        } elseif (strncmp("upd-", $key, 4) == 0) {
+            $key = substr($key, 4);
+            foreach ($item as $subKey => $subItem) {
+                $config[$key][$subKey] = $subItem;
+            }
+        } else {
+            $config[$key] = $item;
         }
-    } elseif (strncmp("upd-", $key, 4) == 0) {
-        $key = substr($key, 4);
-        foreach ($item as $subKey => $subItem) {
-            $config[$key][$subKey] = $subItem;
-        }
-    } else {
-        $config[$key] = $item;
     }
 }
 
