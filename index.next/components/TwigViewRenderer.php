@@ -29,10 +29,8 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
 
     public static function getCookie($key)
     {
-        if (isset($_COOKIE[$key])) {
-            return $_COOKIE[$key];
-        }
-        return null;
+        $value = \Yii::$app->getRequest()->getCookies()->getValue($key);
+        return $value ? $value : null;
     }
 
     public static function url($path, $args = [])
