@@ -522,6 +522,11 @@ class ActiveQuery extends \yii\db\ActiveQuery
             }
         }
 
+        $defaultWhere = $modelClass::defaultWhere();
+        if($defaultWhere) {
+            $this->where($defaultWhere);
+        }
+
         $filteredFields = [];
 
         if (isset($params['filter'])) {
