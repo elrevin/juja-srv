@@ -523,7 +523,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         }
 
         $defaultWhere = $modelClass::defaultWhere();
-        if($defaultWhere) {
+        if($defaultWhere && !isset($params['where'])) {
             $this->where($defaultWhere);
         }
 
