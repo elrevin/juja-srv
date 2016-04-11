@@ -456,6 +456,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             ];
         }
 
+        $postfix = 0;
         foreach ($structure as $fieldName => $fieldConf) {
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
                 if (isset($fieldConf['identify']) && $fieldConf['identify']) {
@@ -470,7 +471,8 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 $fieldConf['addition'] = false;
             }
 
-            $this->getField($fieldName, $modelClass, '', 0, $tableAlias);
+            $this->getField($fieldName, $modelClass, '', $postfix, $tableAlias);
+            $postfix++;
         }
 
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && $modelClass::getRecursive()) {
