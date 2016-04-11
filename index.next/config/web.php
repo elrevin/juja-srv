@@ -110,6 +110,9 @@ $config = [
             'class' => 'yii\rbac\PhpManager',
             'defaultRoles' => ['manager', 'admin'],
         ],
+        'morpher' => [
+            'class' => '\app\components\Morpher'
+        ],
     ],
     'params' => array_merge(['breadCrumbs' => []], [
         'passwordRestoreLetterSubject' => 'Востановление доступа к панели управления сайта '.$_SERVER['SERVER_NAME'],
