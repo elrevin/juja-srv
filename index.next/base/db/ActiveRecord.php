@@ -839,7 +839,7 @@ class ActiveRecord extends db\ActiveRecord
         return $query;
     }
 
-    protected  static function defaultWhere()
+    public static function defaultWhere()
     {
         if (!static::$permanentlyDelete) {
             return "`" . static::tableName() . "`.del = 0";
