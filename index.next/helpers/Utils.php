@@ -90,7 +90,7 @@ class Utils
             $value->date = date('Y-01-01');
         }
 
-        if (!$default) {
+        if (!$value->val && !$default) {
             $value->val = intval($value->val)+1;
         }
 
