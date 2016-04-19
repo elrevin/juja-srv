@@ -7,14 +7,6 @@ class m150228_210419_init extends Migration
 {
     public function up()
     {
-        $this->createTable("s_config", [
-            'id' => 'pk',
-            'title' => "varchar(1024) not null default ''",
-            'name' => "varchar(1024) not null default ''",
-            'type' => "varchar(1024) not null default 'string'",
-            'value' => "text default null",
-        ]);
-
         $this->createTable("s_users_groups", [
             'id' => 'pk',
             'title' => "varchar(1024) not null default ''",
