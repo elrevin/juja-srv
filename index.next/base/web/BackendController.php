@@ -33,6 +33,17 @@ class BackendController extends Controller
 
     public function init()
     {
+        Yii::$app->setComponents([
+            'user' => [
+                'class' => 'yii\web\User',
+                'identityClass' => 'app\models\UserIdentity',
+                'identityCookie' => [
+                    'name' => 'backendIdentity',
+                ],
+                'enableAutoLogin' => true,
+            ],
+        ]);
+
         $this->enableCsrfValidation = false;
 //        Yii::$app->view->setActiveTheme('backend');
 //        Yii::$app->mailer->themeName = Yii::$app->view->themeName;

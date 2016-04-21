@@ -221,6 +221,24 @@ class ActiveRecord extends db\ActiveRecord
      */
     protected static $structure = [];
 
+    /**
+     * Данные из модели могут удаляться (если есть соотвествующие права)
+     * @var bool
+     */
+    protected static $canDelete = true;
+
+    /**
+     * Данные в модель могут добавляться (если есть соотвествующие права)
+     * @var bool
+     */
+    protected static $canAdd = true;
+
+    /**
+     * Данные могут редактироваться (если есть соотвествующие права)
+     * @var bool
+     */
+    protected static $canEdit = true;
+
     protected $pointerAttributes = [];
 
     /**
@@ -1689,6 +1707,9 @@ class ActiveRecord extends db\ActiveRecord
             'linkModelRunAction' => $linkModelRunAction,
             'linkModelName' => $linkModelName,
             'modelName' => $modelName,
+            'canDelete' => static::$canDelete,
+            'canAdd' => static::$canAdd,
+            'canEdit' => static::$canEdit,
             'userRights' => $userRights,
             'createInterfaceForExistingParentOnly' => static::$createInterfaceForExistingParentOnly,
             'title' => static::getModelTitle(),
