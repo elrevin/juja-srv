@@ -15,6 +15,7 @@ use yii\db\ActiveRecord;
  * @property string $name
  * @property string $hash
  * @property string $email
+ * @property int $block
  * @property string $last_login
  * @property string $restore_code
  * @property string $restore_code_expires

@@ -1,0 +1,46 @@
+{% extends '@themelayouts/inner.twig' %}
+{% block content %}
+    <div class="row">
+        <div class="col-xs-12 col-md-4">
+            <form class="form-horizontal" action="{{ url(['/personaloffice/default/login-page']) }}" method="post">
+                <fieldset>
+                    <legend>Вход в личный кабинет</legend>
+                    <input type="hidden" name="_csrf" value="{{ getCsrfToken() }}">
+                    <div class="form-group">
+                        <label for="username" class="col-lg-2 control-label">Логин</label>
+                        <div class="col-lg-10">
+                            <input type="text" class="form-control" name="username" id="username" placeholder="Введите логин">
+                            {% if form.errors['username'] %}
+                                {% for error in form.errors['username'] %}
+                                    {% if error == 'reqired' %}
+                                        <span class="help-block text-danger">Без логина войти невозможно!</span>
+                                    {% elseif error == 'incorrect' %}
+                                        <span class="help-block text-danger">Или вы что-то напутали, или мы вам доступ сюда не давали</span>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="col-lg-2 control-label">Пароль</label>
+                        <div class="col-lg-10">
+                            <input class="form-control" name="password" id="password" placeholder="Введите пароль" type="password">
+                            {% if form.errors['password'] %}
+                                {% for error in form.errors['password'] %}
+                                    {% if error == 'reqired' %}
+                                        <span class="help-block text-danger">Без пароля войти невозможно!</span>
+                                    {% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-lg-10 col-lg-offset-2">
+                            <button type="submit" class="btn btn-primary">Войти</button>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+{% endblock %}

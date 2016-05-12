@@ -83,7 +83,7 @@ class UserIdentity extends \yii\base\Object implements \yii\web\IdentityInterfac
     /**
      * @var \app\models\SUsers
      */
-    private $user = null;
+    public $user = null;
 
     /**
      * Возвращает identity по записи модели SUsers
@@ -102,7 +102,8 @@ class UserIdentity extends \yii\base\Object implements \yii\web\IdentityInterfac
                 'authKey' => $user->hash,
                 'isSU' => $user->su,
                 'cpAccess' => $user->group->cp_access,
-                'email' => $user->email
+                'email' => $user->email,
+                'user' => $user,
             ]);
         }
         return null;

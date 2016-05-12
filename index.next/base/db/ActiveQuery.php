@@ -410,6 +410,9 @@ class ActiveQuery extends \yii\db\ActiveQuery
          * @var $modelClass ActiveRecord
          */
         $modelClass = $this->modelClass;
+
+        $params = $modelClass::beforeList($params);
+
         $tableName = $this->tableName();
         $tableName_ = $tableName;
         if (strpos($tableName, '.') !== false) {
@@ -421,7 +424,6 @@ class ActiveQuery extends \yii\db\ActiveQuery
         $tableAlias = str_replace(".", "_", $tableName_);
         $modelClass::checkStructure();
         $modelClass::addAdditionFields();
-        $structure = $modelClass::getStructure();
         $identifyFieldName = '';
 
         $this->join = [];
@@ -441,7 +443,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
         $this->select[] = "{$tableAlias}.id";
 
-        $params = $modelClass::beforeList($params);
+        $structure = $modelClass::getStructure();
         $_tmpModelClass = $modelClass;
         if (!$structure && $modelClass::getLinkModelName()) {
             /**

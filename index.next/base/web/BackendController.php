@@ -39,11 +39,16 @@ class BackendController extends Controller
                 'identityClass' => 'app\models\UserIdentity',
                 'identityCookie' => [
                     'name' => 'backendIdentity',
+                    'path'=>'/admin'
                 ],
                 'enableAutoLogin' => true,
             ],
+            'session' => [
+                'class' => 'yii\web\Session',
+                'name' => '_backendSessionId',
+                // 'savePath' => __DIR__ . '/../runtime', // a temporary folder on backend
+            ],
         ]);
-
         $this->enableCsrfValidation = false;
 //        Yii::$app->view->setActiveTheme('backend');
 //        Yii::$app->mailer->themeName = Yii::$app->view->themeName;

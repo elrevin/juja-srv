@@ -217,6 +217,9 @@ class ActiveRecord extends db\ActiveRecord
      *          Utils::AUTONUMBER_RESET_MONTH (2) - Сброс происходит каждый месц
      *          Utils::AUTONUMBER_RESET_YEAR (3) - Сброс каждый год
      *
+     *      'fake' - если true, то поле никак не связано с таблицей в БД, то есть для него создаются элементы управления,
+     *          можно "подсунуть" значения, но в таблице такого поля нет
+     *
      * @var array
      */
     protected static $structure = [];
@@ -521,7 +524,7 @@ class ActiveRecord extends db\ActiveRecord
                 $relatedModelClass = static::$linkModelName;
                 return  $relatedModelClass::find()->andWhere(['id' => $this->getAttribute($name)])->one();
             }
-        } elseif ($name == 'parent') {
+        } elseif ($name == '_parent') {
             return static::find()->andWhere(['id' => $this->parent_id])->one();
         }
 
@@ -783,7 +786,7 @@ class ActiveRecord extends db\ActiveRecord
 
             $structure = static::getStructure();
             foreach ($structure as $name => $field) {
-                if (!isset($field['addition']) && !isset($field['calc']) && !array_key_exists($name, $cols)) {
+                if (!isset($field['addition']) && !isset($field['calc']) && !isset($field['fake']) && !array_key_exists($name, $cols)) {
                     static::createTableCol($name, $field);
                 }
             }
@@ -1707,6 +1710,7 @@ class ActiveRecord extends db\ActiveRecord
             'linkModelRunAction' => $linkModelRunAction,
             'linkModelName' => $linkModelName,
             'modelName' => $modelName,
+            'moduleName' => static::getModuleName(),
             'canDelete' => static::$canDelete,
             'canAdd' => static::$canAdd,
             'canEdit' => static::$canEdit,

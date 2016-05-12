@@ -14,6 +14,23 @@ class FrontendController extends Controller
 
     public function init()
     {
+        Yii::$app->setComponents([
+            'user' => [
+                'class' => 'yii\web\User',
+                'identityClass' => 'app\models\UserIdentity',
+                'identityCookie' => [
+                    'name' => 'frontendIdentity',
+                    'path'=>'/'
+                ],
+                'enableAutoLogin' => true,
+            ],
+            'session' => [
+                'class' => 'yii\web\Session',
+                'name' => '_frontendSessionId',
+                // 'savePath' => __DIR__ . '/../runtime', // a temporary folder on backend
+            ],
+        ]);
+
         $this->enableCsrfValidation = true;
         Yii::$app->view->setActiveTheme(Yii::$app->params['themeName']);
         Yii::$app->mailer->view->setActiveTheme(Yii::$app->params['themeName']);

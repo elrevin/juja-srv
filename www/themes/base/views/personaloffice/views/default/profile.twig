@@ -1,0 +1,81 @@
+{% extends '@themelayouts/inner.twig' %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-2 col-xs-12">
+            <div class="list-group">
+                <a href="{{ url(['/personaloffice/default/profile']) }}" class="list-group-item active">
+                    Профиль
+                </a>
+                <a href="{{ url(['/personaloffice/default/logout']) }}" class="list-group-item">Выход
+                </a>
+            </div>
+        </div>
+        <div class="col-md-10 col-xs-12">
+            <h1>Ваш профиль</h1>
+            <div class="row">
+                <div class="col-xs-12 col-md-4">
+                    <form class="form-horizontal" action="{{ url(['/personaloffice/default/profile']) }}" method="post">
+                        <fieldset>
+                            <input type="hidden" name="_csrf" value="{{ getCsrfToken() }}">
+
+                            <div class="form-group">
+                                <label for="name" class="col-lg-5 control-label">Ваше имя</label>
+                                <div class="col-lg-7">
+                                    <input type="text" class="form-control" name="name" id="name" value="{{ form.name }}">
+                                    {% if form.errors['name'] %}
+                                        {% for error in form.errors['name'] %}
+                                            {% if error == 'reqired' %}
+                                                <span class="help-block text-danger">Имя должно быть у всех</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="email" class="col-lg-5 control-label">E-mail</label>
+                                <div class="col-lg-7">
+                                    <input type="text" class="form-control" name="email" id="email" value="{{ form.email }}">
+                                    {% if form.errors['email'] %}
+                                        {% for error in form.errors['email'] %}
+                                            {% if error == 'reqired' %}
+                                                <span class="help-block text-danger">Если вы не скажете свой e-mail, как мы с вами сможем связаться</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password" class="col-lg-5 control-label">Пароль</label>
+                                <div class="col-lg-7">
+                                    <input type="password" class="form-control" name="password" id="password">
+                                    {% if form.errors['password'] %}
+                                        {% for error in form.errors['password'] %}
+                                            {% if error == 'notmatch' %}
+                                                <span class="help-block text-danger">Пароль и его подтверждение должны совпадать</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="password_confirm" class="col-lg-5 control-label">Подтверждение пароля</label>
+                                <div class="col-lg-7">
+                                    <input type="password" class="form-control" name="password_confirm" id="password_confirm">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <div class="col-lg-7 col-lg-offset-5">
+                                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

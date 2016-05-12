@@ -1,0 +1,17 @@
+{% extends '@themelayouts/inner.twig' %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-2 col-xs-12">
+            <div class="list-group">
+                <a href="{{ url(['/personaloffice/default/profile']) }}" class="list-group-item">
+                    Профиль
+                </a>
+                <a href="{{ url(['/personaloffice/default/logout']) }}" class="list-group-item">Выход
+                </a>
+            </div>
+        </div>
+        <div class="col-md-10 col-xs-12">
+            <h1>Вы в личном кабинете</h1>
+        </div>
+    </div>
+{% endblock %}
