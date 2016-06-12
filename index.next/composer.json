@@ -56,35 +56,35 @@
     "repositories": [
         {
             "type": "vcs",
-            "url":  "http://git.web-dev.ru/index-next/site.git"
+            "url":  "git@git.web-dev.ru:index-next/site.git"
         },
         {
             "type": "vcs",
-            "url":  "http://git.web-dev.ru/index-next/backend.git"
+            "url":  "git@git.web-dev.ru:index-next/backend.git"
         },
         {
             "type": "vcs",
-            "url":  "http://git.web-dev.ru/index-next/files.git"
+            "url":  "git@git.web-dev.ru:index-next/files.git"
         },
         {
             "type": "vcs",
-            "url":  "http://git.web-dev.ru/index-next/modules-installer.git"
+            "url":  "git@git.web-dev.ru:index-next/modules-installer.git"
         },
         {
             "type": "vcs",
-            "url":  "http://git.web-dev.ru/index-next/catalog.git"
+            "url":  "git@git.web-dev.ru:index-next/catalog.git"
         },
         {
             "type": "vcs",
-            "url":  "http://git.web-dev.ru/index-next/news.git"
+            "url":  "git@git.web-dev.ru:index-next/news.git"
         },
         {
             "type": "vcs",
-            "url":  "http://git.web-dev.ru/index-next/usersmanager.git"
+            "url":  "git@git.web-dev.ru:index-next/usersmanager.git"
         },
         {
             "type": "vcs",
-            "url":  "http://git.web-dev.ru/index-next/faq.git"
+            "url":  "git@git.web-dev.ru:index-next/faq.git"
         }
     ]
 }
