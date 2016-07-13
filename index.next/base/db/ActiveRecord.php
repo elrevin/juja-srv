@@ -229,7 +229,16 @@ class ActiveRecord extends db\ActiveRecord
      *
      * @var string
      */
-    static protected $extendedModelName= '';
+    static protected $extendedModelName = '';
+
+    /**
+     *  Имя поля по которому связываются данная модель и расширяемая
+     *
+     * @var string
+     */
+    static protected $extendedModelRelFieldName = '__extended_table_id';
+
+    protected $extendedAttributes = [];
 
     /**
      * Данные из модели могут удаляться (если есть соотвествующие права)
@@ -596,8 +605,7 @@ class ActiveRecord extends db\ActiveRecord
         return parent::__get($name);
     }
 
-    public function __set($name, $val)
-    {
+    public static function prepareAttribute($name, $val) {
         $structure = static::getStructure();
         if (array_key_exists($name, $structure)) {
             if (
@@ -617,9 +625,28 @@ class ActiveRecord extends db\ActiveRecord
                 $val = null;
             } elseif ($structure[$name]['type'] == 'bool' && !$val) {
                 $val = 0;
+            } elseif ($structure[$name]['type'] == 'fromextended') {
+                /**
+                 * @var $modelClass ActiveRecord
+                 */
+                $modelClass = static::getExtendedModelName();
+                $val = $modelClass::prepareAttribute($name, $val);
             }
         }
-        return parent::__set($name, $val);
+        return $val;
+    }
+
+    public function __set($name, $val)
+    {
+        $structure = static::getStructure();
+        if (array_key_exists($name, $structure)) {
+            if ($structure[$name]['type'] == 'fromextended') {
+                $this->extendedAttributes[$name] = static::prepareAttribute($name, $val);
+                return;
+            }
+        }
+
+        parent::__set($name, static::prepareAttribute($name, $val));
     }
 
     public static function getExtendedModelName()
@@ -627,6 +654,11 @@ class ActiveRecord extends db\ActiveRecord
         return static::$extendedModelName;
     }
     
+    public static function getExtendedModelRelFieldName()
+    {
+        return static::$extendedModelRelFieldName;
+    }
+
     protected static function createTableCol($fieldName, $field) {
         $tableName = static::tableName();
         if ($field['type'] == 'string') {
@@ -771,6 +803,15 @@ class ActiveRecord extends db\ActiveRecord
                     ALTER TABLE `". $tableName ."`
                         ADD COLUMN `".static::getLinkTableIdField()."` int(11) DEFAULT NULL,
                         ADD CONSTRAINT `". $tableName ."__link_table_id` FOREIGN KEY (`".static::getLinkTableIdField()."`) REFERENCES `". $tmp ."`(id) ON DELETE CASCADE ON UPDATE CASCADE
+                ")->execute();
+            }
+
+            if (static::$extendedModelName && !array_key_exists(static::getExtendedModelRelFieldName(), $cols)) {
+                $tmp = call_user_func([static::$extendedModelName, 'tableName']);
+                Yii::$app->db->createCommand("
+                    ALTER TABLE `". $tableName ."`
+                        ADD COLUMN `".static::getExtendedModelRelFieldName()."` int(11) DEFAULT NULL,
+                        ADD CONSTRAINT `". $tableName ."__extended_table_id` FOREIGN KEY (`".static::getExtendedModelRelFieldName()."`) REFERENCES `". $tmp ."`(id) ON DELETE CASCADE ON UPDATE CASCADE
                 ")->execute();
             }
 
@@ -1179,12 +1220,18 @@ class ActiveRecord extends db\ActiveRecord
      * @param $value
      * @return int|null|string
      */
-    protected static function setType ($fieldName, $value, $type = false)
+    static function setType ($fieldName, $value, $type = false)
     {
         $structure = static::getStructure();
         $type = (!$type ? $structure[$fieldName]['type'] : $type);
 
-        if ($type == 'int') {
+        if ($type == 'fromextended') {
+            /**
+             * @var $extendedModel ActiveRecord
+             */
+            $extendedModel = static::getExtendedModelName();
+            return $extendedModel::setType($fieldName, $value);
+        } elseif ($type == 'int') {
             return intval($value);
         } elseif ($type == 'float') {
             return floatval($value);
@@ -1258,7 +1305,7 @@ class ActiveRecord extends db\ActiveRecord
 
         if ($data) {
             foreach ($data as $key => $val) {
-                if (isset($structure[$key]) && $structure[$key]['type'] != 'linked' &&
+                if (isset($structure[$key]) && $structure[$key]['type'] != 'linked' && $structure[$key]['type'] != 'fromextended' &&
                     $structure[$key]['type'] != 'file' && $structure[$key]['type'] != 'bool' &&
                     (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) &&
                     !$val && isset($structure[$key]['default'])
@@ -1321,20 +1368,54 @@ class ActiveRecord extends db\ActiveRecord
 
     function beforeSave($insert)
     {
-        $structure = static::getStructure();
-        foreach ($structure as $key => $field) {
-            if ($insert && isset($structure[$key]) && $structure[$key]['type'] == 'int' && isset($structure[$key]['autoNumber']) && $structure[$key]['autoNumber']) {
-                $module = static::getModuleName();
-                $registryKey = static::getModelName();
-                $reset = Utils::AUTONUMBER_RESET_NEVER;
-                if (isset($structure[$key]['autoNumberReset'])) {
-                    $reset = $structure[$key]['autoNumberReset'];
+        $beforeInsert = parent::beforeSave($insert);
+
+        if ($beforeInsert) {
+            $structure = static::getStructure();
+            foreach ($structure as $key => $field) {
+                if ($insert && isset($structure[$key]) && $structure[$key]['type'] == 'int' && isset($structure[$key]['autoNumber']) && $structure[$key]['autoNumber']) {
+                    $module = static::getModuleName();
+                    $registryKey = static::getModelName();
+                    $reset = Utils::AUTONUMBER_RESET_NEVER;
+                    if (isset($structure[$key]['autoNumberReset'])) {
+                        $reset = $structure[$key]['autoNumberReset'];
+                    }
+
+                    $this->{$key} = Utils::getAutoNumber($module, $registryKey, $reset, intval($this->{$key}));
+                }
+            }
+
+            if (static::getExtendedModelName()) {
+                /**
+                 * @var $extendedModel ActiveRecord
+                 */
+                $extendedModel = static::getExtendedModelName();
+
+                $extendedModelRelFieldName = static::getExtendedModelRelFieldName();
+                $extendedRec = null;
+                if ($insert && !$this->{$extendedModelRelFieldName}) {
+                    //Добавляем запись в расширяемую модель
+                    $extendedRec = new $extendedModel();
+                } elseif ($this->{$extendedModelRelFieldName}) {
+                    $extendedRec = $extendedModel::find()->andWhere(['id' => $this->{$extendedModelRelFieldName}])->one();
                 }
 
-                $this->{$key} = Utils::getAutoNumber($module, $registryKey, $reset, intval($this->{$key}));
+                if (!$extendedRec) {
+                    throw new db\Exception("Не удается создать запись в наследуемой моделе");
+                }
+                foreach ($this->extendedAttributes as $name => $val) {
+                    $extendedRec->{$name} = $val;
+                }
+
+                $extendedRec->save();
+
+                if ($insert && !$this->{$extendedModelRelFieldName}) {
+                    $this->{$extendedModelRelFieldName} = $extendedRec->id;
+                }
             }
         }
-        return parent::beforeSave($insert);
+
+        return $beforeInsert;
     }
 
     /**

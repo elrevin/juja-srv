@@ -4,6 +4,11 @@
       "title": "Проекты",
       "modelName": "Project",
       "moduleName": "test"
+    },
+    {
+      "title": "Проекты расширенные",
+      "modelName": "ExtProject",
+      "moduleName": "test"
     }
   ]
 }}

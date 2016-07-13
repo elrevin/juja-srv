@@ -220,12 +220,14 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $modelClass = $linkModelName;
             $structure = $modelClass::getStructure();
             $field = $structure[$fieldName];
+            $tableAlias = '__link_model_table';
         }
 
         if ($field['type'] == 'fromextended') {
             $modelClass = $extendedModelName;
             $structure = $modelClass::getStructure();
             $field = $structure[$fieldName];
+            $tableAlias = '__extended_model_table';
         }
 
         if (isset($field['calc']) && $field['calc']) {
@@ -468,6 +470,19 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 'title' => '',
                 'type' => 'linked',
             ];
+        } elseif (!$structure && $modelClass::getExtendedModelName()) {
+            /**
+             * @var $_tmpModelClass ActiveRecord
+             */
+            $_tmpModelClass = $modelClass::getLinkModelName();
+            $structure = $_tmpModelClass::getStructure();
+
+            foreach ($structure as $key => $item) {
+                $structure[$key] = [
+                    'title' => $item['title'],
+                    'type' => 'fromextended',
+                ];
+            }
         }
 
         $postfix = 0;
@@ -579,7 +594,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $modelClass::getMasterModelRelationsType() == $modelClass::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY &&
             $modelClass::getSlaveModelAddMethod() == $modelClass::SLAVE_MODEL_ADD_METHOD_BUTTON
         ) {
-            $relatedTableName = $relatedTableName = $this->tableName($modelClass::getLinkModelName());
+            $relatedTableName = $this->tableName($modelClass::getLinkModelName());
             array_unshift($this->join, [
                 "name" => "`".$relatedTableName."` as __link_model_table",
                 "on"   => $tableAlias.".`".$modelClass::getLinkTableIdField()."` = `__link_model_table`.`id`",
@@ -595,6 +610,17 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 $this->andWhere($tableAlias.'.'.$modelClass::getMasterModelRelFieldName().' = ' . intval($params['masterId']));
             }
             $this->from("{$tableName} as {$tableAlias}");
+        }
+
+        if ($modelClass::getExtendedModelName()) {
+            $relatedTableName = $this->tableName($modelClass::getExtendedModelName());
+            array_unshift($this->join, [
+                "name" => "`".$relatedTableName."` as __extended_model_table",
+                "on"   => $tableAlias.".`".$modelClass::getExtendedModelRelFieldName()."` = `__extended_model_table`.`id`",
+            ]);
+            if (!call_user_func([$modelClass::getExtendedModelName(), 'getPermanentlyDelete'])) {
+                $this->andWhere("`__extended_model_table`.del = 0");
+            }
         }
 
         if ($this->join) {
