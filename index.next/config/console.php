@@ -62,15 +62,6 @@ $config = [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                 ],
-                [
-                    'class' => 'yii\log\EmailTarget',
-                    'levels' => ['error'],
-                    'message' => [
-                        'from' => ['admin@test.ru'],
-                        'to' => ['admin@test.ru'],
-                        'subject' => 'Ошибки на сайте',
-                    ],
-                ],
             ],
         ],
         'db' => $db,

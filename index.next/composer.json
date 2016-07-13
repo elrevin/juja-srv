@@ -16,10 +16,8 @@
         "index-next/site": "*",
         "index-next/backend": "*",
         "index-next/files": "*",
-        "index-next/catalog": "*",
-        "index-next/news": "*",
         "index-next/usersmanager": "*",
-        "index-next/faq": "*"
+        "index-next/personaloffice": "*"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",
@@ -72,19 +70,11 @@
         },
         {
             "type": "vcs",
-            "url":  "git@git.web-dev.ru:index-next/catalog.git"
-        },
-        {
-            "type": "vcs",
-            "url":  "git@git.web-dev.ru:index-next/news.git"
-        },
-        {
-            "type": "vcs",
             "url":  "git@git.web-dev.ru:index-next/usersmanager.git"
         },
         {
             "type": "vcs",
-            "url":  "git@git.web-dev.ru:index-next/faq.git"
+            "url":  "git@git.web-dev.ru:index-next/personaloffice.git"
         }
     ]
 }
