@@ -192,6 +192,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
          * @var $linkModelName ActiveRecord
          */
         $linkModelName = $modelClass::getLinkModelName();
+        $extendedModelName = $modelClass::getExtendedModelName();
         if ($structure) {
             $field = $structure[$fieldName];
         } elseif ($fieldName == $modelClass::getLinkTableIdField()) {
@@ -204,6 +205,11 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $structure = $modelClass::getStructure();
             $field = $structure[$fieldName];
             $tableAlias = '__link_model_table';
+        } elseif ($extendedModelName) {
+            $modelClass = $extendedModelName;
+            $structure = $modelClass::getStructure();
+            $field = $structure[$fieldName];
+            $tableAlias = '__extended_model_table';
         }
 
         if (!$field) {
@@ -212,6 +218,12 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
         if ($field['type'] == 'fromlinked') {
             $modelClass = $linkModelName;
+            $structure = $modelClass::getStructure();
+            $field = $structure[$fieldName];
+        }
+
+        if ($field['type'] == 'fromextended') {
+            $modelClass = $extendedModelName;
             $structure = $modelClass::getStructure();
             $field = $structure[$fieldName];
         }

@@ -1,0 +1,9 @@
+{"manage": {
+  "list" : [
+    {
+      "title": "Проекты",
+      "modelName": "Project",
+      "moduleName": "test"
+    }
+  ]
+}}

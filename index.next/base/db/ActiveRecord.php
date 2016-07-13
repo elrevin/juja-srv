@@ -225,6 +225,13 @@ class ActiveRecord extends db\ActiveRecord
     protected static $structure = [];
 
     /**
+     *  Полное имя класса модели, которую раширяем, если модель расширяемая
+     *
+     * @var string
+     */
+    static protected $extendedModelName= '';
+
+    /**
      * Данные из модели могут удаляться (если есть соотвествующие права)
      * @var bool
      */
@@ -615,6 +622,11 @@ class ActiveRecord extends db\ActiveRecord
         return parent::__set($name, $val);
     }
 
+    public static function getExtendedModelName()
+    {
+        return static::$extendedModelName;
+    }
+    
     protected static function createTableCol($fieldName, $field) {
         $tableName = static::tableName();
         if ($field['type'] == 'string') {
@@ -1513,6 +1525,17 @@ class ActiveRecord extends db\ActiveRecord
                  * @var $modelClass ActiveRecord
                  */
                 $modelClass = static::$linkModelName;
+                $config = $modelClass::getStructure($fieldName);
+                if (!$config) {
+                    throw new Exception("Field {$fieldName} not found in ".static::className());
+                }
+            }
+
+            if ($config['type'] == 'fromextended' && static::$extendedModelName) {
+                /**
+                 * @var $modelClass ActiveRecord
+                 */
+                $modelClass = static::$extendedModelName;
                 $config = $modelClass::getStructure($fieldName);
                 if (!$config) {
                     throw new Exception("Field {$fieldName} not found in ".static::className());
