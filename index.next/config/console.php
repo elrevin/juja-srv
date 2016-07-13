@@ -66,7 +66,7 @@ $config = [
                     'class' => 'yii\log\EmailTarget',
                     'levels' => ['error'],
                     'message' => [
-                        'from' => ['log@gkh-site.ru'],
+                        'from' => ['admin@test.ru'],
                         'to' => ['admin@test.ru'],
                         'subject' => 'Ошибки на сайте',
                     ],
