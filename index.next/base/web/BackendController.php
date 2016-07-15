@@ -338,8 +338,10 @@ class BackendController extends Controller
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
 
             $filterParams = Yii::$app->request->post('colFilter', null);
+            $defaultFilterCondition = Yii::$app->request->post('defaultFilterCondition', null);
 
             $filterParams = Json::decode($filterParams ? $filterParams : Yii::$app->request->get('colFilter', '[]'));
+            $defaultFilterCondition = Json::decode($defaultFilterCondition ? $defaultFilterCondition : Yii::$app->request->get('defaultFilterCondition', '[]'));
 
             $params = [
                 "identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false),
@@ -352,6 +354,7 @@ class BackendController extends Controller
                 "parentId" => Yii::$app->request->get('parentId', null),
                 'query' => Yii::$app->request->post('query', ''),
                 'defaultId' => intval(Yii::$app->request->post('defaultId', 0)),
+                'defaultFilterCondition' => $defaultFilterCondition,
             ];
 
             $list = call_user_func([$modelName, 'getList'], $params);

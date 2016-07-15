@@ -10,6 +10,21 @@ class Project extends ActiveRecord
             'type' => 'string',
             'identify' => true,
         ],
+        'goods' => [
+            'title' => 'Товар',
+            'type' => 'pointer',
+            'relativeModel' => [
+                'moduleName' => 'faq',
+                'name' => 'Topics',
+            ],
+            'defaultFilterCondition' => [
+                [
+                    'field' => 'title',
+                    'operation' => 'start',
+                    'value' => '1',
+                ]
+            ],
+        ],
     ];
 
     // Отключаем перманетное удаление

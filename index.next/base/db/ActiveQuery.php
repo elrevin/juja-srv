@@ -127,7 +127,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $condition[] = $this->getSimpleFilterCondition(
                 (isset($filter['type']) ? $filter['type'] : null),
                 $filter['field'],
-                (isset($filter['comparison']) ? $filter['comparison'] : ''),
+                (isset($filter['comparison']) ? $filter['comparison'] : (isset($filter['operation']) ? $filter['operation'] : '')),
                 $value,
                 $expression
             );
@@ -412,6 +412,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
      *          особым образом
      *      'where' - условия, используется в качестве аргумента метода andWhere
      *      'identifyOnly' - true если требуется выгрузить только идентифицирующее поле (например для выпадающих списков)
+     *      'defaultFilterCondition' 
      *      'masterId' - id родительской записи, если запрошены данные детализации
      *      'dataKey' - Ключ в возвращаемом массиве, который будет содержать данные
      *
@@ -562,6 +563,17 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
         if (isset($params['filter'])) {
             foreach ($params['filter'] as $filter) {
+                $filteredFields[] = $filter['field'];
+                if (isset($this->calcFields[$filter['field']])) {
+                    $this->andWhere($this->getFilterCondition($filter, $this->calcFields[$filter['field']]));
+                } else {
+                    $this->andWhere($this->getFilterCondition($filter));
+                }
+            }
+        }
+
+        if (isset($params['defaultFilterCondition'])) {
+            foreach ($params['defaultFilterCondition'] as $filter) {
                 $filteredFields[] = $filter['field'];
                 if (isset($this->calcFields[$filter['field']])) {
                     $this->andWhere($this->getFilterCondition($filter, $this->calcFields[$filter['field']]));

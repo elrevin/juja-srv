@@ -191,6 +191,7 @@ class ActiveRecord extends db\ActiveRecord
      *              ],
      *          ],
      *
+     *      'defaultFilterCondition' - Условия фильтрации по умолчанию
      *
      *      'default' - значение по умолчанию, для полей типа pointer это может быть только id в подключенном
      *              справочнике, для поля типа select это значение ключа.
@@ -716,6 +717,7 @@ class ActiveRecord extends db\ActiveRecord
             } else {
                 $relatedModelClass = $field['relativeModel'];
             }
+            $relatedModelClass::checkStructure();
             $tmp = call_user_func([$relatedModelClass, 'tableName']);
             $command = ["ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL"];
             if (strpos($tmp, '.') === false) {
@@ -723,6 +725,8 @@ class ActiveRecord extends db\ActiveRecord
             }
             Yii::$app->db->createCommand(implode(", ", $command))->execute();
         } elseif ($field['type'] == 'file') {
+            $relatedModelClass = '\app\modules\files\models\Files';
+            $relatedModelClass::checkStructure();
             Yii::$app->db->createCommand("
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL,
                     ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `s_files`(id) ON DELETE SET NULL ON UPDATE CASCADE
