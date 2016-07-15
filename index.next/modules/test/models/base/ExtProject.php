@@ -7,7 +7,6 @@ class ExtProject extends ActiveRecord
     static protected $structure = [
         'title' => [
             'type' => 'fromextended',
-            'readonly' => true,
         ],
         'price' => [
             'title' => 'Цена',

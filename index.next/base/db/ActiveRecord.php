@@ -542,6 +542,12 @@ class ActiveRecord extends db\ActiveRecord
                  */
                 $relatedModelClass = static::$linkModelName;
                 return  $relatedModelClass::find()->andWhere(['id' => $this->getAttribute($name)])->one();
+            } elseif ($field['type'] == 'fromextended') {
+                /**
+                 * @var $relatedModelClass ActiveRecord
+                 */
+                $relatedModelClass = static::$extendedModelName;
+                return  $relatedModelClass::find()->andWhere(['id' => $this->getAttribute($name)])->one();
             }
         } elseif ($name == '_parent') {
             return static::find()->andWhere(['id' => $this->parent_id])->one();
