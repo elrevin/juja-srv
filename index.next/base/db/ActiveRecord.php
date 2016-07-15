@@ -145,6 +145,9 @@ class ActiveRecord extends db\ActiveRecord
      *          ]
      *          При таких условиях данное поле будет отображаться если установлен флаг-поле payd и значение поля
      *          sum > 5000 AND sum < 8000
+     *          
+     *          в качестве ключа так же могут использоваться следующие зарезервированные слова:
+     *              isnew - есть true, то поле показывается только для новых записей, false - при сохранении старых
      *
      *      'filterCondition' - условие для фильтрации значений поля типа pointer - ассоциативный массив, котором
      *          ключи - это имена других полей, а значения это условие или массив условий, каждое из которых -
@@ -1433,6 +1436,10 @@ class ActiveRecord extends db\ActiveRecord
             $this->{static::$masterModelRelFieldName} = $masterId;
         }
 
+        if (static::$extendedModelName && isset($data[static::$extendedModelRelFieldName]) && $add) {
+            $this->{static::$extendedModelRelFieldName} = $data[static::$extendedModelRelFieldName];
+        }
+
         $this->mapJson($data);
 
         if (static::$sortable && $add) {
@@ -1597,9 +1604,25 @@ class ActiveRecord extends db\ActiveRecord
 
         }
 
+        if (!$modelStructure && static::$extendedModelName) {
+            /**
+             * @var $modelClass ActiveRecord
+             */
+            $modelClass = static::$extendedModelName;
+            $modelStructure = $modelClass::getStructure();
+
+            $modelStructure[static::getLinkTableIdField()] = [
+                'type' => 'fromextended',
+            ];
+
+        }
+
         foreach ($modelStructure as $fieldName => $config) {
             $linkedSubType = '';
             $relativeModel = [];
+
+            $config['extended'] = false;
+
 
             if ($config['type'] == 'fromlinked' && static::$linkModelName) {
                 /**
@@ -1617,10 +1640,13 @@ class ActiveRecord extends db\ActiveRecord
                  * @var $modelClass ActiveRecord
                  */
                 $modelClass = static::$extendedModelName;
-                $config = $modelClass::getStructure($fieldName);
-                if (!$config) {
+                $configTmp = $modelClass::getStructure($fieldName);
+                if (!$configTmp) {
                     throw new Exception("Field {$fieldName} not found in ".static::className());
                 }
+                $configTmp['extended'] = true;
+                $configTmp['readonly'] = (isset($config['readonly']) ? isset($config['readonly']) : false);
+                $config = $configTmp;
             }
 
             if ($config['type'] == 'pointer') {
@@ -1806,6 +1832,10 @@ class ActiveRecord extends db\ActiveRecord
             ];
         }
 
+        /**
+         * @var $extendedModelName ActiveRecord
+         */
+        $extendedModelName = static::getExtendedModelName();
 
         $conf = [
             'fields' => $fields,
@@ -1837,6 +1867,13 @@ class ActiveRecord extends db\ActiveRecord
             'historyAccess' => Yii::$app->user->getIdentity(true)->isSU,
             "printForms" => null,
         ];
+
+        if ($extendedModelName) {
+            $conf["haveExtendedModel"] = ($extendedModelName ? true : false);
+            $conf["extendedModelName"] = $extendedModelName::getModelName();
+            $conf["extendedModelRelFieldName"] = static::getExtendedModelRelFieldName();
+            $conf["extendedModelRunAction"] = $extendedModelName::getRunAction();
+        }
 
         if ($configOnly) {
             $conf['showCondition'] = (static::$showCondition ? static::$showCondition : null);
