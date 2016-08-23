@@ -73,4 +73,14 @@ class View extends web\View
             'basePath' => '@webroot/themes/'.$themeName
         ]);
     }
+    
+    function renderTwigString($string, $params)
+    {
+        if (is_array($this->renderers['twig']) || is_string($this->renderers['twig'])) {
+            $this->renderers['twig'] = \Yii::createObject($this->renderers['twig']);
+        }
+        /* @var $renderer TwigViewRenderer */
+        $renderer = $this->renderers['twig'];
+        return $renderer->renderString($string, $params);
+    }
 }

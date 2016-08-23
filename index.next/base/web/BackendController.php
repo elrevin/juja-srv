@@ -473,6 +473,10 @@ class BackendController extends Controller
 
         if ($over && preg_match("/^\\[[0-9\\,]+\\]$/", $records) && preg_match("/^[a-zA-Z0-9_]+$/", $modelName) && ($position == 'before' || $position == 'after')) {
             $records = Json::decode($records);
+
+            /**
+             * @var $modelName ActiveRecord
+             */
             $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
 
             // Модель рекурсивная
@@ -485,11 +489,11 @@ class BackendController extends Controller
             $parentId = 0;
             $masterId = 0;
             if ($recursive) {
-                $parentId = call_user_func([$modelName, 'findOne'], ["id" => $records[0]])->parent_id;
+                $parentId = $modelName::findOne(["id" => $records[0]])->parent_id->id;
             }
 
             if ($haveMaster) {
-                $masterId = call_user_func([$modelName, 'findOne'], ["id" => $records[0]])->master_table_id;
+                $masterId = $modelName::findOne(["id" => $records[0]])->{$modelName::getMasterModelRelFieldName()}->id;
             }
 
             array_walk($records, function($rec) use ($modelName, $over, $parentId, $masterId, $position) {
@@ -513,7 +517,7 @@ class BackendController extends Controller
                 if ($cond) {
                     $query = $query->where($cond, $params);
                 }
-                $recs = $query->select(["id", "sort_priority"])->orderBy(["sort_priority" => SORT_ASC])->all();
+                $recs = $query->orderBy(["sort_priority" => SORT_ASC])->all();
 
                 if ($oldPriority > $overPriority) {
                     $currentPriority = 1;
@@ -582,6 +586,9 @@ class BackendController extends Controller
      * @return array|null
      */
     public function actionDeleteRecord () {
+        /**
+         * @var $modelName ActiveRecord
+         */
         $modelName = Yii::$app->request->get('modelName', '');
         $data = Json::decode(Yii::$app->request->post('data', '[]'));
         $masterId = intval(Yii::$app->request->post('masterId', 0));
@@ -600,14 +607,14 @@ class BackendController extends Controller
                     }
                 }
                 if ($conditions) {
-                    if (call_user_func([$modelName, 'deleteRecords'], $conditions, $params)) {
+                    if ($modelName::deleteRecords($conditions, $params)) {
                         return [
                             'success' => true
                         ];
                     }
                 }
             } elseif (isset($data['id']) && $data['id']) {
-                if (call_user_func([$modelName, 'deleteRecords'], 'id = :id', [':id' => $data['id']])) {
+                if ($modelName::deleteRecords('id = :id', ['id' => $data['id']])) {
                     return [
                         'success' => true
                     ];

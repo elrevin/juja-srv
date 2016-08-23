@@ -48,4 +48,9 @@ class FrontendController extends Controller
             return $this->render('error', ['exception' => $exception]);
         }
     }
+    
+    public function renderTwigString($string, $params)
+    {
+        return $this->getView()->renderTwigString($string, $params);
+    }
 }

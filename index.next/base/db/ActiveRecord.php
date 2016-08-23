@@ -463,6 +463,9 @@ class ActiveRecord extends db\ActiveRecord
 
     protected $oldDirtyAttributes = [];
 
+    public $extendedMasterId = 0;
+    public $extendedParentId = 0;
+
     public function __get($name)
     {
         $getter = '';
@@ -548,7 +551,8 @@ class ActiveRecord extends db\ActiveRecord
                  * @var $relatedModelClass ActiveRecord
                  */
                 $relatedModelClass = static::$extendedModelName;
-                return  $relatedModelClass::find()->andWhere(['id' => $this->getAttribute($name)])->one();
+                $rec = $relatedModelClass::find()->andWhere(['id' => $this->getAttribute(static::$extendedModelRelFieldName)])->one();
+                return $rec->{$name};
             }
         } elseif ($name == '_parent') {
             return static::find()->andWhere(['id' => $this->parent_id])->one();
@@ -717,7 +721,11 @@ class ActiveRecord extends db\ActiveRecord
             } else {
                 $relatedModelClass = $field['relativeModel'];
             }
-            $relatedModelClass::checkStructure();
+
+            if ($relatedModelClass != '\\'.trim(static::className(), '\\')) {
+                $relatedModelClass::checkStructure();
+            }
+
             $tmp = call_user_func([$relatedModelClass, 'tableName']);
             $command = ["ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL"];
             if (strpos($tmp, '.') === false) {
@@ -726,7 +734,11 @@ class ActiveRecord extends db\ActiveRecord
             Yii::$app->db->createCommand(implode(", ", $command))->execute();
         } elseif ($field['type'] == 'file') {
             $relatedModelClass = '\app\modules\files\models\Files';
-            $relatedModelClass::checkStructure();
+
+            if ($relatedModelClass != '\\'.trim(static::className(), '\\')) {
+                $relatedModelClass::checkStructure();
+            }
+
             Yii::$app->db->createCommand("
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL,
                     ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `s_files`(id) ON DELETE SET NULL ON UPDATE CASCADE
@@ -736,6 +748,15 @@ class ActiveRecord extends db\ActiveRecord
 
     public static function checkStructure () {
         if (YII_DEBUG) {
+            // Сначала extended модель
+            /**
+             * @var $extendedModel ActiveRecord
+             */
+            $extendedModel = static::$extendedModelName;
+            if ($extendedModel) {
+                $extendedModel::checkStructure();
+            }
+
             // Проверяем наличие таблицы
             $tableName = static::tableName();
             $table = Yii::$app->db->createCommand("Show tables like '". $tableName ."'")->queryAll();
@@ -764,6 +785,7 @@ class ActiveRecord extends db\ActiveRecord
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."` ADD COLUMN `del` tinyint(1) NOT NULL DEFAULT 0
                 ")->execute();
+                $cols['del'] = '';
             } elseif (static::$permanentlyDelete && array_key_exists('del', $cols)) {
                 // Удаляем записи помеченные на удаление и поле del
                 Yii::$app->db->createCommand("
@@ -773,6 +795,7 @@ class ActiveRecord extends db\ActiveRecord
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."` DROP COLUMN `del`
                 ")->execute();
+                unset($cols['del']);
             }
 
             if (static::$recursive && !array_key_exists('parent_id', $cols)) {
@@ -781,6 +804,7 @@ class ActiveRecord extends db\ActiveRecord
                         ADD COLUMN `parent_id` int(11) DEFAULT NULL,
                         ADD CONSTRAINT `". $tableName ."__parent_id` FOREIGN KEY (parent_id) REFERENCES `". $tableName ."`(id)  ON DELETE CASCADE ON UPDATE CASCADE
                 ")->execute();
+                $cols['parent_id'] = '';
             } elseif (!static::$recursive && array_key_exists('parent_id', $cols)) {
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."`
@@ -790,6 +814,7 @@ class ActiveRecord extends db\ActiveRecord
                     ALTER TABLE `". $tableName ."`
                         DROP COLUMN `parent_id`,
                 ")->execute();
+                unset($cols['parent_id']);
             }
 
             if (static::$parentModel && !array_key_exists(static::$masterModelRelFieldName, $cols)) {
@@ -799,6 +824,7 @@ class ActiveRecord extends db\ActiveRecord
                         ADD COLUMN `".static::$masterModelRelFieldName."` int(11) DEFAULT NULL,
                         ADD CONSTRAINT `". $tableName ."__".static::$masterModelRelFieldName."` FOREIGN KEY (`".static::$masterModelRelFieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE CASCADE ON UPDATE CASCADE
                 ")->execute();
+                $cols[static::$masterModelRelFieldName] = '';
             }
 
             if (static::$masterModel && !array_key_exists(static::$masterModelRelFieldName, $cols)) {
@@ -808,6 +834,7 @@ class ActiveRecord extends db\ActiveRecord
                         ADD COLUMN `".static::$masterModelRelFieldName."` int(11) DEFAULT NULL,
                         ADD CONSTRAINT `". $tableName ."__".static::$masterModelRelFieldName."` FOREIGN KEY (`".static::$masterModelRelFieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE CASCADE ON UPDATE CASCADE
                 ")->execute();
+                $cols[static::$masterModelRelFieldName] = '';
             }
 
             if (static::$masterModel && static::$masterModelRelationsType == self::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$linkModelName && !array_key_exists(static::getLinkTableIdField(), $cols)) {
@@ -817,6 +844,7 @@ class ActiveRecord extends db\ActiveRecord
                         ADD COLUMN `".static::getLinkTableIdField()."` int(11) DEFAULT NULL,
                         ADD CONSTRAINT `". $tableName ."__link_table_id` FOREIGN KEY (`".static::getLinkTableIdField()."`) REFERENCES `". $tmp ."`(id) ON DELETE CASCADE ON UPDATE CASCADE
                 ")->execute();
+                $cols[static::getLinkTableIdField()] = '';
             }
 
             if (static::$extendedModelName && !array_key_exists(static::getExtendedModelRelFieldName(), $cols)) {
@@ -826,33 +854,38 @@ class ActiveRecord extends db\ActiveRecord
                         ADD COLUMN `".static::getExtendedModelRelFieldName()."` int(11) DEFAULT NULL,
                         ADD CONSTRAINT `". $tableName ."__extended_table_id` FOREIGN KEY (`".static::getExtendedModelRelFieldName()."`) REFERENCES `". $tmp ."`(id) ON DELETE CASCADE ON UPDATE CASCADE
                 ")->execute();
+                $cols[static::getExtendedModelRelFieldName()] = '';
             }
 
             if (static::$hiddable && !array_key_exists('hidden', $cols)) {
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."` ADD COLUMN `hidden` tinyint(1) NOT NULL DEFAULT 0
                 ")->execute();
+                $cols['hidden'] = '';
             } elseif (!static::$hiddable && array_key_exists('hidden', $cols)) {
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."` DROP COLUMN `hidden`
                 ")->execute();
+                unset($cols['hidden']);
             }
 
             if (static::$sortable && !array_key_exists('sort_priority', $cols)) {
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."` ADD COLUMN `sort_priority` int(11) NOT NULL DEFAULT 0
                 ")->execute();
+                $cols['sort_priority'] = '';
             } elseif (!static::$sortable && array_key_exists('sort_priority', $cols)) {
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."` DROP COLUMN `sort_priority`
                 ")->execute();
+                unset($cols['sort_priority']);
             }
 
             // Проверяем структуру
 
             $structure = static::getStructure();
             foreach ($structure as $name => $field) {
-                if (!isset($field['addition']) && !isset($field['calc']) && !isset($field['fake']) && !array_key_exists($name, $cols)) {
+                if (!$field['addition'] && !$field['calc'] && !$field['fake'] && !array_key_exists($name, $cols)) {
                     static::createTableCol($name, $field);
                 }
             }
@@ -915,23 +948,7 @@ class ActiveRecord extends db\ActiveRecord
     public static function find()
     {
         static::checkStructure();
-        $query = parent::find();
-        $cond = static::defaultWhere();
-        if ($cond) {
-            $query->andWhere(static::defaultWhere());
-        }
-        if (static::$sortable) {
-            $query->orderBy(['sort_priority' => SORT_ASC]);
-        }
-        return $query;
-    }
-
-    public static function defaultWhere()
-    {
-        if (!static::$permanentlyDelete) {
-            return "`" . static::tableName() . "`.del = 0";
-        }
-        return [];
+        return Yii::createObject(ActiveQuery::className(), [get_called_class()]);
     }
 
     public function rules()
@@ -1161,8 +1178,11 @@ class ActiveRecord extends db\ActiveRecord
             $field = null;
             if (isset(static::$structure[$fieldName])) {
                 $field = static::$structure[$fieldName];
+                $field['name'] = $fieldName;
+                $field['fake'] = (isset($field['fake']) ? $field['fake'] : false);
                 $field['calc'] = (isset($field['calc']) ? $field['calc'] : false);
                 $field['addition'] = (isset($field['addition']) ? $field['addition'] : false);
+                $field['additionTable'] = (isset($field['additionTable']) ? $field['additionTable'] : '');
                 $field['expression'] = (isset($field['expression']) ? $field['expression'] : false);
                 $field['selectOptions'] = (isset($field['selectOptions']) ? $field['selectOptions'] : []);
                 $field['required'] = (isset($field['required']) ? $field['required'] : false);
@@ -1171,7 +1191,21 @@ class ActiveRecord extends db\ActiveRecord
             }
             return $field;
         }
-        return static::$structure;
+        $structure = [];
+        foreach (static::$structure as $fieldName => $field) {
+            $field['name'] = $fieldName;
+            $field['fake'] = (isset($field['fake']) ? $field['fake'] : false);
+            $field['calc'] = (isset($field['calc']) ? $field['calc'] : false);
+            $field['addition'] = (isset($field['addition']) ? $field['addition'] : false);
+            $field['additionTable'] = (isset($field['additionTable']) ? $field['additionTable'] : '');
+            $field['expression'] = (isset($field['expression']) ? $field['expression'] : false);
+            $field['selectOptions'] = (isset($field['selectOptions']) ? $field['selectOptions'] : []);
+            $field['required'] = (isset($field['required']) ? $field['required'] : false);
+            $field['autoNumber'] = (isset($field['autoNumber']) ? $field['autoNumber'] : false);
+            $field['autoNumberReset'] = (isset($field['autoNumberReset']) ? $field['autoNumberReset'] : Utils::AUTONUMBER_RESET_NEVER);
+            $structure[$fieldName] = $field;
+        }
+        return $structure;
     }
 
     /**
@@ -1283,13 +1317,16 @@ class ActiveRecord extends db\ActiveRecord
             }
         } elseif ($type == 'bool') {
             return $value ? 1 : 0;
-        } elseif ($type == 'pointer' || $type == 'linked' || $type == 'img' || $type == 'file') {
+        } elseif ($type == 'pointer' || $type == 'img' || $type == 'file') {
             if(isset($value['id'])) {
                 return $value['id'];
             } else {
                 $value = intval($value);
                 return ($value ? $value : null);
             }
+        } elseif ($type == 'linked') {
+            $value = intval($value);
+            return ($value ? $value : null);
         }
 
         return null;
@@ -1307,6 +1344,40 @@ class ActiveRecord extends db\ActiveRecord
 
         // Ищем поля типа file и проверяем есть ли загрузка файла
         $structure = static::getStructure();
+
+        if (static::$linkModelName) {
+            if (!$structure) {
+                /**
+                 * @var $modelClass ActiveRecord
+                 */
+                $modelClass = static::$linkModelName;
+                $structure = $modelClass::getStructure();
+
+                $structure[static::getLinkTableIdField()] = [
+                    'title' => '',
+                    'type' => 'linked',
+                ];
+            } else {
+                $hasLinked = false;
+                foreach ($structure as $item) {
+                    if ($item['type'] == 'linked') {
+                        $hasLinked = true;
+                    }
+                }
+                if (!$hasLinked) {
+                    $structure = array_merge([
+                        static::$linkFieldlName => [
+                            'type' => 'linked',
+                            'showInGrid' => false,
+                        ]
+                    ], $structure);
+                }
+            }
+
+            static::$structure = $structure;
+        }
+
+
         foreach ($structure as $key => $field) {
             if (!array_key_exists($key, $data) && isset($_FILES[$key."_filebin"])) {
                 $file = \app\modules\files\models\FilesUtils::uploadFile(0, '' , 1, $key."_filebin");
@@ -1338,7 +1409,7 @@ class ActiveRecord extends db\ActiveRecord
                     if (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) {
                         $this->{static::getLinkTableIdField()} = static::setType($key, $val);
                     }
-                } elseif (isset($structure[$key])) {
+                } elseif (isset($structure[$key]) && $structure[$key]['type'] != 'fromlinked') {
                     if (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) {
                         $this->$key = static::setType($key, $val);
                     }
@@ -1420,6 +1491,16 @@ class ActiveRecord extends db\ActiveRecord
                     $extendedRec->{$name} = $val;
                 }
 
+                if ($extendedModel::getMasterModel()) {
+                    $masterFieldName = $extendedModel::getMasterModelRelFieldName();
+                    $extendedRec->{$masterFieldName} = $this->extendedMasterId;
+                }
+
+                if ($extendedModel::getParentModel()) {
+                    $masterFieldName = $extendedModel::getMasterModelRelFieldName();
+                    $extendedRec->{$masterFieldName} = $this->extendedParentId;
+                }
+
                 $extendedRec->save();
 
                 if ($insert && !$this->{$extendedModelRelFieldName}) {
@@ -1458,7 +1539,7 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         $this->oldDirtyAttributes = $this->dirtyAttributes;
-        if ($this->save()) {
+            if ($this->save()) {
 
             $structure = static::getStructure();
             foreach ($structure as $fieldName => $fieldData) {
@@ -1600,18 +1681,35 @@ class ActiveRecord extends db\ActiveRecord
         $modelStructure = static::getStructure();
         $fields = [];
 
-        if (!$modelStructure && static::$linkModelName) {
-            /**
-             * @var $modelClass ActiveRecord
-             */
-            $modelClass = static::$linkModelName;
-            $modelStructure = $modelClass::getStructure();
+        if (static::$linkModelName) {
+            if (!$modelStructure) {
+                /**
+                 * @var $modelClass ActiveRecord
+                 */
+                $modelClass = static::$linkModelName;
+                $modelStructure = $modelClass::getStructure();
 
-            $modelStructure[static::getLinkTableIdField()] = [
-                'title' => '',
-                'type' => 'linked',
-            ];
-
+                $modelStructure[static::getLinkTableIdField()] = [
+                    'title' => '',
+                    'type' => 'linked',
+                ];
+            } else {
+                $hasLinked = false;
+                foreach ($modelStructure as $item) {
+                    if ($item['type'] == 'linked') {
+                        $hasLinked = true;
+                    }
+                }
+                if (!$hasLinked) {
+                    $modelStructure = array_merge([
+                        static::$linkFieldlName => [
+                            'type' => 'linked',
+                            'showInGrid' => false,
+                        ]],
+                        $modelStructure
+                    );
+                }
+            }
         }
 
         if (!$modelStructure && static::$extendedModelName) {
@@ -1633,6 +1731,7 @@ class ActiveRecord extends db\ActiveRecord
 
             $config['extended'] = false;
 
+            $extendedModelName = static::$extendedModelName;
 
             if ($config['type'] == 'fromlinked' && static::$linkModelName) {
                 /**
@@ -1643,13 +1742,14 @@ class ActiveRecord extends db\ActiveRecord
                 if (!$config) {
                     throw new Exception("Field {$fieldName} not found in ".static::className());
                 }
+                $extendedModelName = $modelClass::getExtendedModelName();
             }
 
-            if ($config['type'] == 'fromextended' && static::$extendedModelName) {
+            if ($config['type'] == 'fromextended' && $extendedModelName) {
                 /**
                  * @var $modelClass ActiveRecord
                  */
-                $modelClass = static::$extendedModelName;
+                $modelClass = $extendedModelName;
                 $configTmp = $modelClass::getStructure($fieldName);
                 if (!$configTmp) {
                     throw new Exception("Field {$fieldName} not found in ".static::className());

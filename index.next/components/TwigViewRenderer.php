@@ -72,6 +72,11 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         $this->functions['getMonthName'] = '\app\components\TwigViewRenderer::getMonthName';
         $this->functions['numToStr'] = '\app\components\TwigViewRenderer::numToStr';
         $this->functions['getRuDate'] = '\app\components\TwigViewRenderer::getRuDate';
+
+        if (isset(\Yii::$app->params['twigFunctions'])) {
+            $this->functions = array_merge($this->functions, \Yii::$app->params['twigFunctions']);
+        }
+
         parent::init();
     }
 
@@ -89,6 +94,13 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         }
 
         return $this->twig->render(pathinfo($file, PATHINFO_BASENAME), $params);
+    }
+    
+    public function renderString($string, $params) 
+    {
+        $this->twig->setLoader(new \Twig_Loader_Array([]));
+        $template = $this->twig->createTemplate($string);
+        return $template->render($params);
     }
 
     /**
