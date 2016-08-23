@@ -1,6 +1,8 @@
 <?php
 namespace app\base\db\fields;
 
+use yii\helpers\Json;
+
 class Pointer extends Simple
 {
     /**
@@ -43,6 +45,9 @@ class Pointer extends Simple
 
     function getListVal ($row)
     {
-        return $row[$this->alias];
+        return Json::encode([
+            'id' => $row[$this->alias],
+            'value' => $row['valof_'.$this->alias]
+        ]);
     }
 }

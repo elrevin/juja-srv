@@ -1,6 +1,7 @@
 <?php
 namespace app\base\db;
 use app\base\db\fields\Child;
+use app\base\db\fields\Color;
 use app\base\db\fields\Extended;
 use app\base\db\fields\File;
 use app\base\db\fields\Linked;
@@ -124,7 +125,63 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $fieldObject->type = $fieldConf['type'];
             $fieldObject->expression = $fieldConf['expression'];
             return $fieldObject;
+        } elseif (in_array($fieldConf['type'], ['color'])) {
+            $fieldObject = new Color();
+            $fieldObject->alias = $fieldAlias;
+            $fieldObject->level = $level;
+            $fieldObject->name = $field;
+            $fieldObject->tableAlias = $tableAlias;
+            $fieldObject->expression = $fieldConf['expression'];
+            return $fieldObject;
         } elseif (in_array($fieldConf['type'], ['linked'])) {
+            if (trim($modelClass::getLinkModelName(), '\\') == 'app\modules\files\models\Files') {
+                $fieldObject = new File();
+
+                $fieldObject->level = $level;
+                $fieldObject->name = $field;
+                $fieldObject->alias = $fieldAlias;
+                $fieldObject->tableAlias = $tableAlias;
+                $fieldObject->type = 'file';
+
+                $idField = new Simple();
+                $idField->level = $level;
+                $idField->name = $field;
+                $idField->tableAlias = $tableAlias;
+                $idField->alias = $fieldAlias;
+                $idField->expression = $fieldConf['expression'];
+                $idField->type = 'int';
+                $fieldObject->idField = $idField;
+
+                /**
+                 * @var $relatedModelClass ActiveRecord
+                 */
+                $relatedModelClass = '\app\modules\files\models\Files';
+
+                $relatedIdentifyFieldConf = $relatedModelClass::getIdentifyFieldConf();
+
+                $relatedTableName = $relatedModelClass::tableName();
+                $this->_pointersCount++;
+                $relatedTableAlias = $this->getTableAlias($relatedTableName, $this->_pointersCount);
+
+                if ($fieldConf['expression']) {
+                    $this->_joins[] = [
+                        'alias' => $relatedTableAlias,
+                        'name' => $relatedTableName,
+                        'on' => ["`{$relatedTableAlias}`.id" => new Expression("(".$fieldConf['expression'].")")],
+                    ];
+                } else {
+                    $this->_joins[] = [
+                        'alias' => $relatedTableAlias,
+                        'name' => $relatedTableName,
+                        'on' => "`{$tableAlias}`.`{$fieldAlias}` = `{$relatedTableAlias}`.id",
+                    ];
+                }
+
+                $fieldObject->valueField = $this->getField($relatedModelClass, $relatedIdentifyFieldConf['name'], "valof_{$fieldAlias}", $this->_pointersCount);
+                $fieldObject->fileField = $this->getField($relatedModelClass, 'name', "fileof_{$fieldAlias}", $this->_pointersCount);
+                $this->_pointers[$field] = $fieldObject;
+                return $fieldObject;
+            }
             $fieldObject = new Simple();
             $fieldObject->alias = $fieldAlias;
             $fieldObject->level = $level;
@@ -679,38 +736,9 @@ class ActiveQuery extends \yii\db\ActiveQuery
              * @var $field Simple
              */
             foreach ($this->_fields as $field) {
-                if ($field->type == 'pointer') {
-                    foreach ($list as $key => $item) {
-                        $list[$key][$field->alias] = Json::encode([
-                            'id' => $item[$field->alias],
-                            'value' => $item['valof_'.$field->alias]
-                        ]);
-                    }
-                } elseif ($field->type == 'select') {
-                    foreach ($list as $key => $item) {
-                        $list[$key][$field->alias] = Json::encode([
-                            'id' => $item[$field->alias],
-                            'value' => $item['valof_'.$field->alias],
-                        ]);
-                    }
-                } elseif ($field->type == 'file') {
-                    foreach ($list as $key => $item) {
-                        $list[$key][$field->alias] = Json::encode([
-                            'id' => $item[$field->alias],
-                            'value' => $item['valof_'.$field->alias],
-                            'fileName' => $item['fileof_'.$field->alias],
-                        ]);
-                    }
-                } elseif ($field->type == 'color') {
-                    foreach ($list as $key => $item) {
-                        if ($item) {
-                            $some = explode(',', $list[$key][$field->alias]);
-                            $list[$key][$field->alias] =
-                                "#"
-                                .str_pad(dechex(intval($some[0])), 2, STR_PAD_LEFT)
-                                .str_pad(dechex(intval($some[1])), 2, STR_PAD_LEFT)
-                                .str_pad(dechex(intval($some[2])), 2, STR_PAD_LEFT);
-                        }
+                foreach ($list as $key => $item) {
+                    if ($item) {
+                        $list[$key][$field->alias] = $field->getListVal($list[$key]);
                     }
                 }
             }

@@ -1,5 +1,7 @@
 <?php
 namespace app\base\db\fields;
+use yii\helpers\Json;
+
 class File extends Simple
 {
     /**
@@ -34,4 +36,12 @@ class File extends Simple
         return $this->valueField->getWhere($operation, $value);
     }
 
+    public function getListVal($row)
+    {
+        return Json::encode([
+            'id' => $row[$this->alias],
+            'value' => $row['valof_'.$this->alias],
+            'fileName' => $row['fileof_'.$this->alias],
+        ]);
+    }
 }

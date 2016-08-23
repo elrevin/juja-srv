@@ -1,6 +1,7 @@
 <?php
 namespace app\base\db\fields;
 use yii\db\Expression;
+use yii\helpers\Json;
 
 class Select extends Simple
 {
@@ -26,5 +27,13 @@ class Select extends Simple
         
         $value = "(CASE {$expression} ".implode(' ', $options)." END)";
         return ["valof_{$this->alias}" => $value, $this->alias => $expression];
+    }
+    
+    function getListVal($row)
+    {
+        return Json::encode([
+            'id' => $row[$this->alias],
+            'value' => $row['valof_'.$this->alias],
+        ]);
     }
 }

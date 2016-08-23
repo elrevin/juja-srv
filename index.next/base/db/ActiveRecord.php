@@ -818,7 +818,12 @@ class ActiveRecord extends db\ActiveRecord
             }
 
             if (static::$parentModel && !array_key_exists(static::$masterModelRelFieldName, $cols)) {
-                $tmp = call_user_func([static::$parentModel, 'tableName']);
+                /**
+                 * @var $relModel ActiveRecord
+                 */
+                $relModel = static::$parentModel;
+                $relModel::checkStructure();
+                $tmp = $relModel::tableName();
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."`
                         ADD COLUMN `".static::$masterModelRelFieldName."` int(11) DEFAULT NULL,
@@ -828,7 +833,12 @@ class ActiveRecord extends db\ActiveRecord
             }
 
             if (static::$masterModel && !array_key_exists(static::$masterModelRelFieldName, $cols)) {
-                $tmp = call_user_func([static::$masterModel, 'tableName']);
+                /**
+                 * @var $relModel ActiveRecord
+                 */
+                $relModel = static::$masterModel;
+                $relModel::checkStructure();
+                $tmp = $relModel::tableName();
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."`
                         ADD COLUMN `".static::$masterModelRelFieldName."` int(11) DEFAULT NULL,
@@ -838,7 +848,12 @@ class ActiveRecord extends db\ActiveRecord
             }
 
             if (static::$masterModel && static::$masterModelRelationsType == self::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY && static::$linkModelName && !array_key_exists(static::getLinkTableIdField(), $cols)) {
-                $tmp = call_user_func([static::$linkModelName, 'tableName']);
+                /**
+                 * @var $relModel ActiveRecord
+                 */
+                $relModel = static::$linkModelName;
+                $relModel::checkStructure();
+                $tmp = $relModel::tableName();
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."`
                         ADD COLUMN `".static::getLinkTableIdField()."` int(11) DEFAULT NULL,
@@ -848,7 +863,12 @@ class ActiveRecord extends db\ActiveRecord
             }
 
             if (static::$extendedModelName && !array_key_exists(static::getExtendedModelRelFieldName(), $cols)) {
-                $tmp = call_user_func([static::$extendedModelName, 'tableName']);
+                /**
+                 * @var $relModel ActiveRecord
+                 */
+                $relModel = static::$extendedModelName;
+                $relModel::checkStructure();
+                $tmp = $relModel::tableName();
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."`
                         ADD COLUMN `".static::getExtendedModelRelFieldName()."` int(11) DEFAULT NULL,
@@ -1325,7 +1345,11 @@ class ActiveRecord extends db\ActiveRecord
                 return ($value ? $value : null);
             }
         } elseif ($type == 'linked') {
-            $value = intval($value);
+            if (trim(static::$linkModelName, '\\') == 'app\modules\files\models\Files') {
+                $value = (isset($value['id']) ? $value['id'] : null);
+            } else {
+                $value = intval($value);
+            }
             return ($value ? $value : null);
         }
 
