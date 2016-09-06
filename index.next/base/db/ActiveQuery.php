@@ -116,7 +116,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $tableName = $relatedTableName;
         }
 
-        if (in_array($fieldConf['type'], ['int', 'float', 'date', 'datetime', 'string', 'tinystring', 'text', 'html', 'bool'])) {
+        if (in_array($fieldConf['type'], ['int', 'float', 'date', 'datetime', 'string', 'tinystring', 'text', 'html', 'bool', 'code'])) {
             $fieldObject = new Simple();
             $fieldObject->alias = $fieldAlias;
             $fieldObject->level = $level;
@@ -377,7 +377,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         $tableName = $modelClass::tableName();
         $tableAlias = $this->getTableAlias($tableName);
 
-        $this->select = ["{$tableAlias}.id"];
+        $this->select = ["id"=>"{$tableAlias}.id"];
 
         $structure = $modelClass::getStructure();
 
@@ -528,29 +528,6 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $this->select[] = "`{$tableAlias}`.`hidden`";
         }
 
-//        if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && $modelClass::getParentModel()) {
-//            /**
-//             * @var $parentModelName ActiveRecord
-//             */
-//            $parentModelName = $modelClass::getParentModel();
-//
-//            $fieldName = $modelClass::getMasterModelRelFieldName();
-//            $relatedIdentifyFieldConf = $parentModelName::getIdentifyFieldConf();
-//            if ($relatedIdentifyFieldConf) {
-//                $relatedTableName = $parentModelName::tableName();
-//                $relatedTableAlias = $this->getTableAlias($relatedTableName, $this->_pointersCount);
-//                $this->select[] = $tableAlias.".`".$fieldName."`";
-//
-//                $this->getField($parentModelName, '', "valof_{$fieldName}", 0);
-//
-//                $this->_joins[] = [
-//                    'name' => $relatedTableName,
-//                    'alias' => $relatedTableAlias,
-//                    'on' => "`{$tableAlias}`.`{$fieldName}` = `{$relatedTableAlias}`.id",
-//                ];
-//            }
-//        }
-//
         if(
             $modelClass::getMasterModelRelationsType() == $modelClass::MASTER_MODEL_RELATIONS_TYPE_MANY_TO_MANY &&
             $modelClass::getSlaveModelAddMethod() == $modelClass::SLAVE_MODEL_ADD_METHOD_CHECK

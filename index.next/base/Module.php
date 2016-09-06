@@ -9,6 +9,26 @@ class Module extends \yii\base\Module implements BootstrapInterface
 {
     static protected $inSiteStructure = true;
     static protected $moduleTitle = '';
+
+    /**
+     * если true, то разделов данного модуля на сайте может быть много (теряет актуальность, если описаны типы разделов)
+     * @var bool
+     */
+    static protected $multipleSections = false;
+
+    /**
+     * Описание типов разделов сайта для модуля, если их может быть несколько. Каждый раздел описывается структурой вида:
+     * 'sectionTypeName' => [
+     *      'title' => 'Название типа раздела',
+     *      'multipleSections' => truw, // если true, то разделов данного типа на сайте может быть много
+     * ]
+     *
+     * но можно и так:
+     *
+     * 'sectionTypeName' => 'Название типа раздела' - в таком случае multipleSections = false
+     *
+     * @var array
+     */
     static protected $siteSectionTypes = [];
 
     /**
@@ -46,8 +66,27 @@ class Module extends \yii\base\Module implements BootstrapInterface
         return static::$inSiteStructure;
     }
 
+    static public function getMultipleSections()
+    {
+        return static::$multipleSections;
+    }
+
     static public function getSiteSectionTypes ()
     {
+        foreach (static::$siteSectionTypes as $key => $type) {
+            if (is_string($type)) {
+                static::$siteSectionTypes[$key] = [
+                    'title' => $type,
+                    'multipleSections' => false,
+                ];
+            } elseif (is_array($type)) {
+                static::$siteSectionTypes[$key] = [
+                    'title' => (isset($type['title']) ? $type['title'] : ''),
+                    'multipleSections' => (isset($type['multipleSections']) ? $type['multipleSections'] : false),
+                ];
+            }
+        }
+
         return static::$siteSectionTypes;
     }
 

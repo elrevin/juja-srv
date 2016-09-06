@@ -10,6 +10,7 @@ use yii\web\Controller;
 
 class DirectrequestController extends Controller
 {
+    public $layout = false;
     public function init()
     {
         Yii::$app->setComponents([

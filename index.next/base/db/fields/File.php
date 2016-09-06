@@ -31,7 +31,7 @@ class File extends Simple
         return $arr;
     }
 
-    public function getWhere($operation, $value)
+    public function getWhere($operation, $value, $filterType = null)
     {
         return $this->valueField->getWhere($operation, $value);
     }

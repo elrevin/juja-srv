@@ -73,7 +73,7 @@ class Simple extends Object
             } elseif ($operation == 'noteq' || $operation == '!=') {
                 return ['<>', $left, $value];
             }
-        } elseif (in_array($this->type, ['string', 'tinystring', 'text', 'html'])) {
+        } elseif (in_array($this->type, ['string', 'tinystring', 'text', 'html', 'code'])) {
             if ($operation == 'start') {
                 return ['like', $left, $value."%", false];
             } elseif ($operation == 'end') {

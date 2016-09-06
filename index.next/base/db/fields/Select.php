@@ -36,4 +36,16 @@ class Select extends Simple
             'value' => $row['valof_'.$this->alias],
         ]);
     }
+
+    public function getWhere($operation, $value, $filterType = null)
+    {
+        $left = ($this->expression ? new Expression($this->expression) : "`{$this->tableAlias}`.`{$this->name}`");
+        if ($operation == '==' || $operation == 'eq') {
+            return ['=', $left, $value];
+        } elseif ($operation == 'noteq' || $operation == '!=') {
+            return ['<>', $left, $value];
+        }
+        return [];
+    }
+
 }
