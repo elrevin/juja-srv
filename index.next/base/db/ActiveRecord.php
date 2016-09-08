@@ -716,20 +716,26 @@ class ActiveRecord extends db\ActiveRecord
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` DATETIME DEFAULT NULL
             ")->execute();
         } elseif ($field['type'] == 'pointer') {
+            /**
+             * @var $relatedModelClass ActiveRecord
+             */
             if (is_array($field['relativeModel'])) {
                 $relatedModelClass = '\app\modules\\'.$field['relativeModel']['moduleName'].'\models\\'.$field['relativeModel']['name'];
             } else {
                 $relatedModelClass = $field['relativeModel'];
             }
 
-            if ($relatedModelClass != '\\'.trim(static::className(), '\\')) {
-                $relatedModelClass::checkStructure();
-            }
-
             $tmp = call_user_func([$relatedModelClass, 'tableName']);
             $command = ["ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL"];
-            if (strpos($tmp, '.') === false) {
-                $command[] = "ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE SET NULL ON UPDATE CASCADE";
+
+            if ($relatedModelClass::tableName() != 'NONE') {
+                if ($relatedModelClass != '\\'.trim(static::className(), '\\')) {
+                    $relatedModelClass::checkStructure();
+                }
+
+                if (strpos($tmp, '.') === false) {
+                    $command[] = "ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE SET NULL ON UPDATE CASCADE";
+                }
             }
             Yii::$app->db->createCommand(implode(", ", $command))->execute();
         } elseif ($field['type'] == 'file') {
