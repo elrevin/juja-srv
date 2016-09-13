@@ -489,7 +489,7 @@ class BackendController extends Controller
             $parentId = 0;
             $masterId = 0;
             if ($recursive) {
-                $parentId = $modelName::findOne(["id" => $records[0]])->_parent->id;
+                $parentId = $modelName::findOne(["id" => $records[0]])->parent_id->id;
             }
 
             if ($haveMaster) {

@@ -56,11 +56,13 @@ class View extends web\View
             if (is_array($this->renderers['twig'])) {
                 $this->renderers['twig']['namespaces'] = [
                     '@webroot/themes/'.$themeName => 'themeroot',
-                    '@webroot/themes/'.$themeName.'/views/layouts' => 'themelayouts'
+                    '@webroot/themes/'.$themeName.'/views/layouts' => 'themelayouts',
+                    '@webroot/themes/'.$themeName.'/views' => 'themeviews',
                 ];
             } elseif (is_object($this->renderers['twig']) && is_callable([$this->renderers['twig'], 'addPath'])) {
                 $this->renderers['twig']->addPathAlias('themeroot', '@webroot/themes/'.$themeName);
                 $this->renderers['twig']->addPathAlias('themelayouts', '@webroot/themes/'.$themeName.'/views/layouts');
+                $this->renderers['twig']->addPathAlias('themeviews', '@webroot/themes/'.$themeName.'/views');
             }
         }
         $this->setTheme([

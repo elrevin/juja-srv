@@ -46,6 +46,7 @@ class ActiveRecord extends db\ActiveRecord
      *          'tinystring' - строка, в mysql varchar(256),
      *          'text' - многострочный текст, редактируется textarea, в mysql - longtext
      *          'html' - многострочный текст с форматированием, редактируется tinymce, в mysql - longtext
+     *          'code' - многострочный текст с форматированием, редактируется codemirror, в mysql - longtext
      *          'date' - дата
      *          'datetime' - дата и время
      *          'pointer' - ссылка на запись в другой модели, в mysql - int(11) и внешний ключ ссылающийся на другую модель, имя
@@ -90,6 +91,8 @@ class ActiveRecord extends db\ActiveRecord
      *
      *      'keepHistory' - Если true, то автоматически будет сохраняться история значений поля,
      *
+     *      'codeLang' - Язак для подсветки кода, используется полем codemiror
+     * 
      *      'colorFormat' - Формат цвета:
      *          'hex' - шестнадцатиричный формат ("#ffffff")
      *          'dec' - десятичный формат ("255,255,255")
@@ -463,8 +466,8 @@ class ActiveRecord extends db\ActiveRecord
 
     protected $oldDirtyAttributes = [];
 
-    public $extendedMasterId = 0;
-    public $extendedParentId = 0;
+    public $extendedMasterId = null;
+    public $extendedParentId = null;
 
     public function __get($name)
     {
@@ -556,6 +559,10 @@ class ActiveRecord extends db\ActiveRecord
             }
         } elseif ($name == '_parent') {
             return static::find()->andWhere(['id' => $this->parent_id])->one();
+        } elseif ($name == '_children') {
+            return static::find()->andWhere(array_merge(['parent_id' => $this->id], (static::$hiddable ? ['hidden' => 0] : [])))->all();
+        } elseif ($name == '_hasChildren') {
+            return (static::find()->andWhere(array_merge(['parent_id' => $this->id], (static::$hiddable ? ['hidden' => 0] : [])))->select(['id'])->one() ? true : false);
         }
 
         if ($name == static::$masterModelRelFieldName) {
@@ -616,6 +623,20 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
+        if ($name == '_linked') {
+            /**
+             * @var $linkMOdel ActiveRecord
+             */
+            $linkMOdel = static::$linkModelName;
+            $masterModelRelFieldName = static::$linkFieldlName;
+            $hiddable = $linkMOdel::getHiddable();
+            $where = [];
+            if ($hiddable) {
+                $where["hidden"] = 0;
+            }
+            return $linkMOdel::find()->andWhere($where)->andWhere(['id' => $this->{$masterModelRelFieldName}])->one();
+        }
+
         return parent::__get($name);
     }
 
@@ -627,12 +648,12 @@ class ActiveRecord extends db\ActiveRecord
                     $structure[$name]['type'] == 'tinystring' ||
                     $structure[$name]['type'] == 'color' ||
                     $structure[$name]['type'] == 'text' ||
-                    $structure[$name]['type'] == 'html') && !$val
+                    $structure[$name]['type'] == 'html') && !$val && !$structure[$name]['nullAllow']
             ) {
                 $val = '';
             } elseif (
                 ($structure[$name]['type'] == 'int' ||
-                    $structure[$name]['type'] == 'float') && !$val
+                    $structure[$name]['type'] == 'float') && !$val && !$structure[$name]['nullAllow']
             ) {
                 $val = 0;
             } elseif (($structure[$name]['type'] == 'pointer' || $structure[$name]['type'] == 'select') && !$val) {
@@ -659,7 +680,6 @@ class ActiveRecord extends db\ActiveRecord
                 return;
             }
         }
-
         parent::__set($name, static::prepareAttribute($name, $val));
     }
 
@@ -687,7 +707,7 @@ class ActiveRecord extends db\ActiveRecord
             Yii::$app->db->createCommand("
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` VARCHAR(11) NOT NULL DEFAULT ''
             ")->execute();
-        } elseif ($field['type'] == 'text' || $field['type'] == 'html') {
+        } elseif ($field['type'] == 'text' || $field['type'] == 'html' || $field['type'] == 'code') {
             Yii::$app->db->createCommand("
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` LONGTEXT
             ")->execute();
@@ -716,26 +736,20 @@ class ActiveRecord extends db\ActiveRecord
                 ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` DATETIME DEFAULT NULL
             ")->execute();
         } elseif ($field['type'] == 'pointer') {
-            /**
-             * @var $relatedModelClass ActiveRecord
-             */
             if (is_array($field['relativeModel'])) {
                 $relatedModelClass = '\app\modules\\'.$field['relativeModel']['moduleName'].'\models\\'.$field['relativeModel']['name'];
             } else {
                 $relatedModelClass = $field['relativeModel'];
             }
 
+            if ($relatedModelClass != '\\'.trim(static::className(), '\\')) {
+                $relatedModelClass::checkStructure();
+            }
+
             $tmp = call_user_func([$relatedModelClass, 'tableName']);
             $command = ["ALTER TABLE `". $tableName ."` ADD COLUMN `".$fieldName."` int(11) DEFAULT NULL"];
-
-            if ($relatedModelClass::tableName() != 'NONE') {
-                if ($relatedModelClass != '\\'.trim(static::className(), '\\')) {
-                    $relatedModelClass::checkStructure();
-                }
-
-                if (strpos($tmp, '.') === false) {
-                    $command[] = "ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE SET NULL ON UPDATE CASCADE";
-                }
+            if (strpos($tmp, '.') === false) {
+                $command[] = "ADD CONSTRAINT `". $tableName ."__".$fieldName."` FOREIGN KEY (`".$fieldName."`) REFERENCES `". $tmp ."`(id) ON DELETE SET NULL ON UPDATE CASCADE";
             }
             Yii::$app->db->createCommand(implode(", ", $command))->execute();
         } elseif ($field['type'] == 'file') {
@@ -1214,6 +1228,7 @@ class ActiveRecord extends db\ActiveRecord
                 $field['required'] = (isset($field['required']) ? $field['required'] : false);
                 $field['autoNumber'] = (isset($field['autoNumber']) ? $field['autoNumber'] : false);
                 $field['autoNumberReset'] = (isset($field['autoNumberReset']) ? $field['autoNumberReset'] : Utils::AUTONUMBER_RESET_NEVER);
+                $field['nullAllow'] = (isset($field['nullAllow']) ? $field['nullAllow'] : false);
             }
             return $field;
         }
@@ -1229,6 +1244,7 @@ class ActiveRecord extends db\ActiveRecord
             $field['required'] = (isset($field['required']) ? $field['required'] : false);
             $field['autoNumber'] = (isset($field['autoNumber']) ? $field['autoNumber'] : false);
             $field['autoNumberReset'] = (isset($field['autoNumberReset']) ? $field['autoNumberReset'] : Utils::AUTONUMBER_RESET_NEVER);
+            $field['nullAllow'] = (isset($field['nullAllow']) ? $field['nullAllow'] : false);
             $structure[$fieldName] = $field;
         }
         return $structure;
@@ -1308,7 +1324,7 @@ class ActiveRecord extends db\ActiveRecord
             return intval($value);
         } elseif ($type == 'float') {
             return floatval($value);
-        } elseif ($type == 'string' || $type == 'tinystring' || $type == 'text' || $type == 'html') {
+        } elseif ($type == 'string' || $type == 'tinystring' || $type == 'text' || $type == 'html' || $type == 'code') {
             return strval($value);
         } elseif ($type == 'color') {
             if ($structure[$fieldName]['colorFormat'] == 'dec') {
@@ -1439,7 +1455,7 @@ class ActiveRecord extends db\ActiveRecord
                     if (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) {
                         $this->{static::getLinkTableIdField()} = static::setType($key, $val);
                     }
-                } elseif (isset($structure[$key]) && $structure[$key]['type'] != 'fromlinked') {
+                } elseif (isset($structure[$key]) && $structure[$key]['type'] != 'fromlinked' && $structure[$key]['type'] != 'fromextended') {
                     if (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) {
                         $this->$key = static::setType($key, $val);
                     }
@@ -1510,6 +1526,14 @@ class ActiveRecord extends db\ActiveRecord
                 if ($insert && !$this->{$extendedModelRelFieldName}) {
                     //Добавляем запись в расширяемую модель
                     $extendedRec = new $extendedModel();
+                    if ($extendedModel::getParentModel()) {
+                        $masterFieldName = $extendedModel::getMasterModelRelFieldName();
+                        $extendedRec->{$masterFieldName} = $this->extendedParentId;
+                    }
+                    if ($extendedModel::getMasterModel()) {
+                        $masterFieldName = $extendedModel::getMasterModelRelFieldName();
+                        $extendedRec->{$masterFieldName} = $this->extendedMasterId;
+                    }
                 } elseif ($this->{$extendedModelRelFieldName}) {
                     $extendedRec = $extendedModel::find()->andWhere(['id' => $this->{$extendedModelRelFieldName}])->one();
                 }
@@ -1519,16 +1543,6 @@ class ActiveRecord extends db\ActiveRecord
                 }
                 foreach ($this->extendedAttributes as $name => $val) {
                     $extendedRec->{$name} = $val;
-                }
-
-                if ($extendedModel::getMasterModel()) {
-                    $masterFieldName = $extendedModel::getMasterModelRelFieldName();
-                    $extendedRec->{$masterFieldName} = $this->extendedMasterId;
-                }
-
-                if ($extendedModel::getParentModel()) {
-                    $masterFieldName = $extendedModel::getMasterModelRelFieldName();
-                    $extendedRec->{$masterFieldName} = $this->extendedParentId;
                 }
 
                 $extendedRec->save();

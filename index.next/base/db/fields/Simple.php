@@ -62,7 +62,7 @@ class Simple extends Object
     
     public function getWhere($operation, $value, $filterType = null)
     {
-        $left = ($this->expression ? new Expression($this->expression) : "`{$this->tableAlias}`.`{$this->name}`");
+        $left = ($this->expression ? "({$this->expression})" : "`{$this->tableAlias}`.`{$this->name}`");
         if (in_array($this->type, ['int', 'float', 'date', 'datetime'])) {
             if ($operation == '==' || $operation == 'eq') {
                 return ['=', $left, $value];

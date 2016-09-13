@@ -59,6 +59,8 @@ class Morpher extends Component
      * @const Предложный падеж (О ком? О чем?)
      */
     const CASE_PREPOSITIONAL = 5;
+    
+    protected $cache = [];
 
     protected function sendRequest($function, $data)
     {
@@ -68,10 +70,16 @@ class Morpher extends Component
         }
         $query = implode("&", $query);
         try {
-            $cont = file_get_contents("http://api.morpher.ru/WebService.asmx/{$function}?".$query);
-            if ($cont) {
-                $xml = simplexml_load_string($cont);
-                return $xml;
+            $h = md5("http://api.morpher.ru/WebService.asmx/{$function}?".$query);
+            if (isset($this->cache[$h])) {
+                return $this->cache[$h];
+            } else {
+                $cont = file_get_contents("http://api.morpher.ru/WebService.asmx/{$function}?".$query);
+                if ($cont) {
+                    $xml = simplexml_load_string($cont);
+                    $this->cache[$h] = $xml;
+                    return $xml;
+                }
             }
         } catch (Exception $e) {
             return null;
