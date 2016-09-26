@@ -116,6 +116,7 @@ class Module extends \yii\base\Module implements BootstrapInterface
      */
     public function bootstrap($app)
     {
+        $this->setComponents($this->components);
         $this->doEventSubscribe();
         if ($app instanceof \yii\console\Application) {
             $this->controllerNamespace = 'app\modules\\'.$this->id.'\commands';

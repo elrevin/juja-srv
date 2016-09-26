@@ -419,6 +419,8 @@ class ActiveQuery extends \yii\db\ActiveQuery
             }
         }
 
+        $aliasesForExpressions = [];
+        
         foreach ($structure as $fieldName => $fieldConf) {
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
                 if (isset($fieldConf['identify']) && $fieldConf['identify']) {
@@ -427,9 +429,14 @@ class ActiveQuery extends \yii\db\ActiveQuery
             }
 
             $field = $this->getField($modelClass, $fieldConf, '', 0);
-            $this->select = array_merge($this->select, $field->getSelect());
+            if (!$field->expression) {
+                $this->select = array_merge($this->select, $field->getSelect());
+            }
             $this->params = array_merge($this->params, $field->params);
             $this->_fields[$fieldName] = $field;
+            if ($field->type == 'pointer') {
+                $aliasesForExpressions["{$field->name}_tablename"] = $field->valueField->tableAlias;
+            }
         }
 
         if (($modelClass::getParentModel() || $modelClass::getMasterModel()) && $modelClass::getMasterModelRelFieldName() && !isset($this->_fields[$modelClass::getMasterModelRelFieldName()])) {
@@ -475,6 +482,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $this->_pointers[$fieldAlias] = $fieldObject;
 
             $this->_fields[$fieldAlias] = $fieldObject;
+            $aliasesForExpressions["{$fieldObject->name}_tablename"] = $fieldObject->valueField->tableAlias;
             $this->select = array_merge($this->select, $fieldObject->getSelect());
         }
 
@@ -521,9 +529,10 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $this->_pointers[$fieldAlias] = $fieldObject;
 
             $this->_fields[$fieldAlias] = $fieldObject;
+            $aliasesForExpressions["{$fieldObject->name}_tablename"] = $fieldObject->valueField->tableAlias;
             $this->select = array_merge($this->select, $fieldObject->getSelect());
         }
-
+        
         if (!(isset($params['identifyOnly']) && $params['identifyOnly']) && $modelClass::getHiddable()) {
             $this->select[] = "`{$tableAlias}`.`hidden`";
         }
@@ -574,6 +583,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 $this->andWhere("`__link_model_table`.del = 0");
             }
             $this->from(["$tableName" => "$tableAlias"]);
+
         } else {
 
             if (isset($params['masterId']) && $params['masterId'] && ($modelClass::getMasterModel() || $modelClass::getParentModel())) {
@@ -581,6 +591,19 @@ class ActiveQuery extends \yii\db\ActiveQuery
             }
             $this->from([$tableName => $tableAlias]);
         }
+
+        /**
+         * @var $field Simple
+         */
+        foreach ($this->_fields as $field) {
+            if ($field->expression) {
+                foreach ($aliasesForExpressions as $name => $alias) {
+                    $field->expression = preg_replace("/\\{\\{\\s*".$name."\\s*\\}\\}/i", $alias, $field->expression);
+                }
+                $this->select = array_merge($this->select, $field->getSelect());
+            }
+        }
+
 
         if ($this->_joins) {
             $joins = [];
@@ -608,6 +631,14 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $this->orWhere(["`{$tableAlias}`.id" => $params['defaultId']]);
         }
 
+        if ($modelClass::$defaultFilter) {
+            if (isset($params['filter'])){
+                $params['filter'] = array_merge($modelClass::$defaultFilter, $params['filter']);
+            } else {
+                $params['filter'] = $modelClass::$defaultFilter;
+            }
+        }
+        
         if (isset($params['filter'])) {
             foreach ($params['filter'] as $filter) {
                 $filter = $this->prepareFilter($filter);

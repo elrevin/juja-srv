@@ -19,6 +19,7 @@ $config = [
     'modules' => $modules,
     'components' => [
         'request' => [
+            'class' => '\app\base\web\Request',
             'cookieValidationKey' => 'U3vahA9HZrCImrMtw5Y2HgfNDXRPTJOi',
         ],
         'cache' => [
@@ -71,16 +72,52 @@ $config = [
             'showScriptName' => false,
             'enableStrictParsing' => true,
             'suffix' => '/',
+            'ruleConfig' => [
+                'class' => '\app\components\UrlRule',
+            ],
             'rules' => [
-                'debug/<controller>/<action>' => 'debug/<controller>/<action>',
-                'admin' => 'backend/default/index',
-                'admin/<action:[\w-\.]+>' => 'backend/default/<action>',
-                'admin/<controller:[\w-]+>/<action:[\w-\.]+>' => 'backend/<controller>/<action>',
-                'admin/<module:[\w-]+>/<controller:[\w-]+>/<action:[\w-\.]+>' => '<module>/adm-<controller>/<action>',
-
-                'admin/getJS/<module:[\w-]+>/<modelName:[\w-]+>/<file:[\w-\./]+>' => '<module>/adm-main/get-js-file.js',
-
-                'directrequest/<module:[\w-]+>/<controller:[\w-]+>/<action:[\w-\.]+>' => '<module>/directrequest-<controller>/<action>',
+                [
+                    'pattern' => 'debug/<controller>/<action>',
+                    'route' => 'debug/<controller>/<action>',
+                    'isAdmin' => false,
+                    'class' => '\app\components\UrlRule',
+                ],
+                [
+                    'pattern' => 'admin',
+                    'route' => 'backend/default/index',
+                    'isAdmin' => true,
+                    'class' => '\app\components\UrlRule',
+                ],
+                [
+                    'pattern' => 'admin/<action:[\w-\.]+>',
+                    'route' => 'backend/default/<action>',
+                    'isAdmin' => true,
+                    'class' => '\app\components\UrlRule',
+                ],
+                [
+                    'pattern' => 'admin/<controller:[\w-]+>/<action:[\w-\.]+>',
+                    'route' => 'backend/<controller>/<action>',
+                    'isAdmin' => true,
+                    'class' => '\app\components\UrlRule',
+                ],
+                [
+                    'pattern' => 'admin/<module:[\w-]+>/<controller:[\w-]+>/<action:[\w-\.]+>',
+                    'route' => '<module>/adm-<controller>/<action>',
+                    'isAdmin' => true,
+                    'class' => '\app\components\UrlRule',
+                ],
+                [
+                    'pattern' => 'admin/getJS/<module:[\w-]+>/<modelName:[\w-]+>/<file:[\w-\./]+>',
+                    'route' => '<module>/adm-main/get-js-file.js',
+                    'isAdmin' => true,
+                    'class' => '\app\components\UrlRule',
+                ],
+                [
+                    'pattern' => 'directrequest/<module:[\w-]+>/<controller:[\w-]+>/<action:[\w-\.]+>',
+                    'route' => '<module>/directrequest-<controller>/<action>',
+                    'isDirectRequest' => true,
+                    'class' => '\app\components\UrlRule',
+                ],
             ],
         ],
         'response' => [

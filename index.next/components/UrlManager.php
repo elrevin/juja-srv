@@ -6,6 +6,11 @@ namespace app\components;
 
 class UrlManager extends \yii\web\UrlManager
 {
+    /**
+     * @var UrlRule
+     */
+    public $currentUrlRule = null;
+    
     public function init()
     {
         // Загружаем правила

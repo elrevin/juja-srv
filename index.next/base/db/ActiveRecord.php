@@ -459,6 +459,13 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static $defaultSort = [];
 
+
+    /**
+     * Фильтр по умолчанию, только для метода getList
+     * @var array
+     */
+    public static $defaultFilter = [];
+
     public static $detailModels = [];
     public static $childModel = [];
 
@@ -563,6 +570,24 @@ class ActiveRecord extends db\ActiveRecord
             return static::find()->andWhere(array_merge(['parent_id' => $this->id], (static::$hiddable ? ['hidden' => 0] : [])))->all();
         } elseif ($name == '_hasChildren') {
             return (static::find()->andWhere(array_merge(['parent_id' => $this->id], (static::$hiddable ? ['hidden' => 0] : [])))->select(['id'])->one() ? true : false);
+        }
+
+        if ($name == "_extended") {
+            $val = $this->getAttribute(static::$extendedModelRelFieldName);
+            /**
+             * @var $relatedModelClass ActiveRecord
+             */
+            $relatedModelClass = static::$extendedModelName;
+            if ($relatedModelClass) {
+                $hiddable = call_user_func([$relatedModelClass, 'getHiddable']);
+
+                $val = $relatedModelClass::find()->andWhere(['id' => $val]);
+                if ($hiddable) {
+                    $val->andWhere(['hidden' => 0]);
+                }
+
+                return $val->one();
+            }
         }
 
         if ($name == static::$masterModelRelFieldName) {
