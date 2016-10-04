@@ -364,7 +364,7 @@ class ActiveRecord extends db\ActiveRecord
      * префиксом "_parent_table"
      * @var array
      */
-    protected static $showCondition = [];
+    protected static $showCondition = null;
 
     /**
      * Имя поля в таблице для связи с родительской или master моделью
@@ -465,6 +465,24 @@ class ActiveRecord extends db\ActiveRecord
      * @var array
      */
     public static $defaultFilter = [];
+
+    /**
+     * URL формата 'controller/action' для получения данных
+     * @var string
+     */
+    protected static $getDataAction = '';
+
+    /**
+     * URL формата 'controller/action' для сохранения данных
+     * @var string
+     */
+    protected static $saveAction = '';
+
+    /**
+     * URL формата 'controller/action' для удаления данных
+     * @var string
+     */
+    protected static $deleteAction = '';
 
     public static $detailModels = [];
     public static $childModel = [];
@@ -1393,7 +1411,7 @@ class ActiveRecord extends db\ActiveRecord
             }
         } elseif ($type == 'linked') {
             if (trim(static::$linkModelName, '\\') == 'app\modules\files\models\Files') {
-                $value = (isset($value['id']) ? $value['id'] : null);
+                $value = (isset($value['id']) ? $value['id'] : intval($value));
             } else {
                 $value = intval($value);
             }
@@ -1951,7 +1969,27 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        $getDataAction = [static::getModuleName(), 'main', 'list'];
+        if (static::$getDataAction) {
+            $getDataAction = explode('/', static::$getDataAction);
+            $getDataAction = [static::getModuleName(), $getDataAction[0], $getDataAction[1]];
+        } else {
+            $getDataAction = [static::getModuleName(), 'main', 'list'];
+        }
+
+        if (static::$saveAction) {
+            $saveAction = explode('/', static::$saveAction);
+            $saveAction = [static::getModuleName(), $saveAction[0], $saveAction[1]];
+        } else {
+            $saveAction = [static::getModuleName(), 'main', 'save-record'];
+        }
+
+        if (static::$deleteAction) {
+            $deleteAction = explode('/', static::$deleteAction);
+            $deleteAction = [static::getModuleName(), $deleteAction[0], $deleteAction[1]];
+        } else {
+            $deleteAction = [static::getModuleName(), 'main', 'delete-record'];
+        }
+
         $linkModelRunAction = null;
         if (static::$linkModelName) {
             $linkModelRunAction = call_user_func([static::$linkModelName, 'getRunAction']);
@@ -2019,6 +2057,8 @@ class ActiveRecord extends db\ActiveRecord
         $conf = [
             'fields' => $fields,
             'getDataAction' => $getDataAction,
+            'saveAction' => $saveAction,
+            'deleteAction' => $deleteAction,
             'printItemAction' => [static::getModuleName(), 'main', 'print-item'],
             'linkModelRunAction' => $linkModelRunAction,
             'linkModelName' => $linkModelName,
@@ -2055,7 +2095,7 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         if ($configOnly) {
-            $conf['showCondition'] = (static::$showCondition ? static::$showCondition : null);
+            $conf['showCondition'] = static::$showCondition;
         }
 
         if (!$modal) {

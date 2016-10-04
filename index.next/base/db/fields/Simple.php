@@ -62,6 +62,14 @@ class Simple extends Object
     
     public function getWhere($operation, $value, $filterType = null)
     {
+        if (is_array($value)) {
+            $ret = [];
+            foreach ($value as $item) {
+                $ret[] = $this->getWhere($operation, $item, $filterType);
+            }
+            $ret = array_merge(['OR'], $ret);
+            return $ret;
+        }
         $left = ($this->expression ? "({$this->expression})" : "`{$this->tableAlias}`.`{$this->name}`");
         if (in_array($this->type, ['int', 'float', 'date', 'datetime'])) {
             if ($operation == '==' || $operation == 'eq') {
