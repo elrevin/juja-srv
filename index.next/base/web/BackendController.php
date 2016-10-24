@@ -347,6 +347,7 @@ class BackendController extends Controller
                 "identifyOnly" => (Yii::$app->request->get('identifyOnly', 0) ? true : false),
                 'masterId' => intval(Yii::$app->request->post('masterId', 0)),
                 "sort" => Json::decode(Yii::$app->request->post('sort', '[]')),
+                "group" => Json::decode(Yii::$app->request->post('group', '[]')),
                 "start" => intval(Yii::$app->request->post('start', 0)),
                 "limit" => intval(Yii::$app->request->post('limit', 0)),
                 "filter" => $filterParams,
@@ -403,7 +404,7 @@ class BackendController extends Controller
                  */
                 if ($data && !ArrayHelper::isAssociative($data)) {
                     $results = [];
-
+                    $code = [];
                     foreach ($data as $item) {
                         $model = new $modelName();
                         if ($result = $model->saveData($item, true, $masterId)) {
@@ -417,10 +418,12 @@ class BackendController extends Controller
                             $this->ajaxError('\app\base\web\BackendController\actionSave?modelName='.$modelName.'&add=1', 'Ошибка сохранения данных:<br/>'.$errors);
                             return null;
                         }
+                        $code[] = $model->afterSaveDataCode;
                     }
                     $data = [
                         'data' => $results,
-                        'success' => true
+                        'success' => true,
+                        'exec' => implode('; ', $code),
                     ];
                     return $data;
                 } else {
@@ -428,7 +431,8 @@ class BackendController extends Controller
                     if ($result = $model->saveData($data, true, $masterId)) {
                         $data = [
                             'data' => $result,
-                            'success' => true
+                            'success' => true,
+                            'exec' => $model->afterSaveDataCode,
                         ];
                         return $data;
                     } else {
@@ -446,7 +450,8 @@ class BackendController extends Controller
                 if ($result = $model->saveData($data, false, $masterId)) {
                     $data = [
                         'data' => $result,
-                        'success' => true
+                        'success' => true,
+                        'exec' => $model->afterSaveDataCode,
                     ];
                     return $data;
                 } else {

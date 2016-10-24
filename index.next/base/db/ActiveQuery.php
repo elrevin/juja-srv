@@ -661,7 +661,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
                      * @var $field Simple
                      */
                     $field = $this->_fields[$fieldName];
-                    $this->andWhere($field->getWhere($filter['operation'], $filter['value']));
+                    $this->andWhere($field->getWhere($filter['operation'], (isset($filter['value']) ? $filter['value'] : null), (isset($filter['type']) ? $filter['type'] : null)));
                 }
             }
         }
@@ -695,7 +695,43 @@ class ActiveQuery extends \yii\db\ActiveQuery
                         $fieldObject = $this->_pointers[$sort['property']];
                         $orderBy["`{$fieldObject->getValueField()->tableAlias}`.`{$fieldObject->getValueField()->alias}`"] = $dir;
                     } else {
-                        $orderBy["`{$tableAlias}`.`{$sort['property']}`"] = $dir;
+                        $prop = explode(".", $sort['property']);
+                        if (count($prop) > 1) {
+                            $orderBy["`{$prop[0]}`.`{$prop[1]}`"] = $dir;
+                        } else {
+                            if (isset($this->_fields[$sort['property']])) {
+                                $field = $this->_fields[$sort['property']];
+
+                                $orderBy[$field->getOrder()] = $dir;
+                            } elseif ($sort['property' == 'id']) {
+                                $orderBy["`{$tableAlias}`.id"] = $dir;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        $groupBy = [];
+        if (isset($params['group']) && $params['group']) {
+            foreach ($params['group'] as $group) {
+
+                if (isset($group['property'])) {
+                    if (isset($this->_pointers[$group['property']])) {
+                        /**
+                         * @var $fieldObject Pointer
+                         */
+                        $fieldObject = $this->_pointers[$group['property']];
+                        $groupBy[] ="`{$fieldObject->getValueField()->tableAlias}`.`{$fieldObject->getValueField()->alias}`";
+                    } else {
+                        $prop = explode(".", $group['property']);
+                        if (count($prop) > 1) {
+                            $groupBy[] = "`{$prop[0]}`.`{$prop[1]}`";
+                        } else {
+                            if (isset($this->_fields[$group['property']])) {
+                                $field = $this->_fields[$group['property']];
+                                $groupBy[] = $field->getGroup()."_";
+                            }
+                        }
                     }
                 }
             }
@@ -713,6 +749,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         }
 
         $this->orderBy($orderBy);
+        $this->groupBy($groupBy);
 
         if (!$modelClass::isSortable()) {
             if (isset($params['limit']) && $params['limit']) {

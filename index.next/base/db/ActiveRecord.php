@@ -103,6 +103,7 @@ class ActiveRecord extends db\ActiveRecord
      *          'modalSelect' - выбирать запись в модальном окне,
      *          'name' - имя модели,
      *          'runAction' - массив: имя модуля, имя контроллера, имя действия; для получения пользовательского интерфейса,
+     *          'params' - массив параметров, который передается при загрузке модульного окна
      *
      *      'autocomplete' - true если нужно чтобы в pointer поле была авто подстановка,
      *
@@ -316,6 +317,15 @@ class ActiveRecord extends db\ActiveRecord
     protected static $masterModel = '';
 
     /**
+     * В этом массиве можно перечислить детализации, в том порядке в котором они должны быть.
+     * Последним элементом может быть слово "other", что быдет ошначать что далее нужно вставить автоматически найденные детализации, которые тут не перечислены
+     * Каждый элемент массива представляет собой имя класса детализации без пространства имен
+     *
+     * @var array
+     */
+    protected static $detailModelsList = ['other'];
+
+    /**
      * Условия отображения detail модели в панели управления.
      * Ассоциативный массив, в котором ключи - это поля, а значения это условие или массив условий,
      * каждое из которых - ассоциативный массив (все условия в итоге
@@ -487,6 +497,8 @@ class ActiveRecord extends db\ActiveRecord
     public static $detailModels = [];
     public static $childModel = [];
 
+    public $afterSaveDataCode = '';
+
     protected static $haveRightsRules = true;
 
     protected $oldDirtyAttributes = [];
@@ -521,7 +533,8 @@ class ActiveRecord extends db\ActiveRecord
                 $list = static::getList([
                     'limit' => 1,
                     'where' => "`".static::tableName()."`.id = {$this->id}",
-                    'dataKey' => 'data'
+                    'dataKey' => 'data',
+                    'masterId' => (static::$masterModel ? $this->{static::$masterModelRelFieldName}->id : 0),
                 ]);
                 if ($list['data']) {
                     return $list['data'][0][$name];
@@ -668,16 +681,16 @@ class ActiveRecord extends db\ActiveRecord
 
         if ($name == '_linked') {
             /**
-             * @var $linkMOdel ActiveRecord
+             * @var $linkModel ActiveRecord
              */
-            $linkMOdel = static::$linkModelName;
+            $linkModel = static::$linkModelName;
             $masterModelRelFieldName = static::$linkFieldlName;
-            $hiddable = $linkMOdel::getHiddable();
+            $hiddable = $linkModel::getHiddable();
             $where = [];
             if ($hiddable) {
                 $where["hidden"] = 0;
             }
-            return $linkMOdel::find()->andWhere($where)->andWhere(['id' => $this->{$masterModelRelFieldName}])->one();
+            return $linkModel::find()->andWhere($where)->andWhere(['id' => $this->{$masterModelRelFieldName}])->one();
         }
 
         return parent::__get($name);
@@ -1227,12 +1240,13 @@ class ActiveRecord extends db\ActiveRecord
             foreach ($files as $file) {
                 if (preg_match("/^[a-zA-Z0-9]+\\.php$/", $file)) {
                     $modelName = str_replace(".php", "", $file);
+                    $modelNameWONS = $modelName;
                     if ($modelName != $className) {
-                        $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
+                        $modelName = $classNameSpace.'\\'.$modelNameWONS;
                         if (is_callable([$modelName, 'getMasterModel'])) {
                             $masterModel = call_user_func([$modelName, 'getMasterModel']);
                             if (trim($masterModel, '\\') == $className) {
-                                $result[] = $modelName;
+                                $result[] = $modelNameWONS;
                             }
                         }
                     }
@@ -1240,8 +1254,31 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
 
-        static::$detailModels[$className] = $result;
-        return $result;
+        $ret = [];
+        $other = false;
+        foreach (static::$detailModelsList as $item) {
+            if ($item == 'other') {
+                $other = true;
+                break;
+            }
+
+            $key = array_search($item, $result);
+            if ($key !== false) {
+                $ret[] = $classNameSpace.'\\'.$item;
+                array_splice($result, $key, 1);
+            }
+        }
+
+        if ($other) {
+            foreach ($result as $key => $item) {
+                $result[$key] = $classNameSpace.'\\'.$item;
+            }
+
+            $ret = array_merge($ret, $result);
+        }
+
+        static::$detailModels[$className] = $ret;
+        return $ret;
     }
 
     public static function setDetailModels ($detailModels)
@@ -1513,7 +1550,7 @@ class ActiveRecord extends db\ActiveRecord
         }
     }
 
-    private function saveToHistory($event, $id)
+    protected function saveToHistory($event, $id)
     {
         $history = new SDataHistoryEvents();
         $history->time = date('Y-m-d H:i:s');
@@ -1600,6 +1637,16 @@ class ActiveRecord extends db\ActiveRecord
     }
 
     /**
+     * @param bool $insert
+     * @param array $data
+     * @return array|null|bool
+     */
+    function afterSaveData($insert, $data)
+    {
+        return $data;
+    }
+
+    /**
      * Сохраняет данные переданные в массиве $data
      * @param array $data
      * @param bool $add
@@ -1626,7 +1673,7 @@ class ActiveRecord extends db\ActiveRecord
         }
 
         $this->oldDirtyAttributes = $this->dirtyAttributes;
-            if ($this->save()) {
+        if ($this->save()) {
 
             $structure = static::getStructure();
             foreach ($structure as $fieldName => $fieldData) {
@@ -1642,10 +1689,10 @@ class ActiveRecord extends db\ActiveRecord
             if ($add) {
                 $result = static::getList([
                     "limit" => 1,
-                    "where" => "`".static::tableName()."`.id = '{$this->id}'",
+                    "where" => ["`".static::tableName()."`.id" => $this->id],
                     "masterId" => $masterId
                 ]);
-
+                $result = $this->afterSaveData(true, $result);
                 if ($result && is_array($result)) {
                     $this->saveToHistory("create", $result['data'][0]['id']);
                     return $result['data'][0];
@@ -1654,9 +1701,11 @@ class ActiveRecord extends db\ActiveRecord
                 }
             } else {
                 $result = static::getList([
-                    "where" => "`".static::tableName()."`.id = '{$data['id']}'",
+                    "where" => ["`".static::tableName()."`.id" => $this->id],
                     "masterId" => $masterId
                 ]);
+
+                $result = $this->afterSaveData(false, $result);
 
                 if ($result && is_array($result)) {
                     $this->saveToHistory("update", $result['data'][0]['id']);
@@ -1825,10 +1874,20 @@ class ActiveRecord extends db\ActiveRecord
                  * @var $modelClass ActiveRecord
                  */
                 $modelClass = static::$linkModelName;
-                $config = $modelClass::getStructure($fieldName);
-                if (!$config) {
+                $lkConfig = $modelClass::getStructure($fieldName);
+                if (!$lkConfig) {
                     throw new Exception("Field {$fieldName} not found in ".static::className());
                 }
+                if (isset($config['type'])) {
+                    unset($config['type']);
+                }
+                if (isset($config['relativeModel'])) {
+                    unset($config['relativeModel']);
+                }
+                if (isset($config['selectOptions'])) {
+                    unset($config['selectOptions']);
+                }
+                $config = array_merge($lkConfig, $config);
                 $extendedModelName = $modelClass::getExtendedModelName();
             }
 

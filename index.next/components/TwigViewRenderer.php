@@ -61,6 +61,46 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         return Utils::getRuDate($date, $format, $case);
     }
 
+    public static function inflectGenFilter($string)
+    {
+        /** @var Morpher $morpher */
+        $morpher = \Yii::$app->morpher;
+        $ret = $morpher->inflect($string, Morpher::CASE_GENITIVE);
+        return $ret;
+    }
+
+    public static function inflectDatFilter($string)
+    {
+        /** @var Morpher $morpher */
+        $morpher = \Yii::$app->morpher;
+        $ret = $morpher->inflect($string, Morpher::CASE_DATIVE);
+        return $ret;
+    }
+
+    public static function inflectAcuFilter($string)
+    {
+        /** @var Morpher $morpher */
+        $morpher = \Yii::$app->morpher;
+        $ret = $morpher->inflect($string, Morpher::CASE_ACCUSATIVE);
+        return $ret;
+    }
+
+    public static function inflectInstrFilter($string)
+    {
+        /** @var Morpher $morpher */
+        $morpher = \Yii::$app->morpher;
+        $ret = $morpher->inflect($string, Morpher::CASE_INSTRUMENTAL);
+        return $ret;
+    }
+
+    public static function inflectPreFilter($string)
+    {
+        /** @var Morpher $morpher */
+        $morpher = \Yii::$app->morpher;
+        $ret = $morpher->inflect($string, Morpher::CASE_PREPOSITIONAL);
+        return $ret;
+    }
+
     public function init()
     {
         $this->functions['urlTo'] = '\yii\helpers\Url::to';
@@ -73,8 +113,18 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
         $this->functions['numToStr'] = '\app\components\TwigViewRenderer::numToStr';
         $this->functions['getRuDate'] = '\app\components\TwigViewRenderer::getRuDate';
 
+        $this->filters['gen'] = '\app\components\TwigViewRenderer::inflectGenFilter';
+        $this->filters['dat'] = '\app\components\TwigViewRenderer::inflectDatFilter';
+        $this->filters['acu'] = '\app\components\TwigViewRenderer::inflectAcuFilter';
+        $this->filters['ins'] = '\app\components\TwigViewRenderer::inflectInstrFilter';
+        $this->filters['pre'] = '\app\components\TwigViewRenderer::inflectPreFilter';
+
         if (isset(\Yii::$app->params['twigFunctions'])) {
             $this->functions = array_merge($this->functions, \Yii::$app->params['twigFunctions']);
+        }
+
+        if (isset(\Yii::$app->params['twigFilters'])) {
+            $this->filters = array_merge($this->filters, \Yii::$app->params['twigFilters']);
         }
 
         parent::init();
