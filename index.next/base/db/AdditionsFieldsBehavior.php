@@ -23,6 +23,8 @@ class AdditionsFieldsBehavior extends Behavior
      */
     protected $values = [];
 
+    protected $_oldAttributes = [];
+
     protected static function createTableCol($fieldName, $field) {
         $tableName = call_user_func([static::$additionModel, 'tableName']);
         if ($field['type'] == 'string') {
@@ -198,6 +200,7 @@ class AdditionsFieldsBehavior extends Behavior
     public function __set($name, $value)
     {
         if (array_key_exists($name, static::$fields)) {
+            $v = $this->{$name};
             $this->values[$name] = $value;
         } else {
             parent::__set($name, $value);
@@ -211,6 +214,7 @@ class AdditionsFieldsBehavior extends Behavior
                 ->asArray()->one();
             if ($model) {
                 $this->values = $model;
+                $this->_oldAttributes = $model;
             }
         }
         if (array_key_exists($name, static::$fields)) {
@@ -234,5 +238,28 @@ class AdditionsFieldsBehavior extends Behavior
         } else {
             parent::__unset($name);
         }
+    }
+
+    public function getDirtyAttributes ($names = null)
+    {
+        if (!$names) {
+            $names = array_keys(static::$fields);
+        }
+        $names = array_flip($names);
+        $attributes = [];
+        if (!$this->_oldAttributes) {
+            foreach ($this->values as $name => $value) {
+                if (isset($names[$name])) {
+                    $attributes[$name] = $value;
+                }
+            }
+        } else {
+            foreach ($this->values as $name => $value) {
+                if (isset($names[$name]) && (!array_key_exists($name, $this->_oldAttributes) || $value !== $this->_oldAttributes[$name])) {
+                    $attributes[$name] = $value;
+                }
+            }
+        }
+        return $attributes;
     }
 }

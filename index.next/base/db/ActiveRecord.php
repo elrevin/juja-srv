@@ -628,13 +628,7 @@ class ActiveRecord extends db\ActiveRecord
              */
             $relatedModelClass = (static::$masterModel ? static::$masterModel : (static::$parentModel ? static::$parentModel : ''));
             if ($relatedModelClass) {
-                $hiddable = call_user_func([$relatedModelClass, 'getHiddable']);
-
                 $val = $relatedModelClass::find()->andWhere(['id' => $val]);
-                if ($hiddable) {
-                    $val->andWhere(['hidden' => 0]);
-                }
-
                 return $val->one();
             }
         }
@@ -1791,6 +1785,21 @@ class ActiveRecord extends db\ActiveRecord
         }
     }
 
+    public function getAllDirtyAttributes($names = null)
+    {
+        $attributes = [];
+        if ($this->behaviors) {
+            foreach ($this->behaviors as $behavior) {
+                if (method_exists($behavior, 'getDirtyAttributes')) {
+                    $attributes = $behavior->getDirtyAttributes($names);
+                }
+            }
+        }
+        
+        $attributes = array_merge(parent::getDirtyAttributes($names), $attributes);
+        return $attributes;
+    }
+    
     /**
      * Возвращает настройки пользовательского интерфейса.
      *

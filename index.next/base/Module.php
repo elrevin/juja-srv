@@ -1,6 +1,7 @@
 <?php
 namespace app\base;
 use yii\base\BootstrapInterface;
+use yii\base\Component;
 use yii\base\Event;
 use yii\base\Exception;
 use yii\helpers\ArrayHelper;
@@ -20,7 +21,7 @@ class Module extends \yii\base\Module implements BootstrapInterface
      * Описание типов разделов сайта для модуля, если их может быть несколько. Каждый раздел описывается структурой вида:
      * 'sectionTypeName' => [
      *      'title' => 'Название типа раздела',
-     *      'multipleSections' => truw, // если true, то разделов данного типа на сайте может быть много
+     *      'multipleSections' => true, // если true, то разделов данного типа на сайте может быть много
      * ]
      *
      * но можно и так:
@@ -56,6 +57,9 @@ class Module extends \yii\base\Module implements BootstrapInterface
      */
     protected $eventSubscribe = [];
 
+    public $extensions = [];
+    protected $_extensions = [];
+    
     static public function getModuleTitle()
     {
         return (static::$moduleTitle ? static::$moduleTitle : static::className());
@@ -117,6 +121,18 @@ class Module extends \yii\base\Module implements BootstrapInterface
     public function bootstrap($app)
     {
         $this->setComponents($this->components);
+
+        /**
+         * @var string  $name
+         * @var Component $component
+         */
+        foreach ($this->components as $name => $component) {
+            $component = $this->{$name};
+            if ($component->hasProperty('module')) {
+                $component->module = $this;
+            }
+        }
+
         $this->doEventSubscribe();
         if ($app instanceof \yii\console\Application) {
             $this->controllerNamespace = 'app\modules\\'.$this->id.'\commands';

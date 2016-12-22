@@ -24,8 +24,12 @@ class Select extends Simple
             $this->params[":option{$keyIndex}_{$fieldAlias}_value"] = $value;
             $keyIndex++;
         }
-        
-        $value = "(CASE {$expression} ".implode(' ', $options)." END)";
+
+        if ($options) {
+            $value = "(CASE {$expression} ".implode(' ', $options)." END)";
+        } else {
+            $value = new Expression("''");
+        }
         return ["valof_{$this->alias}" => $value, $this->alias => $expression];
     }
     

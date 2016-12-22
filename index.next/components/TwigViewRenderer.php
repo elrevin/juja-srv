@@ -148,9 +148,21 @@ class TwigViewRenderer extends \yii\twig\ViewRenderer
     
     public function renderString($string, $params) 
     {
+        $loader = null;
+        try
+        {
+            $loader = @$this->twig->getLoader();
+        }
+        catch (\Exception $e)
+        {
+        }
         $this->twig->setLoader(new \Twig_Loader_Array([]));
         $template = $this->twig->createTemplate($string);
-        return $template->render($params);
+        $t = $template->render($params);
+        if ($loader) {
+            $this->twig->setLoader($loader);
+        }
+        return $t;
     }
 
     /**

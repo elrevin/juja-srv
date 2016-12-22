@@ -128,13 +128,15 @@ class Morpher extends Component
 
     public function getStrNum($num, $unit, $case = 0)
     {
-        switch ($case) {
-            case static::CASE_GENITIVE : $case = "Р"; break;
-            case static::CASE_DATIVE : $case = "Д"; break;
-            case static::CASE_ACCUSATIVE : $case = "В"; break;
-            case static::CASE_INSTRUMENTAL : $case = "Т"; break;
-            case static::CASE_PREPOSITIONAL : $case = "П"; break;
-            default : $case = "И"; break;
+        if (!in_array($case, ["Р", "Д", "В", "Т", "П"])) {
+            switch ($case) {
+                case static::CASE_GENITIVE : $case = "Р"; break;
+                case static::CASE_DATIVE : $case = "Д"; break;
+                case static::CASE_ACCUSATIVE : $case = "В"; break;
+                case static::CASE_INSTRUMENTAL : $case = "Т"; break;
+                case static::CASE_PREPOSITIONAL : $case = "П"; break;
+                default : $case = "И"; break;
+            }
         }
         $xml = $this->sendRequest('Propis', [
             "n" => $num,

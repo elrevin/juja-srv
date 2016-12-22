@@ -72,7 +72,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         return $alias;
     }
 
-    function getField($modelClass, $field = '', $fieldAlias = '', $level = 0)
+    function getField($modelClass, $field = '', $fieldAlias = '', $coef = 0, $level = 0)
     {
         /**
          * @var $modelClass ActiveRecord
@@ -97,7 +97,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $fieldAlias = ($fieldAlias ? $fieldAlias : $field);
         } else {
             $tableName = $modelClass::tableName();
-            $tableAlias = $this->getTableAlias($tableName, $level);
+            $tableAlias = $this->getTableAlias($tableName, $coef);
         }
 
         if ($fieldConf['expression']) {
@@ -106,7 +106,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
         if ($fieldConf['addition']) {
             $relatedTableName = $fieldConf['additionTable'];
-            $relatedTableAlias = $this->getTableAlias($relatedTableName, $level);
+            $relatedTableAlias = $this->getTableAlias($relatedTableName, $coef);
             $this->_joins[] = [
                 'alias' => $relatedTableAlias,
                 'name' => $relatedTableName,
@@ -119,7 +119,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         if (in_array($fieldConf['type'], ['int', 'float', 'date', 'datetime', 'string', 'tinystring', 'text', 'html', 'bool', 'code'])) {
             $fieldObject = new Simple();
             $fieldObject->alias = $fieldAlias;
-            $fieldObject->level = $level;
+            $fieldObject->level = $coef;
             $fieldObject->name = $field;
             $fieldObject->tableAlias = $tableAlias;
             $fieldObject->type = $fieldConf['type'];
@@ -128,7 +128,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         } elseif (in_array($fieldConf['type'], ['color'])) {
             $fieldObject = new Color();
             $fieldObject->alias = $fieldAlias;
-            $fieldObject->level = $level;
+            $fieldObject->level = $coef;
             $fieldObject->name = $field;
             $fieldObject->tableAlias = $tableAlias;
             $fieldObject->expression = $fieldConf['expression'];
@@ -137,14 +137,14 @@ class ActiveQuery extends \yii\db\ActiveQuery
             if (trim($modelClass::getLinkModelName(), '\\') == 'app\modules\files\models\Files') {
                 $fieldObject = new File();
 
-                $fieldObject->level = $level;
+                $fieldObject->level = $coef;
                 $fieldObject->name = $field;
                 $fieldObject->alias = $fieldAlias;
                 $fieldObject->tableAlias = $tableAlias;
                 $fieldObject->type = 'file';
 
                 $idField = new Simple();
-                $idField->level = $level;
+                $idField->level = $coef;
                 $idField->name = $field;
                 $idField->tableAlias = $tableAlias;
                 $idField->alias = $fieldAlias;
@@ -184,7 +184,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             }
             $fieldObject = new Simple();
             $fieldObject->alias = $fieldAlias;
-            $fieldObject->level = $level;
+            $fieldObject->level = $coef;
             $fieldObject->name = 'id';
             $fieldObject->tableAlias = '__link_model_table';
             $fieldObject->type = $fieldConf['type'];
@@ -193,7 +193,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
         } elseif (in_array($fieldConf['type'], ['select'])) {
             $fieldObject = new Select();
             $fieldObject->alias = $fieldAlias;
-            $fieldObject->level = $level;
+            $fieldObject->level = $coef;
             $fieldObject->name = $field;
             $fieldObject->tableAlias = $tableAlias;
             $fieldObject->expression = $fieldConf['expression'];
@@ -202,16 +202,16 @@ class ActiveQuery extends \yii\db\ActiveQuery
         } elseif (in_array($fieldConf['type'], ['pointer'])) {
             $fieldObject = new Pointer();
 
-            $fieldObject->level = $level;
+            $fieldObject->level = $coef;
             $fieldObject->name = $field;
             $fieldObject->alias = $fieldAlias;
             $fieldObject->tableAlias = $tableAlias;
             $fieldObject->type = 'pointer';
 
             $idField = new Simple();
-            $idField->level = $level;
+            $idField->level = $coef;
             $idField->name = $field;
-            $idField->alias = $fieldAlias;
+            $idField->alias = ($level ? $fieldAlias."_id" : $fieldAlias);
             $idField->tableAlias = $tableAlias;
             $idField->expression = $fieldConf['expression'];
             $idField->type = 'int';
@@ -245,24 +245,24 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 $this->_joins[] = [
                     'alias' => $relatedTableAlias,
                     'name' => $relatedTableName,
-                    'on' => "`{$tableAlias}`.`{$fieldAlias}` = `{$relatedTableAlias}`.id",
+                    'on' => "`{$tableAlias}`.`{$field}` = `{$relatedTableAlias}`.id",
                 ];
             }
 
-            $fieldObject->valueField = $this->getField($relatedModelClass, $relatedIdentifyFieldConf['name'], "valof_{$fieldAlias}", $this->_pointersCount);
+            $fieldObject->valueField = $this->getField($relatedModelClass, $relatedIdentifyFieldConf['name'], ($level ? $fieldAlias : "valof_{$fieldAlias}"), $this->_pointersCount, $level+1);
             $this->_pointers[$field] = $fieldObject;
             return $fieldObject;
         } elseif (in_array($fieldConf['type'], ['file'])) {
             $fieldObject = new File();
 
-            $fieldObject->level = $level;
+            $fieldObject->level = $coef;
             $fieldObject->name = $field;
             $fieldObject->alias = $fieldAlias;
             $fieldObject->tableAlias = $tableAlias;
             $fieldObject->type = 'file';
 
             $idField = new Simple();
-            $idField->level = $level;
+            $idField->level = $coef;
             $idField->name = $field;
             $idField->tableAlias = $tableAlias;
             $idField->alias = $fieldAlias;
@@ -301,13 +301,13 @@ class ActiveQuery extends \yii\db\ActiveQuery
             return $fieldObject;
         } elseif (in_array($fieldConf['type'], ['fromextended'])) {
             $fieldObject = new Extended();
-            $fieldObject->level = $level;
+            $fieldObject->level = $coef;
             $fieldObject->name = $field;
             $fieldObject->alias = $fieldAlias;
             $fieldObject->tableAlias = $tableAlias;
             $relatedModelClass = $modelClass::getExtendedModelName();
             $relatedTableName = $relatedModelClass::tableName();
-            $relatedTableAlias = $this->getTableAlias($relatedTableName, $level);
+            $relatedTableAlias = $this->getTableAlias($relatedTableName, $coef);
 
             $extendedModelRelFieldName = $modelClass::getExtendedModelRelFieldName();
 
@@ -317,7 +317,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
                 'on' => "`{$tableAlias}`.`{$extendedModelRelFieldName}` = `{$relatedTableAlias}`.id",
             ];
 
-            $fieldObject->parentField = $this->getField($modelClass::getExtendedModelName(), $field, $fieldAlias, $level);
+            $fieldObject->parentField = $this->getField($modelClass::getExtendedModelName(), $field, $fieldAlias, $coef);
             return $fieldObject;
         }
     }
