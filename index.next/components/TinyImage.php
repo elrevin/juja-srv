@@ -53,7 +53,7 @@ class TinyImage
         } else {
             return false;
         }
-         return $image;
+        return $image;
     }
 
     /**
@@ -119,18 +119,18 @@ class TinyImage
         if (!($image = static::loadImage($fileName))) {
             return false;
         }
-        $isGray = isset($imageProps['isGray']) ? true : false;
-        $isTransparency = isset($imageProps['isTransparency']) ? true : false;
+        $gray = isset($imageProps['gray']) ? true : false;
 
         $dim = static::getDimensions($image, $imageProps);
 
         $resultImage=imagecreatetruecolor($dim['width'], $dim['height']);
 
-        if($isTransparency) {
+        if (isset($imageProps['transparency']) && $imageProps['transparency']) {
             imagealphablending($resultImage, false);
             imagesavealpha($resultImage, true);
         }
-        if($isGray) {
+
+        if($gray) {
             imagefilter($resultImage, IMG_FILTER_GRAYSCALE);
         }
 
@@ -174,6 +174,7 @@ class TinyImage
         $heightProps = (isset($imageProps['height']) && $imageProps['height'] ? $imageProps['height'] : 0);
         $bgColor = isset($imageProps['bgColor']) ? $imageProps['bgColor'] : \Yii::$app->params['defaultImageBgColor'];
         $crop = isset($imageProps['crop']) && $imageProps['crop'] ? 1 : 0;
+        $transparency = isset($imageProps['transparency']) && $imageProps['transparency'] ? 1 : 0;
 
         $cacheFile = FileSystem::getFilePathByOriginalName($fileHash, '-'.$widthProps.'-'.$heightProps.'-'.$bgColor.($crop ? '-'.$crop : ''), 'cache');
         $cacheFilePath = $cacheFile['path'].'/'.$cacheFile['fileName'];
@@ -208,6 +209,10 @@ class TinyImage
             } elseif ($imageType == IMAGETYPE_JPEG) {
                 imagejpeg($resultImage, $cacheFilePath, static::qualityIMG);
             } elseif ($imageType == IMAGETYPE_PNG) {
+                if ($transparency == 1) {
+                    imagealphablending($resultImage, false);
+                    imagesavealpha($resultImage, true);
+                }
                 imagepng($resultImage, $cacheFilePath);
             }
 
