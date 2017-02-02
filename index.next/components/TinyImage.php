@@ -119,18 +119,18 @@ class TinyImage
         if (!($image = static::loadImage($fileName))) {
             return false;
         }
-        $gray = isset($imageProps['gray']) ? true : false;
+        $isGray = isset($imageProps['isGray']) ? true : false;
+        $isTransparency = isset($imageProps['isTransparency']) ? true : false;
 
         $dim = static::getDimensions($image, $imageProps);
 
         $resultImage=imagecreatetruecolor($dim['width'], $dim['height']);
 
-        if (isset($imageProps['transparency']) && $imageProps['transparency']) {
+        if($isTransparency) {
             imagealphablending($resultImage, false);
             imagesavealpha($resultImage, true);
         }
-
-        if($gray) {
+        if($isGray) {
             imagefilter($resultImage, IMG_FILTER_GRAYSCALE);
         }
 

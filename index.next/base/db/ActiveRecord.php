@@ -292,8 +292,6 @@ class ActiveRecord extends db\ActiveRecord
      */
     protected static $modelTitle = '';
 
-    
-    
     /**
      * Если модель рекурсивная (древовидная), то это свойство = true
      * @var bool

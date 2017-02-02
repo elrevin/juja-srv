@@ -36,6 +36,7 @@ class Module extends \yii\base\Module implements BootstrapInterface
      * Здесь можно описать обработчики событий, каждый элемент массива будет иметь структуру:
      *
      * [
+     *      'group' => ''
      *      'module' => '',
      *      'observeClass' => '',
      *      'event' => '',
@@ -44,7 +45,8 @@ class Module extends \yii\base\Module implements BootstrapInterface
      *      'method' => '',
      * ]
      *
-     *  где 'module' - имя модуля на события которого подписываемся, если события генерирует непосредвенно объект модуля
+     *  где group - группа модулей на которую подписываемся
+     *      'module' - имя модуля на события которого подписываемся, если события генерирует непосредвенно объект модуля
      *      'observeClass' - полное имя класса (включая namespace) на события которого подписываемся (если определен observeClass,
      *          'module' игнорируется)
      *      'event' - событие
@@ -149,6 +151,9 @@ class Module extends \yii\base\Module implements BootstrapInterface
         }
 
         foreach ($this->eventSubscribe as $item) {
+            if (isset($item['group']) && $item['group']) {
+                continue;
+            }
             if (isset($item['observeClass'])) {
                 $observeClass = trim($item['observeClass'], '\\');
             } elseif (isset($item['module'])) {
@@ -180,4 +185,34 @@ class Module extends \yii\base\Module implements BootstrapInterface
             Event::on($observeClass, $event, [$subscriberClass, $method]);
         }
     }
+
+    public function onGroupEvent($group, $eventName, $event)
+    {
+        foreach ($this->eventSubscribe as $item) {
+            if (isset($item['group']) && $item['group'] == $group) {
+                if ($item['event'] == $eventName) {
+                    if (isset($item['subscriberClass'])) {
+                        $subscriberClass = trim($item['subscriberClass'], '\\');
+                    } elseif (isset($item['subscriberComponent'])) {
+                        $subscriberClass = $this->{$item['subscriberComponent']};
+                    } else {
+                        $subscriberClass = $this;
+                    }
+
+                    $method = $item['method'];
+
+                    if (!$method) {
+                        throw new Exception("Subscriber method not found");
+                    }
+
+                    if (!method_exists($subscriberClass, $method)) {
+                        throw new Exception("Subscriber method not exists");
+                    }
+
+                    call_user_func([$subscriberClass, $method], $event);
+                }
+            }
+        }
+    }
+
 }
