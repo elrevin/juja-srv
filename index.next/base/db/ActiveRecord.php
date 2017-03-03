@@ -1176,6 +1176,14 @@ class ActiveRecord extends db\ActiveRecord
     }
 
     /**
+     * Возвращает полный url (с учетом доменного имени) сохраненной записи
+     * @return string
+     */
+     public function getUrlRecord() {
+        return '';
+    }
+
+    /**
      * Возвращает имя класса модели (с указанием пространства имен), которая является подчиненной данной модели, если таковая есть
      * если подчиненных моделей нет, то возвращается false
      * @return bool|mixed|string
