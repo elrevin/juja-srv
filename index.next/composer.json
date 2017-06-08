@@ -17,7 +17,8 @@
         "index-next/backend": "*",
         "index-next/files": "*",
         "index-next/usersmanager": "*",
-        "index-next/personaloffice": "*"
+        "index-next/news": "*",
+        "index-next/faq": "*"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",
@@ -74,7 +75,11 @@
         },
         {
             "type": "vcs",
-            "url":  "git@git.web-dev.ru:index-next/personaloffice.git"
+            "url":  "git@git.web-dev.ru:index-next/news.git"
+        },
+        {
+            "type": "vcs",
+            "url":  "git@git.web-dev.ru:index-next/faq.git"
         }
     ]
 }
