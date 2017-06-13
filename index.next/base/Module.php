@@ -59,6 +59,32 @@ class Module extends \yii\base\Module implements BootstrapInterface
      */
     protected $eventSubscribe = [];
 
+    /**
+     * Обработчики сообщений.
+     * В любом месте можно послать сообщение всем модулям, сообщение обязательно содержит
+     * имя, и если будет найден модуль, который сможет обработать это сообщение, упраление будет
+     * передано соотвествующиму его обработчику
+     *
+     * описывается в следующем формате:
+     *
+     * [
+     *      'name' => [
+     *          'class' => 'КЛАСС ОБРАБОТЧИК',
+     *          'component' => 'КОМПОНЕНТ ОБРАБОТЧИК',
+     *          'method' => 'МЕТОД'
+     *      ]
+     * ]
+     *
+     * или
+     *
+     * [
+     *      'name' => МЕТОД
+     * ]
+     *
+     * @var array
+     */
+    protected $messageReceivers = [];
+
     public $extensions = [];
     protected $_extensions = [];
     
@@ -213,6 +239,40 @@ class Module extends \yii\base\Module implements BootstrapInterface
                 }
             }
         }
+    }
+
+    public function onMessage($name, &$result, $args) {
+        foreach ($this->messageReceivers as $key => $messageReceiver) {
+            if ($key == $name) {
+                if (is_callable($messageReceiver)) {
+                    $result = $messageReceiver($args);
+                    return true;
+                } else {
+                    if (!empty($messageReceiver['class'])) {
+                        $class = trim($messageReceiver['class'], '\\');
+                    } elseif (!empty($messageReceiver['component'])) {
+                        $class = $this->{$messageReceiver['component']};
+                    } else {
+                        $class = $this;
+                    }
+
+                    $method = $messageReceiver['method'];
+
+                    if (!$method) {
+                        throw new Exception("Subscriber method not found");
+                    }
+
+                    if (!method_exists($class, $method)) {
+                        throw new Exception("Subscriber method not exists");
+                    }
+
+                    $result = call_user_func([$class, $method], $name, $args);
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
 }
