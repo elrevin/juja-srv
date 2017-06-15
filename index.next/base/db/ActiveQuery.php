@@ -430,7 +430,16 @@ class ActiveQuery extends \yii\db\ActiveQuery
 
             $field = $this->getField($modelClass, $fieldConf, '', 0);
             if (!$field->expression) {
-                $this->select = array_merge($this->select, $field->getSelect());
+                if ($identifyFieldName == $fieldName && $fieldConf['type'] == 'pointer') {
+                    /** @var Pointer $field */
+                    $sel = $field->getSelect();
+
+                    //$sel[$field->alias] = $sel[$field->getValueField()->alias];
+
+                    $this->select = array_merge($this->select, $sel);
+                } else {
+                    $this->select = array_merge($this->select, $field->getSelect());
+                }
             }
             $this->params = array_merge($this->params, $field->params);
             $this->_fields[$fieldName] = $field;
@@ -769,10 +778,20 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $_list = [];
             foreach ($list as $rowIndex => $row) {
                 if (array_key_exists($identifyFieldName, $row)) {
-                    $_list[] = [
-                        'id' => $row['id'],
-                        $identifyFieldName => $row[$identifyFieldName],
-                    ];
+                    if ($structure[$identifyFieldName]['type'] == 'pointer') {
+                        $_list[] = [
+                            'id' => $row['id'],
+                            $identifyFieldName => Json::encode([
+                                'id' => $row[$identifyFieldName],
+                                'value' => $row[$this->_fields[$identifyFieldName]->valueField->alias]
+                            ]),
+                        ];
+                    } else {
+                        $_list[] = [
+                            'id' => $row['id'],
+                            $identifyFieldName => $row[$identifyFieldName],
+                        ];
+                    }
                 }
             }
             $list = $_list;
