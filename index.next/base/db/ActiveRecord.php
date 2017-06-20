@@ -1537,7 +1537,7 @@ class ActiveRecord extends db\ActiveRecord
                     if (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) {
                         $this->{static::getLinkTableIdField()} = static::setType($key, $val);
                     }
-                } elseif (isset($structure[$key]) && $structure[$key]['type'] != 'fromlinked' && $structure[$key]['type'] != 'fromextended') {
+                } elseif (isset($structure[$key]) && $structure[$key]['type'] != 'fromlinked') {
                     if (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) {
                         $this->$key = static::setType($key, $val);
                     }
