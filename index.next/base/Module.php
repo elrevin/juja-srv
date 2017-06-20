@@ -1,5 +1,6 @@
 <?php
 namespace app\base;
+use app\base\db\ActiveRecord;
 use yii\base\BootstrapInterface;
 use yii\base\Component;
 use yii\base\Event;
@@ -87,7 +88,9 @@ class Module extends \yii\base\Module implements BootstrapInterface
 
     public $extensions = [];
     protected $_extensions = [];
-    
+
+    protected static $models = [];
+
     static public function getModuleTitle()
     {
         return (static::$moduleTitle ? static::$moduleTitle : static::className());
@@ -275,4 +278,23 @@ class Module extends \yii\base\Module implements BootstrapInterface
         return false;
     }
 
+    public function getModels()
+    {
+        $thisModuleName = explode('\\', static::className());
+        $id = $thisModuleName[count($thisModuleName) - 2];
+
+        if(!empty(self::$models[$id])) return self::$models[$id];
+        $folder = \Yii::$app->basePath.'/modules/'.$id.'/models/';
+        if(is_dir($folder)){
+            foreach(glob($folder.'*.php') as $model){
+                /** @var  ActiveRecord $modelClass */
+                $model = basename($model, '.php');
+                $modelClass = '\app\modules\\'.$id.'\models\\'.$model;
+                if(method_exists($modelClass, 'getModelTitle'))
+                    self::$models[$id][] = $modelClass;
+            }
+        }
+
+        return self::$models[$id];
+    }
 }

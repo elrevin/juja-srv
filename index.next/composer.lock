@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "456d2bac2dabc2d95ce090dbe3d005b9",
+    "content-hash": "a7a43b40b814110ac279181be3adaea8",
     "packages": [
         {
             "name": "bower-asset/bootstrap",
@@ -88,16 +88,16 @@
         },
         {
             "name": "bower-asset/jquery.inputmask",
-            "version": "3.3.6",
+            "version": "3.3.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/RobinHerbots/Inputmask.git",
-                "reference": "e42852f4afa01a80815394a5b2f9ce504c1a8d0b"
+                "reference": "9835731cb78cac749734d94a1cb5bd70da4d3b10"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/e42852f4afa01a80815394a5b2f9ce504c1a8d0b",
-                "reference": "e42852f4afa01a80815394a5b2f9ce504c1a8d0b",
+                "url": "https://api.github.com/repos/RobinHerbots/Inputmask/zipball/9835731cb78cac749734d94a1cb5bd70da4d3b10",
+                "reference": "9835731cb78cac749734d94a1cb5bd70da4d3b10",
                 "shasum": ""
             },
             "require": {
@@ -329,20 +329,6 @@
             "time": "2017-05-05 06:27:59"
         },
         {
-            "name": "index-next/faq",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "git@git.web-dev.ru:index-next/faq.git",
-                "reference": "46972c147ba320e3cacd9b1002001cac0da55664"
-            },
-            "require": {
-                "php": ">=5.4.0"
-            },
-            "type": "index-next-module",
-            "time": "2016-07-27 05:43:45"
-        },
-        {
             "name": "index-next/files",
             "version": "dev-master",
             "source": {
@@ -398,20 +384,6 @@
                 "index.next CMS"
             ],
             "time": "2015-02-27 19:19:23"
-        },
-        {
-            "name": "index-next/news",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "git@git.web-dev.ru:index-next/news.git",
-                "reference": "093b73636feb9fead30fd999aa955f7fbd367090"
-            },
-            "require": {
-                "php": ">=5.4.0"
-            },
-            "type": "index-next-module",
-            "time": "2016-10-04 09:30:20"
         },
         {
             "name": "index-next/site",
@@ -501,12 +473,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/twigphp/Twig.git",
-                "reference": "b3cb3d22d7bfc01cc7766cf443c8408675b8de6c"
+                "reference": "821fd61cfc8f89afdbeb9d4758360b96f8a9092c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twigphp/Twig/zipball/b3cb3d22d7bfc01cc7766cf443c8408675b8de6c",
-                "reference": "b3cb3d22d7bfc01cc7766cf443c8408675b8de6c",
+                "url": "https://api.github.com/repos/twigphp/Twig/zipball/821fd61cfc8f89afdbeb9d4758360b96f8a9092c",
+                "reference": "821fd61cfc8f89afdbeb9d4758360b96f8a9092c",
                 "shasum": ""
             },
             "require": {
@@ -558,7 +530,7 @@
             "keywords": [
                 "templating"
             ],
-            "time": "2017-06-07 18:45:59"
+            "time": "2017-06-12 16:58:36"
         },
         {
             "name": "yiisoft/yii2",
@@ -566,12 +538,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-framework.git",
-                "reference": "3d1b7a38dc41aa782f60471e793920699a52ad0f"
+                "reference": "ba3b48048bf3472ae18191b0002066dc846c7fca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/3d1b7a38dc41aa782f60471e793920699a52ad0f",
-                "reference": "3d1b7a38dc41aa782f60471e793920699a52ad0f",
+                "url": "https://api.github.com/repos/yiisoft/yii2-framework/zipball/ba3b48048bf3472ae18191b0002066dc846c7fca",
+                "reference": "ba3b48048bf3472ae18191b0002066dc846c7fca",
                 "shasum": ""
             },
             "require": {
@@ -658,7 +630,7 @@
                 "framework",
                 "yii2"
             ],
-            "time": "2017-06-07 21:19:47"
+            "time": "2017-06-12 09:25:45"
         },
         {
             "name": "yiisoft/yii2-bootstrap",
@@ -1077,12 +1049,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/yiisoft/yii2-faker.git",
-                "reference": "23794668a7d5411345420a05e35367fcd203017e"
+                "reference": "76537470ef668029b74e1ac8bde49939fdfcd57c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/yiisoft/yii2-faker/zipball/23794668a7d5411345420a05e35367fcd203017e",
-                "reference": "23794668a7d5411345420a05e35367fcd203017e",
+                "url": "https://api.github.com/repos/yiisoft/yii2-faker/zipball/76537470ef668029b74e1ac8bde49939fdfcd57c",
+                "reference": "76537470ef668029b74e1ac8bde49939fdfcd57c",
                 "shasum": ""
             },
             "require": {
@@ -1116,7 +1088,7 @@
                 "faker",
                 "yii2"
             ],
-            "time": "2017-04-19T15:05:37+00:00"
+            "time": "2017-06-13T15:08:53+00:00"
         },
         {
             "name": "yiisoft/yii2-gii",
