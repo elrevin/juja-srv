@@ -4,6 +4,8 @@
  */
 namespace app\components;
 
+use app\modules\backend\models\RedirectsSettings;
+
 class UrlManager extends \yii\web\UrlManager
 {
     /**
@@ -13,8 +15,26 @@ class UrlManager extends \yii\web\UrlManager
     
     public function init()
     {
-        // Загружаем правила
+        // Отрабатываем редиректы
+        $redirectsSettings = RedirectsSettings::find()->one();
+        if ($redirectsSettings) {
+            $currentUrl = parse_url(\Yii::$app->request->absoluteUrl);
+            foreach ($redirectsSettings->redirectsSettingsUrls as $redirect) {
+                if(strpos($currentUrl['path'], $redirect->url_from) !== false) {
+                    $web = $redirectsSettings->web->id;
+                    if ($web)
+                        $finalUrl = $redirectsSettings->protocol->id . '://' . $web . '.' . $currentUrl['host'] . '/' . $redirect->url_to;
+                    else
+                        $finalUrl = $redirectsSettings->protocol->id . '://' . $currentUrl['host'] . '/' . $redirect->url_to;
 
+                    \Yii::$app->response->statusCode = $redirectsSettings->status_code->id;
+                    \Yii::$app->response->redirect($finalUrl."/");
+                    \Yii::$app->end();
+                }
+            }
+        }
+
+        // Загружаем правила
         foreach (\Yii::$app->modules as $name => $moduleConf) {
             $file = \Yii::getAlias("@app/modules/{$name}/urlRules.php");
             if (is_file($file)) {
