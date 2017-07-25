@@ -26,9 +26,9 @@ class UrlManager extends \yii\web\UrlManager
             foreach ($redirectsSettings->redirectsSettingsUrls as $redirect) {
                 if(strpos($currentUrl['path'], $redirect->url_from) !== false) {
                     if ($web)
-                        $finalUrl = $protocol . '://' . $web . '.' . $currentUrl['host'] . '/' . trim($redirect->url_to, '/') . '/';
+                        $finalUrl = $protocol . '://' . $web . '.' . $currentUrl['host'] . '/' . trim($redirect->url_to, '/');
                     else
-                        $finalUrl = $protocol . '://' . $currentUrl['host'] . '/' . trim($redirect->url_to, '/') . '/';
+                        $finalUrl = $protocol . '://' . $currentUrl['host'] . '/' . trim($redirect->url_to, '/');
 
                     \Yii::$app->response->statusCode = $statusCode;
                     \Yii::$app->response->redirect($finalUrl);
