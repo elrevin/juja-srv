@@ -19,18 +19,32 @@ class UrlManager extends \yii\web\UrlManager
         $redirectsSettings = RedirectsSettings::find()->one();
         if ($redirectsSettings) {
             $currentUrl = parse_url(\Yii::$app->request->absoluteUrl);
+            $web = $redirectsSettings->web->id;
+            $protocol = $redirectsSettings->protocol->id;
+            $statusCode = $redirectsSettings->status_code->id;
+
             foreach ($redirectsSettings->redirectsSettingsUrls as $redirect) {
                 if(strpos($currentUrl['path'], $redirect->url_from) !== false) {
-                    $web = $redirectsSettings->web->id;
                     if ($web)
-                        $finalUrl = $redirectsSettings->protocol->id . '://' . $web . '.' . $currentUrl['host'] . '/' . $redirect->url_to;
+                        $finalUrl = $protocol . '://' . $web . '.' . $currentUrl['host'] . '/' . trim($redirect->url_to, '/');
                     else
-                        $finalUrl = $redirectsSettings->protocol->id . '://' . $currentUrl['host'] . '/' . $redirect->url_to;
+                        $finalUrl = $protocol . '://' . $currentUrl['host'] . '/' . trim($redirect->url_to, '/');
 
-                    \Yii::$app->response->statusCode = $redirectsSettings->status_code->id;
-                    \Yii::$app->response->redirect($finalUrl."/");
+                    \Yii::$app->response->statusCode = $statusCode;
+                    \Yii::$app->response->redirect($finalUrl);
                     \Yii::$app->end();
                 }
+            }
+
+            if ($currentUrl['scheme'] != $protocol || ($web && strpos($currentUrl['host'], $web) !== false)) {
+                if ($web)
+                    $finalUrl = $protocol . '://' . $web . '.' . $currentUrl['host'];
+                else
+                    $finalUrl = $protocol . '://' . $currentUrl['host'];
+
+                \Yii::$app->response->statusCode = $statusCode;
+                \Yii::$app->response->redirect($finalUrl);
+                \Yii::$app->end();
             }
         }
 
