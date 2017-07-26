@@ -4,6 +4,8 @@
  */
 namespace app\components;
 
+use app\modules\backend\models\RedirectsSettings;
+
 class UrlManager extends \yii\web\UrlManager
 {
     /**
@@ -13,8 +15,40 @@ class UrlManager extends \yii\web\UrlManager
     
     public function init()
     {
-        // Загружаем правила
+        // Отрабатываем редиректы
+        $redirectsSettings = RedirectsSettings::find()->one();
+        if ($redirectsSettings) {
+            $currentUrl = parse_url(\Yii::$app->request->absoluteUrl);
+            $web = $redirectsSettings->web->id;
+            $protocol = $redirectsSettings->protocol->id;
+            $statusCode = $redirectsSettings->status_code->id;
 
+            foreach ($redirectsSettings->redirectsSettingsUrls as $redirect) {
+                if(strpos($currentUrl['path'], $redirect->url_from) !== false) {
+                    if ($web)
+                        $finalUrl = $protocol . '://' . $web . '.' . $currentUrl['host'] . '/' . trim($redirect->url_to, '/');
+                    else
+                        $finalUrl = $protocol . '://' . $currentUrl['host'] . '/' . trim($redirect->url_to, '/');
+
+                    \Yii::$app->response->statusCode = $statusCode;
+                    \Yii::$app->response->redirect($finalUrl);
+                    \Yii::$app->end();
+                }
+            }
+
+            if ($currentUrl['scheme'] != $protocol || ($web && strpos($currentUrl['host'], $web) !== false)) {
+                if ($web)
+                    $finalUrl = $protocol . '://' . $web . '.' . $currentUrl['host'];
+                else
+                    $finalUrl = $protocol . '://' . $currentUrl['host'];
+
+                \Yii::$app->response->statusCode = $statusCode;
+                \Yii::$app->response->redirect($finalUrl);
+                \Yii::$app->end();
+            }
+        }
+
+        // Загружаем правила
         foreach (\Yii::$app->modules as $name => $moduleConf) {
             $file = \Yii::getAlias("@app/modules/{$name}/urlRules.php");
             if (is_file($file)) {
