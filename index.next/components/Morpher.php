@@ -70,11 +70,12 @@ class Morpher extends Component
         }
         $query = implode("&", $query);
         try {
-            $h = md5("http://api.morpher.ru/WebService.asmx/{$function}?".$query);
+            $url = "http://ws3.morpher.ru/russian/{$function}?{$query}";
+            $h = md5($url);
             if (isset($this->cache[$h])) {
                 return $this->cache[$h];
             } else {
-                $cont = file_get_contents("http://api.morpher.ru/WebService.asmx/{$function}?".$query);
+                $cont = file_get_contents($url);
                 if ($cont) {
                     $xml = simplexml_load_string($cont);
                     $this->cache[$h] = $xml;
@@ -96,7 +97,7 @@ class Morpher extends Component
             case static::CASE_INSTRUMENTAL : $case = "Т"; break;
             case static::CASE_PREPOSITIONAL : $case = "П"; break;
         }
-        $xml = $this->sendRequest('GetXml', [
+        $xml = $this->sendRequest('declension', [
             "s" => $s,
         ]);
 
@@ -110,7 +111,7 @@ class Morpher extends Component
 
     public function getFullName($s)
     {
-        $xml = $this->sendRequest('GetXml', [
+        $xml = $this->sendRequest('declension', [
             "s" => $s,
         ]);
 
@@ -138,7 +139,7 @@ class Morpher extends Component
                 default : $case = "И"; break;
             }
         }
-        $xml = $this->sendRequest('Propis', [
+        $xml = $this->sendRequest('spell', [
             "n" => $num,
             "unit" => $unit,
         ]);
