@@ -1,10 +1,10 @@
 <?php
 namespace app\components;
+use yii\base\BaseObject;
 use yii\base\Component;
-use yii\base\Object;
 use yii\helpers\Json;
 
-class CompanyData extends Object
+class CompanyData extends BaseObject
 {
     public $shortName = '';
     public $fullName = '';
@@ -18,9 +18,10 @@ class CompanyData extends Object
     public $address = '';
     public $directorName = '';
     public $directorPost = '';
+    public $individual = false;
 }
 
-class BankData extends Object
+class BankData extends BaseObject
 {
     public $shortName = '';
     public $fullName = '';
@@ -31,7 +32,7 @@ class BankData extends Object
     public $correspondentAccount = '';
 }
 
-class AddressData extends Object
+class AddressData extends BaseObject
 {
     public $postalCode = '';
     public $country = '';
@@ -63,12 +64,21 @@ class AddressData extends Object
     public $geoLon = '';
 }
 
+class FioData extends BaseObject
+{
+    public $name;
+    public $patronymic;
+    public $surname;
+    public $gender;
+
+}
+
 class Dadata extends Component
 {
     private $url,
         $token;
     public function init() {
-        $this->url = "https://dadata.ru/api/v2/suggest/";
+        $this->url = "https://suggestions.dadata.ru/suggestions/api/4_1/rs/suggest/";
         $this->token = \Yii::$app->params['dadataApiKey'];
     }
 
@@ -98,6 +108,7 @@ class Dadata extends Component
         if ($data->suggestions) {
             $ret = [];
             foreach ($data->suggestions as $item) {
+                $retItem['individual'] = ($item->data->type == 'INDIVIDUAL' );
                 $retItem['shortNameOpf'] = strval($item->data->name->short_with_opf);
                 $retItem['fullNameOpf'] = strval($item->data->name->full_with_opf);
                 $retItem['shortName'] = ($item->data->type == 'INDIVIDUAL' ? strval($item->data->name->full) : strval($item->data->name->short));
@@ -108,8 +119,8 @@ class Dadata extends Component
                 $retItem['okved'] = strval($item->data->okved);
                 $retItem['okpo'] = strval($item->data->okpo);
                 $retItem['address'] = strval($item->data->address->value);
-                $retItem['directorName'] = ($item->data->type == 'INDIVIDUAL' ? strval($item->data->name->full) : strval($item->data->management->name));
-                $retItem['directorPost'] = ($item->data->type == 'INDIVIDUAL' ? '' : strval($item->data->management->post));
+                $retItem['directorName'] = ($item->data->type == 'INDIVIDUAL' ? strval($item->data->name->full) : ($item->data->management ? strval($item->data->management->name) : ""));
+                $retItem['directorPost'] = ($item->data->type == 'INDIVIDUAL' ? '' : ($item->data->management ? strval($item->data->management->post) : ""));
 
                 if ($first) {
                     return new CompanyData($retItem);
@@ -220,6 +231,46 @@ class Dadata extends Component
                     return new AddressData($retItem);
                 } else {
                     $ret[] = new AddressData($retItem);
+                }
+            }
+        }
+        return $ret;
+    }
+
+    public function getFio($data, $first = true)
+    {
+        $options = [
+            'http' => [
+                'method'  => 'POST',
+                'header'  => [
+                    'Content-type: application/json',
+                    'Accept: application/json',
+                    'Authorization: Token ' . $this->token,
+                ],
+                'content' => Json::encode([
+                    "query" => $data,
+                ]),
+            ],
+        ];
+        $context = stream_context_create($options);
+        $result = file_get_contents($this->url."fio", false, $context);
+        $data = json_decode($result);
+        $ret = null;
+
+        if ($data->suggestions) {
+            $ret = [];
+            foreach ($data->suggestions as $item) {
+                $item = $item->data;
+                $retItem = [];
+                $retItem['surname'] = $item->surname;
+                $retItem['name'] = $item->name;
+                $retItem['patronymic'] = $item->patronymic;
+                $retItem['gender'] = $item->gender;
+
+                if ($first) {
+                    return new FioData($retItem);
+                } else {
+                    $ret[] = new FioData($retItem);
                 }
             }
         }

@@ -816,8 +816,13 @@ class ActiveRecord extends db\ActiveRecord
         }
     }
 
+    static protected $_tablesChecked = [];
+
     public static function checkStructure () {
         if (YII_DEBUG) {
+            if (in_array(static::tableName(), self::$_tablesChecked)) {
+                return;
+            }
             // Сначала extended модель
             /**
              * @var $extendedModel ActiveRecord
@@ -829,6 +834,7 @@ class ActiveRecord extends db\ActiveRecord
 
             // Проверяем наличие таблицы
             $tableName = static::tableName();
+            self::$_tablesChecked[] = $tableName;
             $table = Yii::$app->db->createCommand("Show tables like '". $tableName ."'")->queryAll();
             $cols = [];
             if (!$table) {
@@ -850,7 +856,7 @@ class ActiveRecord extends db\ActiveRecord
             }
 
             // Перманентное удаление
-            if (!static::$permanentlyDelete && !array_key_exists('del', $cols)) {
+            if (!static::$permanentlyDelete && !array_key_exists('del', $cols) && !(static::$linkModelName && static::$slaveModelAddMethod == ActiveRecord::SLAVE_MODEL_ADD_METHOD_CHECK)) {
                 // Добавляем поле 'del'
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."` ADD COLUMN `del` tinyint(1) NOT NULL DEFAULT 0
@@ -981,6 +987,13 @@ class ActiveRecord extends db\ActiveRecord
             }
         }
     }
+
+    public static function deleteAll($condition = null, $params = [])
+    {
+        static::checkStructure();
+        return parent::deleteAll($condition, $params);
+    }
+
 
     public static function getMasterModelRelationsType()
     {
@@ -1122,6 +1135,14 @@ class ActiveRecord extends db\ActiveRecord
 
     public static function getModelTitle () {
         return static::$modelTitle;
+    }
+
+    public static function getRecordTitle () {
+        return static::$recordTitle;
+    }
+
+    public static function getAccusativeRecordTitle () {
+        return static::$accusativeRecordTitle;
     }
 
     public static function getRecursive () {
@@ -1300,6 +1321,13 @@ class ActiveRecord extends db\ActiveRecord
             $field = null;
             if (isset(static::$structure[$fieldName])) {
                 $field = static::$structure[$fieldName];
+                if (is_string($field)) {
+                    $field = [
+                        "title" => $field,
+                        "type" => "string",
+                    ];
+                }
+
                 $field['name'] = $fieldName;
                 $field['fake'] = (isset($field['fake']) ? $field['fake'] : false);
                 $field['calc'] = (isset($field['calc']) ? $field['calc'] : false);
@@ -1316,17 +1344,7 @@ class ActiveRecord extends db\ActiveRecord
         }
         $structure = [];
         foreach (static::$structure as $fieldName => $field) {
-            $field['name'] = $fieldName;
-            $field['fake'] = (isset($field['fake']) ? $field['fake'] : false);
-            $field['calc'] = (isset($field['calc']) ? $field['calc'] : false);
-            $field['addition'] = (isset($field['addition']) ? $field['addition'] : false);
-            $field['additionTable'] = (isset($field['additionTable']) ? $field['additionTable'] : '');
-            $field['expression'] = (isset($field['expression']) ? $field['expression'] : false);
-            $field['selectOptions'] = (isset($field['selectOptions']) ? $field['selectOptions'] : []);
-            $field['required'] = (isset($field['required']) ? $field['required'] : false);
-            $field['autoNumber'] = (isset($field['autoNumber']) ? $field['autoNumber'] : false);
-            $field['autoNumberReset'] = (isset($field['autoNumberReset']) ? $field['autoNumberReset'] : Utils::AUTONUMBER_RESET_NEVER);
-            $field['nullAllow'] = (isset($field['nullAllow']) ? $field['nullAllow'] : false);
+            $field = static::getStructure($fieldName);
             $structure[$fieldName] = $field;
         }
         return $structure;
@@ -1517,6 +1535,9 @@ class ActiveRecord extends db\ActiveRecord
 
         if ($data) {
             foreach ($data as $key => $val) {
+                if (isset($structure[$key]['fake']) && $structure[$key]['fake']) {
+                    continue;
+                }
                 if (isset($structure[$key]) && $structure[$key]['type'] != 'linked' && $structure[$key]['type'] != 'fromextended' &&
                     $structure[$key]['type'] != 'file' && $structure[$key]['type'] != 'bool' &&
                     (!isset($structure[$key]['calc']) || !$structure[$key]['calc']) &&
@@ -1641,7 +1662,16 @@ class ActiveRecord extends db\ActiveRecord
     /**
      * @param bool $insert
      * @param array $data
-     * @return array|null|bool
+     * @return array|bool|null
+     */
+    function beforeSaveData($insert, $data) {
+        return $data;
+    }
+    
+    /**
+     * @param bool $insert
+     * @param array $data
+     * @return array|bool|null
      */
     function afterSaveData($insert, $data)
     {
@@ -1667,6 +1697,8 @@ class ActiveRecord extends db\ActiveRecord
             $this->{static::$extendedModelRelFieldName} = $data[static::$extendedModelRelFieldName];
         }
 
+        $data = $this->beforeSaveData($add, $data);
+        
         $this->mapJson($data);
 
         if (static::$sortable && $add) {

@@ -59,7 +59,7 @@ class Morpher extends Component
      * @const Предложный падеж (О ком? О чем?)
      */
     const CASE_PREPOSITIONAL = 5;
-    
+
     protected $cache = [];
 
     protected function sendRequest($function, $data)

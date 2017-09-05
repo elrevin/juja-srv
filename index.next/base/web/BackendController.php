@@ -102,7 +102,7 @@ class BackendController extends Controller
             $params['modelName'] = $modelName;
         }
 
-        $params['modelName'] = (isset($params['modelName']) ? '\app\modules\\'.$this->module->id.'\models\\'.$params['modelName'] : '');
+        $params['modelName'] = (isset($params['modelName']) ? '\app\modules\\'.(is_string($this->module) ? $this->module : $this->module->id).'\models\\'.$params['modelName'] : '');
 
         $masterId = intval(Yii::$app->request->get('masterId', 0));
 
@@ -180,12 +180,12 @@ class BackendController extends Controller
         foreach ($list as $item) {
             $node = [
                 "modelName" => $shortModelName,
-                "moduleName" => $this->module->id,
+                "moduleName" => (is_string($this->module) ? $this->module : $this->module->id),
                 "leaf" => true,
                 "title" => $item[$identifyFieldName],
                 "recordId" => $item['id'],
-                "runAction" => [$this->module->id, "main", "get-interface"],
-                "sortAction" => [$this->module->id, "main", "sort-records"],
+                "runAction" => [(is_string($this->module) ? $this->module : $this->module->id), "main", "get-interface"],
+                "sortAction" => [(is_string($this->module) ? $this->module : $this->module->id), "main", "sort-records"],
                 "sortable" => call_user_func([$modelName, 'isSortable'])
             ];
 
@@ -194,7 +194,7 @@ class BackendController extends Controller
                 $query = call_user_func([$modelName, 'find']);
                 $haveChildren = $query->where(['parent_id' => $item['id']])->select(['id'])->limit(1)->exists();
                 $node['leaf'] = false;//!$haveChildren;
-                $node['getSubTreeAction'] = [$this->module->id, "main", "cp-menu"];
+                $node['getSubTreeAction'] = [(is_string($this->module) ? $this->module : $this->module->id), "main", "cp-menu"];
                 $node['list'] = $this->getCPMenuData($recursive, $shortModelName, $modelName, $item['id'], $identifyFieldName);
             }
             $res[] = $node;
@@ -227,7 +227,7 @@ class BackendController extends Controller
         //      толдько атрибут "runAction", а "getSubTreeAction" не требуется.
 
         $shortModelName = $modelName;
-        $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+        $modelName = '\app\modules\\'.(is_string($this->module) ? $this->module : $this->module->id).'\models\\'.$modelName;
 
         $identifyFieldName = call_user_func([$modelName, 'getIdentifyFieldConf'])['name'];
         $recursive = call_user_func([$modelName, 'getRecursive']);
@@ -272,7 +272,7 @@ class BackendController extends Controller
 
     protected function getDataFile($fileName)
     {
-        $moduleName = $this->module->id;
+        $moduleName = (is_string($this->module) ? $this->module : $this->module->id);
         return \app\helpers\Utils::getDataFile($moduleName, $fileName);
     }
 
@@ -289,7 +289,7 @@ class BackendController extends Controller
             $this->ajaxError('\app\base\web\BackendController\actionGetInterface?modelName='.$modelName, 'Справочник не найден.');
         }
 
-        $moduleName = $this->module->id;
+        $moduleName = (is_string($this->module) ? $this->module : $this->module->id);
 
         $masterId = ($masterId ? $masterId : intval(Yii::$app->request->get('masterRecordId', 0)));
         $recordId = intval(Yii::$app->request->get('id', 0));
@@ -314,7 +314,7 @@ class BackendController extends Controller
         $modelName = Yii::$app->request->get('modelName');
         $file = Yii::$app->request->get('file');
         if (preg_match("/^[a-zA-Z0-9_]+$/", $modelName) && preg_match("/^[a-zA-Z0-9_\\/]+\\.js$/", $file)) {
-            $path = '@app/modules/'.$this->module->id.'/js/'.$modelName.'/'.$file;
+            $path = '@app/modules/'.(is_string($this->module) ? $this->module : $this->module->id).'/js/'.$modelName.'/'.$file;
             $path = Yii::getAlias($path);
             if (file_exists($path)) {
                 $content = file_get_contents($path);
@@ -335,7 +335,7 @@ class BackendController extends Controller
          */
         $modelName = Yii::$app->request->get('modelName', '');
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
-            $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+            $modelName = '\app\modules\\'.(is_string($this->module) ? $this->module : $this->module->id).'\models\\'.$modelName;
 
             $filterParams = Yii::$app->request->post('colFilter', null);
             $defaultFilterCondition = Yii::$app->request->post('defaultFilterCondition', null);
@@ -397,7 +397,7 @@ class BackendController extends Controller
         $masterId = intval(Yii::$app->request->post('masterId', 0));
 
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
-            $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+            $modelName = '\app\modules\\'.(is_string($this->module) ? $this->module : $this->module->id).'\models\\'.$modelName;
             if ($add || !(isset($data['id']) && $data['id'])) {
                 /**
                  * @var \yii\db\ActiveRecord
@@ -482,7 +482,7 @@ class BackendController extends Controller
             /**
              * @var $modelName ActiveRecord
              */
-            $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+            $modelName = '\app\modules\\'.(is_string($this->module) ? $this->module : $this->module->id).'\models\\'.$modelName;
 
             // Модель рекурсивная
             $recursive = call_user_func([$modelName, 'getRecursive']);
@@ -599,7 +599,7 @@ class BackendController extends Controller
         $masterId = intval(Yii::$app->request->post('masterId', 0));
 
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
-            $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$modelName;
+            $modelName = '\app\modules\\'.(is_string($this->module) ? $this->module : $this->module->id).'\models\\'.$modelName;
 
             if (is_array($data) && isset($data[0])) {
                 $conditions = [];
@@ -642,12 +642,12 @@ class BackendController extends Controller
             throw new Exception("Print form not found");
         }
 
-        $formFile = Yii::getAlias("@app/modules/".$this->module->id."/printforms/{$form}.php");
+        $formFile = Yii::getAlias("@app/modules/".(is_string($this->module) ? $this->module : $this->module->id)."/printforms/{$form}.php");
 
         /**
          * @var $formClass PrintForm
          */
-        $formClass = '\app\modules\\'.$this->module->id.'\printforms\\'.$form;
+        $formClass = '\app\modules\\'.(is_string($this->module) ? $this->module : $this->module->id).'\printforms\\'.$form;
 
         if (!file_exists($formFile) || !method_exists($formClass, 'printItem')) {
             throw new Exception("Print form not found");
@@ -671,12 +671,12 @@ class BackendController extends Controller
             throw new Exception("Print form not found");
         }
 
-        $formFile = Yii::getAlias("@app/modules/".$this->module->id."/printforms/{$form}.php");
+        $formFile = Yii::getAlias("@app/modules/".(is_string($this->module) ? $this->module : $this->module->id)."/printforms/{$form}.php");
 
         /**
          * @var $formClass PrintForm
          */
-        $formClass = '\app\modules\\'.$this->module->id.'\printforms\\'.$form;
+        $formClass = '\app\modules\\'.(is_string($this->module) ? $this->module : $this->module->id).'\printforms\\'.$form;
 
         if (!file_exists($formFile) || !method_exists($formClass, 'printItem')) {
             throw new Exception("Print form not found");

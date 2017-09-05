@@ -3,6 +3,7 @@ namespace app\base\web;
 class Request extends \yii\web\Request
 {
     public $baseDomain = '';
+    public $baseProtocol = "http";
     
     function init()
     {

@@ -146,6 +146,9 @@ $config = [
         'morpher' => [
             'class' => '\app\components\Morpher'
         ],
+        'dadata' => [
+            'class' => '\app\components\Dadata'
+        ],
     ],
     'params' => array_merge(['breadCrumbs' => []], [
         'passwordRestoreLetterSubject' => 'Востановление доступа к панели управления сайта '.$_SERVER['SERVER_NAME'],

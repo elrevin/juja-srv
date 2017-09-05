@@ -20,6 +20,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
     private $_pointersCount = 0;
     private $_fields = [];
     private $_calcFields = [];
+    private $_fromSectionWasChanged = false;
 
     public function createCommand($db = null)
     {
@@ -40,7 +41,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $from = $modelClass::tableName();
         }
 
-        if (!$modelClass::getPermanentlyDelete()) {
+        if (!$this->_fromSectionWasChanged && !$modelClass::getPermanentlyDelete()) {
             $this->andWhere("{$from}.del = 0");
         }
 
@@ -101,7 +102,12 @@ class ActiveQuery extends \yii\db\ActiveQuery
         }
 
         if ($fieldConf['expression']) {
+            $user = 0;
+            if (isset(\Yii::$app->user) && !\Yii::$app->user->isGuest) {
+                $user = \Yii::$app->user->id;
+            }
             $fieldConf['expression'] = preg_replace("/\\{\\{\\s*tablename\\s*\\}\\}/i", $tableAlias, $fieldConf['expression']);
+            $fieldConf['expression'] = preg_replace("/\\{\\{\\s*user\\s*\\}\\}/i", $user, $fieldConf['expression']);
         }
 
         if ($fieldConf['addition']) {
@@ -422,6 +428,9 @@ class ActiveQuery extends \yii\db\ActiveQuery
         $aliasesForExpressions = [];
         
         foreach ($structure as $fieldName => $fieldConf) {
+            if (isset($fieldConf['fake']) && $fieldConf['fake']) {
+                continue;
+            }
             if (isset($params['identifyOnly']) && $params['identifyOnly']) {
                 if (isset($fieldConf['identify']) && $fieldConf['identify']) {
                     $identifyFieldName = $fieldName;
@@ -559,6 +568,7 @@ class ActiveQuery extends \yii\db\ActiveQuery
             $linkModelName = $modelClass::getLinkModelName();
             $relatedTableName = $linkModelName::tableName();
 
+            $this->_fromSectionWasChanged = true;
             $this->from(["__link_model_table" => $relatedTableName]);
             $this->select[] = "IF((`{$tableAlias}`.`id` IS NOT NULL AND ".
                 "`{$tableAlias}`.`".$modelClass::getMasterModelRelFieldName()."` = {$params['masterId']}), 1, 0) AS `__check`";
@@ -658,6 +668,8 @@ class ActiveQuery extends \yii\db\ActiveQuery
                      */
                     $field = $this->_fields[$fieldName];
                     $this->andWhere($field->getWhere($filter['operation'], $filter['value'], $filter['type']));
+                } elseif ($fieldName == $modelClass::getMasterModelRelFieldName()) {
+                    $this->andWhere(["`{$tableAlias}`.`{$fieldName}`" => $filter['value']]);
                 }
             }
         }

@@ -72,8 +72,14 @@ class Simple extends Object
         }
         $left = ($this->expression ? "({$this->expression})" : "`{$this->tableAlias}`.`{$this->name}`");
         if ($operation == 'set') {
+            if ($this->type == 'bool') {
+                return [$left => 1];
+            }
             return ['not', [$left => null]];
         } elseif ($operation == 'notset') {
+            if ($this->type == 'bool') {
+                return [$left => 0];
+            }
             return [$left => null];
         } elseif (in_array($this->type, ['int', 'float', 'date', 'datetime'])) {
             if ($operation == '==' || $operation == 'eq') {
