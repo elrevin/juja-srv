@@ -70,12 +70,15 @@ class Morpher extends Component
         }
         $query = implode("&", $query);
         try {
-            $url = "http://ws3.morpher.ru/russian/{$function}?{$query}";
+            $url = "https://ws3.morpher.ru/russian/{$function}?{$query}";
             $h = md5($url);
             if (isset($this->cache[$h])) {
                 return $this->cache[$h];
             } else {
-                $cont = file_get_contents($url);
+
+                (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] != 'off') ?
+                     $cont = $this->curl_get_contents($url) : $cont = file_get_contents($url);
+
                 if ($cont) {
                     $xml = simplexml_load_string($cont);
                     $this->cache[$h] = $xml;
@@ -153,5 +156,19 @@ class Morpher extends Component
             }
         }
         return null;
+    }
+
+    private function curl_get_contents($url)
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_URL, $url);
+
+        $data = curl_exec($ch);
+        curl_close($ch);
+
+        return $data;
     }
 }
