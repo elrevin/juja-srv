@@ -70,20 +70,6 @@ class UrlManager extends \yii\web\UrlManager
      */
     public function parseRequest($request)
     {
-        /*
-         * Если в конце URL нет слеша, добавляем его и выполняем 301 редирект
-         */
-        $url = $request->getAbsoluteUrl();
-        if (preg_match('|[^/]\?|', $url)) {
-            \Yii::$app->response->statusCode = 301;
-            \Yii::$app->response->redirect(str_replace('?', '/?', $url));
-            \Yii::$app->end();
-        } elseif (strpos($url, '?') === false && $url[strlen($url) - 1] != '/') {
-            \Yii::$app->response->statusCode = 301;
-            \Yii::$app->response->redirect($url."/");
-            \Yii::$app->end();
-        }
-
         $route = parent::parseRequest($request);
 
         $action = explode('/', $route[0]);

@@ -72,6 +72,12 @@ $config = [
             'showScriptName' => false,
             'enableStrictParsing' => true,
             'suffix' => '/',
+            'normalizer' => [
+                'class' => '\yii\web\UrlNormalizer',
+                'action' => 301,
+                'collapseSlashes' => true,
+                'normalizeTrailingSlash' => true,
+            ],
             'ruleConfig' => [
                 'class' => '\app\components\UrlRule',
             ],
