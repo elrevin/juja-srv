@@ -19,6 +19,8 @@ class BackendController extends Controller
     protected $currentInterfaceType = 'manage';
     protected $defaultAccessList = [
         'list' => 'backend-read',
+        'print-item' => 'backend-read',
+        'print-list' => 'backend-read',
         'save-record' => 'backend-save-record',
         'sort-records' => 'backend-save-record',
         'delete-record' => 'backend-delete-record',
@@ -686,6 +688,62 @@ class BackendController extends Controller
          * @var $form PrintForm
          */
         $form = new $formClass($this->module, $recordID, []);
-        return $form->printItem($options);
+        return $form->doPrint($options);
+    }
+
+    public function actionPrintList()
+    {
+        $columns = Json::decode(Yii::$app->request->get('columns'));
+        $options = Json::decode(Yii::$app->request->get('options', '[]'));
+        $form = Yii::$app->request->get('form', '');
+
+        if (preg_match('/^[a-z_0-9]+$/i', $form)) {
+            /** @var PrintForm $form */
+            $form = '\app\modules\\'.$this->module->id.'\printforms\\'.$form;
+
+            /**
+             * @var $modelName ActiveRecord
+             */
+            $modelName = '\app\modules\\'.$this->module->id.'\models\\'.$form::getModel();
+
+            $filterParams = Yii::$app->request->get('colFilter', null);
+            $defaultFilterCondition = Yii::$app->request->get('defaultFilterCondition', null);
+
+            $filterParams = Json::decode($filterParams ? $filterParams : Yii::$app->request->get('colFilter', '[]'));
+            $defaultFilterCondition = Json::decode($defaultFilterCondition ? $defaultFilterCondition : Yii::$app->request->get('defaultFilterCondition', '[]'));
+
+            $params = [
+                "identifyOnly" => false,
+                'masterId' => 0,
+                "sort" => Json::decode(Yii::$app->request->get('sort', '[]')),
+                "group" => Json::decode(Yii::$app->request->get('group', '[]')),
+                "start" => intval(Yii::$app->request->get('start', 0)),
+                "limit" => intval(Yii::$app->request->get('limit', 0)),
+                "filter" => $filterParams,
+                "all" => false,
+                "parentId" => Yii::$app->request->get('parentId', null),
+                'query' => Yii::$app->request->get('query', ''),
+                'defaultId' => intval(Yii::$app->request->post('defaultId', 0)),
+                'defaultFilterCondition' => $defaultFilterCondition,
+            ];
+
+            $list = $modelName::getList($params);
+
+            if ($columns) {
+                foreach ($list['data'] as $key => $item) {
+                    foreach ($list['data'][$key] as $col => $val) {
+                        if ($col != 'id' && !in_array($col, $columns)) {
+                            unset($list['data'][$key][$col]);
+                        }
+                    }
+                }
+            }
+
+            $form = new $form($this->module, 0, []);
+            return $form->doPrint($options, $list['data']);
+        }
+        $this->ajaxError('\app\base\web\BackendController\actionExportList?form='.$form, 'Справочник не найден.');
+        return null;
+
     }
 }

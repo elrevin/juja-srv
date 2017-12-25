@@ -2168,6 +2168,7 @@ class ActiveRecord extends db\ActiveRecord
             'saveAction' => $saveAction,
             'deleteAction' => $deleteAction,
             'printItemAction' => [static::getModuleName(), 'main', 'print-item'],
+            'printListAction' => [static::getModuleName(), 'main', 'print-list'],
             'linkModelRunAction' => $linkModelRunAction,
             'linkModelName' => $linkModelName,
             'modelName' => $modelName,
@@ -2247,7 +2248,7 @@ class ActiveRecord extends db\ActiveRecord
                          * @var $class PrintForm
                          */
                         $class = '\app\modules\\'.static::getModuleName().'\printforms\\'. $className;
-                        if (method_exists($class, "printItem") && $class::getModel() == $modelName) {
+                        if (method_exists($class, "doPrint") && $class::getModel() == $modelName) {
                             if (!$conf['printForms']) {
                                 $conf['printForms'] = [];
                             }
@@ -2255,6 +2256,7 @@ class ActiveRecord extends db\ActiveRecord
                                 'title' => $class::getTitle(),
                                 'format' => $class::getFormat(),
                                 "runAction" => null,
+                                'type' => $class::getFormType(),
                             ];
 
                             if ($class::getForm()) {

@@ -10,6 +10,9 @@ use yii\helpers\Json;
 
 class PrintForm extends Component implements ViewContextInterface
 {
+    const PRINT_FORM_TYPE_ITEM = 1;
+    const PRINT_FORM_TYPE_LIST = 2;
+
     private $_view;
     private $_viewPath;
 
@@ -19,6 +22,7 @@ class PrintForm extends Component implements ViewContextInterface
     protected $record = null;
 
     protected static $form = [];
+    protected static $formType = PrintForm::PRINT_FORM_TYPE_ITEM;
     protected $id;
     public $layout = false;
 
@@ -31,19 +35,21 @@ class PrintForm extends Component implements ViewContextInterface
     {
         $this->module = $module;
 
-        if (!$recordId) {
-            throw new Exception("Record id expected");
-        }
+        if (static::$formType == static::PRINT_FORM_TYPE_ITEM) {
+            if (!$recordId) {
+                throw new Exception("Record id expected");
+            }
 
-        /**
-         * @var $modelClass ActiveRecord
-         */
-        $modelClass = '\app\modules\\'.$this->module->id.'\models\\'.static::$model;
-        $this->record = $modelClass::find()->andWhere(['id' => $recordId])->one();
+            /**
+             * @var $modelClass ActiveRecord
+             */
+            $modelClass = '\app\modules\\'.$this->module->id.'\models\\'.static::$model;
+            $this->record = $modelClass::find()->andWhere(['id' => $recordId])->one();
 
-        if (!$this->record) {
-            \Yii::$app->response->format = \yii\web\Response::FORMAT_HTML;
-            throw new \yii\web\HttpException(404, 'Not found');
+            if (!$this->record) {
+                \Yii::$app->response->format = \yii\web\Response::FORMAT_HTML;
+                throw new \yii\web\HttpException(404, 'Not found');
+            }
         }
 
         $className = static::className();
@@ -99,6 +105,11 @@ class PrintForm extends Component implements ViewContextInterface
     public static function getForm()
     {
         return static::$form;
+    }
+
+    public static function getFormType()
+    {
+        return static::$formType;
     }
 
     public static function getModel()
@@ -219,12 +230,22 @@ class PrintForm extends Component implements ViewContextInterface
     }
 
     /**
+     * Для совместимости с предыдущими версиями
      * @param array $options
      * @return string
      */
     function printItem($options = [])
     {
-        return '';
+        return $this->doPrint($options);
     }
 
+    /**
+     * @param array $options
+     * @param array $list
+     * @return string
+     */
+    function doPrint($options = [], $list = [])
+    {
+        return '';
+    }
 }
