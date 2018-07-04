@@ -285,7 +285,8 @@ class Module extends \yii\base\Module implements BootstrapInterface
 
         if(!empty(self::$models[$id])) return self::$models[$id];
         $folder = \Yii::$app->basePath.'/modules/'.$id.'/models/';
-        if(is_dir($folder)){
+        self::$models[$id] = [];
+        if(file_exists($folder) && is_dir($folder)){
             foreach(glob($folder.'*.php') as $model){
                 /** @var  ActiveRecord $modelClass */
                 $model = basename($model, '.php');

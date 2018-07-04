@@ -7,16 +7,16 @@
     "license": "BSD-3-Clause",
     "minimum-stability": "dev",
     "require": {
-        "php": ">=5.4.0",
-        "yiisoft/yii2": ">=2.0.4",
+        "php": ">=7.0",
+        "yiisoft/yii2": "~2.0.15",
         "yiisoft/yii2-bootstrap": "*",
         "yiisoft/yii2-swiftmailer": "*",
         "yiisoft/yii2-twig": "*",
         "index-next/modules-installer": "*",
-        "index-next/site": "*",
         "index-next/backend": "*",
         "index-next/files": "*",
-        "index-next/usersmanager": "*"
+        "index-next/usersmanager": "*",
+        "true/punycode": "~2.0"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",
@@ -51,10 +51,6 @@
         }
     },
     "repositories": [
-        {
-            "type": "vcs",
-            "url":  "git@git.web-dev.ru:index-next/site.git"
-        },
         {
             "type": "vcs",
             "url":  "git@git.web-dev.ru:index-next/backend.git"

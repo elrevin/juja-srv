@@ -7,6 +7,36 @@ class m150228_210419_init extends Migration
 {
     public function up()
     {
+        $this->createTable("s_files", [
+            'id' => 'pk',
+            'title' => "varchar(1024) not null default ''",
+            'original_name' => "varchar(1024) not null default ''",
+            'name' => "varchar(1024) not null default ''",
+            'tmp' => "tinyint(1) default '0' not null",
+            'upload_time' => "int default '0' not null",
+        ]);
+
+        $this->createTable("s_constants", [
+            'id' => 'pk',
+            'title' => "varchar(1024) not null default ''",
+            'name' => "varchar(1024) not null default ''",
+            'module' => "varchar(256) not null default ''",
+            'type' => "varchar(1024) not null default ''",
+            'select_options' => "text not null default ''",
+            'related_model' => "varchar(1024) not null default ''",
+            'val_int' => "int(11) not null default 0",
+            'val_float' => "double not null default 0",
+            'val_select' => "varchar(1024) not null default ''",
+            'val_pointer' => "int(11) default null",
+            'val_string' => "varchar(1024) not null default ''",
+            'val_text' => "longtext null",
+            'val_html' => "longtext null",
+            'val_file' => "int(11) null",
+            'val_date' => "date null",
+            'val_datetime' => "datetime null",
+        ]);
+        $this->addForeignKey("s_constants__val_file__s_files__id", "s_constants", "val_file", "s_files", "id", "CASCADE", "CASCADE");
+
         $this->createTable("s_users_groups", [
             'id' => 'pk',
             'title' => "varchar(1024) not null default ''",
