@@ -12,11 +12,11 @@
         "yiisoft/yii2-bootstrap": "*",
         "yiisoft/yii2-swiftmailer": "*",
         "yiisoft/yii2-twig": "*",
+        "true/punycode": "~2.0",
         "index-next/modules-installer": "*",
         "index-next/backend": "*",
         "index-next/files": "*",
-        "index-next/usersmanager": "*",
-        "true/punycode": "~2.0"
+        "index-next/usersmanager": "*"
     },
     "require-dev": {
         "yiisoft/yii2-codeception": "*",

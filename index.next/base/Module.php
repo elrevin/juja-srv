@@ -50,7 +50,7 @@ class Module extends \yii\base\Module implements BootstrapInterface
      *      'module' - имя модуля на события которого подписываемся, если события генерирует непосредвенно объект модуля
      *      'observeClass' - полное имя класса (включая namespace) на события которого подписываемся (если определен observeClass,
      *          'module' игнорируется)
-     *      'event' - событие
+     *      'event' - Имя события или массив имен
      *      'subscriberClass' - класс подписанный на событие
      *      'subscriberComponent' - имя компонента модуля, который будет подписан на событие, если subscriberClass и subscriberComponent пустые,
      *           то подписывается объект модуля
@@ -148,6 +148,7 @@ class Module extends \yii\base\Module implements BootstrapInterface
 
     /**
      * @param \yii\base\Application $app
+     * @throws Exception
      */
     public function bootstrap($app)
     {
@@ -191,27 +192,31 @@ class Module extends \yii\base\Module implements BootstrapInterface
                 throw new Exception("Observable class not found");
             }
 
-            $event = $item['event'];
-
-            if (isset($item['subscriberClass'])) {
-                $subscriberClass = trim($item['subscriberClass'], '\\');
-            } elseif (isset($item['subscriberComponent'])) {
-                $subscriberClass = $this->{$item['subscriberComponent']};
-            } else {
-                $subscriberClass = $this;
+            $events = $item['event'];
+            if (!is_array($events)) {
+                $events = [$events];
             }
+            foreach ($events as $event) {
+                if (isset($item['subscriberClass'])) {
+                    $subscriberClass = trim($item['subscriberClass'], '\\');
+                } elseif (isset($item['subscriberComponent'])) {
+                    $subscriberClass = $this->{$item['subscriberComponent']};
+                } else {
+                    $subscriberClass = $this;
+                }
 
-            $method = $item['method'];
+                $method = $item['method'];
 
-            if (!$method) {
-                throw new Exception("Subscriber method not found");
+                if (!$method) {
+                    throw new Exception("Subscriber method not found");
+                }
+
+                if (!method_exists($subscriberClass, $method)) {
+                    throw new Exception("Subscriber method not exists");
+                }
+
+                Event::on($observeClass, $event, [$subscriberClass, $method]);
             }
-
-            if (!method_exists($subscriberClass, $method)) {
-                throw new Exception("Subscriber method not exists");
-            }
-
-            Event::on($observeClass, $event, [$subscriberClass, $method]);
         }
     }
 

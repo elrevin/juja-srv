@@ -2,6 +2,7 @@
 namespace app\base\db;
 
 use app\base\components\PrintForm;
+use app\components\ClassMaps;
 use app\helpers\Utils;
 use app\models\SDataHistory;
 use app\models\SDataHistoryEvents;
@@ -11,6 +12,16 @@ use yii\base\Exception;
 use yii\db;
 use yii\helpers\Json;
 
+/**
+ * Class ActiveRecord
+ * @package app\base\db
+ *
+ * @property $id
+ * @property $master_table_id
+ * @property $parent_id
+ * @property $link_table_id
+ * @property $_parent
+ */
 class ActiveRecord extends db\ActiveRecord
 {
     const MASTER_MODEL_RELATIONS_TYPE_MASTER_DETAIL = "master_detail";
@@ -231,6 +242,13 @@ class ActiveRecord extends db\ActiveRecord
      * @var array
      */
     protected static $structure = [];
+
+    /**
+     * Внешние расширения = классы из других модулей, которые могут менять структуру данных, добавлять или удалять
+     * детализации, обрабатывать события модели.
+     * @var Plugin[]
+     */
+    protected static $plugins = [];
 
     /**
      *  Полное имя класса модели, которую раширяем, если модель расширяемая
@@ -1300,6 +1318,13 @@ class ActiveRecord extends db\ActiveRecord
             $ret = array_merge($ret, $result);
         }
 
+        static::fillPlugins();
+
+        foreach (static::$plugins as $plugin) {
+            $details = $plugin::getDetailModels();
+            $ret = array_merge($ret, $details);
+        }
+
         static::$detailModels[$className] = $ret;
         return $ret;
     }
@@ -1307,6 +1332,11 @@ class ActiveRecord extends db\ActiveRecord
     public static function setDetailModels ($detailModels)
     {
         static::$detailModels = $detailModels;
+    }
+
+    protected static function fillPlugins()
+    {
+        static::$plugins = ClassMaps::getPlugins(static::class);
     }
 
     /**
@@ -1317,9 +1347,11 @@ class ActiveRecord extends db\ActiveRecord
      */
     public static function getStructure($fieldName = '')
     {
+        static::fillPlugins();
         if ($fieldName) {
             $field = null;
-            if (isset(static::$structure[$fieldName])) {
+
+            if (!$field && isset(static::$structure[$fieldName])) {
                 $field = static::$structure[$fieldName];
                 if (is_string($field)) {
                     $field = [
@@ -1342,10 +1374,18 @@ class ActiveRecord extends db\ActiveRecord
             }
             return $field;
         }
+
+        foreach (static::$plugins as $plugin) {
+            $pluginStr = $plugin::getStructure($fieldName);
+            static::$structure = array_merge(static::$structure, $pluginStr);
+        }
+
         $structure = [];
         foreach (static::$structure as $fieldName => $field) {
             $field = static::getStructure($fieldName);
-            $structure[$fieldName] = $field;
+            if ($field) {
+                $structure[$fieldName] = $field;
+            }
         }
         return $structure;
     }
@@ -1972,7 +2012,7 @@ class ActiveRecord extends db\ActiveRecord
                 $relativeModelPath = '';
                 if (!isset($relativeModel['moduleName']) || !isset($relativeModel['name'])) {
                     $relativeModelFullName = $relativeModel['classname'];
-                    $relativeModelPath = str_replace('\app\modules\\', '', str_replace('\models', '', $relativeModelFullName));
+                    $relativeModelPath = str_replace('app\modules\\', '', str_replace('\models', '', trim($relativeModelFullName, '\\')));
                     $relativeModelPath = explode('\\', $relativeModelPath);
                 }
 

@@ -336,6 +336,8 @@ class BackendController extends Controller
          * @var $modelName ActiveRecord
          */
         $modelName = Yii::$app->request->get('modelName', '');
+        $modelName = explode('\\', $modelName);
+        $modelName = array_pop($modelName);
         if (preg_match('/^[a-z_0-9]+$/i', $modelName)) {
             $modelName = '\app\modules\\'.(is_string($this->module) ? $this->module : $this->module->id).'\models\\'.$modelName;
 
@@ -394,6 +396,8 @@ class BackendController extends Controller
     public function actionSaveRecord()
     {
         $modelName = Yii::$app->request->get('modelName', '');
+        $modelName = explode('\\', $modelName);
+        $modelName = array_pop($modelName);
         $add = intval(Yii::$app->request->get('add', 0));
         $data = Json::decode(Yii::$app->request->post('data', '[]'));
         $masterId = intval(Yii::$app->request->post('masterId', 0));
@@ -475,6 +479,8 @@ class BackendController extends Controller
     {
         $records = str_replace('"', '', Yii::$app->request->post('records', '[]'));
         $modelName = Yii::$app->request->get('modelName', '');
+        $modelName = explode('\\', $modelName);
+        $modelName = array_pop($modelName);
         $position = Yii::$app->request->post('position', '');
         $over = intval(Yii::$app->request->post('over', ''));
 
@@ -597,6 +603,8 @@ class BackendController extends Controller
          * @var $modelName ActiveRecord
          */
         $modelName = Yii::$app->request->get('modelName', '');
+        $modelName = explode('\\', $modelName);
+        $modelName = array_pop($modelName);
         $data = Json::decode(Yii::$app->request->post('data', '[]'));
         $masterId = intval(Yii::$app->request->post('masterId', 0));
 
