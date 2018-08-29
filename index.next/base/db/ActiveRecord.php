@@ -21,6 +21,7 @@ use yii\helpers\Json;
  * @property $parent_id
  * @property $link_table_id
  * @property $_parent
+ * @property $sort_priority
  */
 class ActiveRecord extends db\ActiveRecord
 {
@@ -656,7 +657,7 @@ class ActiveRecord extends db\ActiveRecord
         foreach ($detailsModel as $model) {
             $modelClassNameParts = explode('\\', $model);
             $countOfModelClassNameParts = count($modelClassNameParts);
-            if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !method_exists($this, 'get'.$name)) {
+            if (($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) || $name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1])."s") && !method_exists($this, 'get'.$name)) {
                 $masterModelRelFieldName = call_user_func([$model, 'getMasterModelRelFieldName']);
                 $permanentlyDelete = call_user_func([$model, 'getPermanentlyDelete']);
                 $hiddable = call_user_func([$model, 'getHiddable']);
@@ -676,7 +677,7 @@ class ActiveRecord extends db\ActiveRecord
             $modelClassNameParts = explode('\\', $childModel);
             $countOfModelClassNameParts = count($modelClassNameParts);
 
-            if ($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) && !method_exists($this, 'get'.$name)) {
+            if (($name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1]) || $name == lcfirst($modelClassNameParts[$countOfModelClassNameParts - 1])."s") && !method_exists($this, 'get'.$name)) {
                 $masterModelRelFieldName = call_user_func([$childModel, 'getMasterModelRelFieldName']);
                 $permanentlyDelete = call_user_func([$childModel, 'getPermanentlyDelete']);
                 $hiddable = call_user_func([$childModel, 'getHiddable']);
@@ -987,6 +988,9 @@ class ActiveRecord extends db\ActiveRecord
                 Yii::$app->db->createCommand("
                     ALTER TABLE `". $tableName ."` ADD COLUMN `sort_priority` int(11) NOT NULL DEFAULT 0
                 ")->execute();
+
+                static::setSortPriorityToAll();
+
                 $cols['sort_priority'] = '';
             } elseif (!static::$sortable && array_key_exists('sort_priority', $cols)) {
                 Yii::$app->db->createCommand("
@@ -1244,7 +1248,7 @@ class ActiveRecord extends db\ActiveRecord
                     $modelName = $classNameSpace.'\\'.str_replace(".php", "", $file);
                     if ($modelName != $className) {
                         if (is_callable([$modelName, 'getParentModel'])) {
-                            $parentModel = call_user_func([$modelName, 'getParentModel']);
+                            $parentModel = '\\'.trim(call_user_func([$modelName, 'getParentModel']), '\\');
                             if ($parentModel == $className) {
                                 static::$childModel[$className] = $modelName;
                                 return $modelName;
@@ -1707,7 +1711,39 @@ class ActiveRecord extends db\ActiveRecord
     function beforeSaveData($insert, $data) {
         return $data;
     }
-    
+
+    /**
+     * @param $id
+     * @param null|int $parent
+     * @return int
+     */
+    protected static function getSortPriority($id, $parent = null)
+    {
+        if (static::$recursive) {
+            $maxSortIndex = intval(static::find()->select([new db\Expression("max(sort_priority)")])->andWhere(['parent_id' => $parent])->andWhere(['<>', 'id', $id])->scalar());
+        } else {
+            $maxSortIndex = intval(static::find()->select([new db\Expression("max(sort_priority)")])->andWhere(['<>', 'id', $id])->scalar());
+        }
+
+        return $maxSortIndex + 1;
+    }
+
+    protected static function setSortPriorityToAll($parent = null)
+    {
+        if (static::getRecursive()) {
+            $list = static::find()->andWhere(['parent_id' => $parent])->all();
+        } else {
+            $list = static::find()->all();
+        }
+        foreach ($list as $k => $item) {
+            $item->sort_priority = $k + 1;
+            $item->save();
+            if (static::getRecursive()) {
+                self::setSortPriorityToAll($item->id);
+            }
+        }
+    }
+
     /**
      * @param bool $insert
      * @param array $data
@@ -1742,8 +1778,7 @@ class ActiveRecord extends db\ActiveRecord
         $this->mapJson($data);
 
         if (static::$sortable && $add) {
-            $maxSortPriority = call_user_func([static::className(), 'find'])->max('sort_priority');
-            $this->sort_priority = $maxSortPriority + 1;
+            $this->sort_priority = static::getSortPriority(0, (isset($data['parent_id']) ? $data['parent_id'] : null));
         }
 
         $this->oldDirtyAttributes = $this->dirtyAttributes;

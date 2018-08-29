@@ -332,7 +332,7 @@ class Utils
      * @param  string $range IP/CIDR netmask eg. 127.0.0.0/24, also 127.0.0.1 is accepted and /32 assumed
      * @return boolean true if the ip is in this range / false if not.
      */
-    public function ipInRange( $ip, $range ) {
+    public static function ipInRange( $ip, $range ) {
         if ( strpos( $range, '/' ) == false ) {
             $range .= '/32';
         }
@@ -343,5 +343,10 @@ class Utils
         $wildcard_decimal = pow( 2, ( 32 - $netmask ) ) - 1;
         $netmask_decimal = ~ $wildcard_decimal;
         return ( ( $ip_decimal & $netmask_decimal ) == ( $range_decimal & $netmask_decimal ) );
+    }
+
+    public static function setCurrentSectionPath($path)
+    {
+        \Yii::$app->params["currentSectionPath"] = $path;
     }
 }

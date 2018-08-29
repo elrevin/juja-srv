@@ -12,13 +12,13 @@ class ClassMaps
         static::$modelsMaps = json_decode(file_get_contents(\Yii::getAlias("@app/maps/models.json")), true);
     }
 
-    public static function addModelToMap($module, $model, $className)
+    public static function addModelToMap($module, $className)
     {
         if (!isset(static::$modelsMaps[$module])) {
             static::$modelsMaps[$module] = [];
         }
 
-        static::$modelsMaps[$module][$model] = $className;
+        static::$modelsMaps[$module][] = $className;
 
         $json = json_encode(static::$modelsMaps);
         file_put_contents(\Yii::getAlias("@app/maps/models.json"), $json);
@@ -26,7 +26,7 @@ class ClassMaps
 
     public static function getModels($module = '')
     {
-        return ($module ? static::$modelsMaps[$module] : static::$modelsMaps);
+        return ($module ? (isset(static::$modelsMaps[$module]) ? static::$modelsMaps[$module] : []) : static::$modelsMaps);
     }
 
     public static function addPluginToMap($model, $className)

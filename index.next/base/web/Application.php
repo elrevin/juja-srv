@@ -24,6 +24,19 @@ class Application extends \yii\web\Application
                         }
                     }
                 }
+
+                $modelsDir = $currentModuleDir . "/models/";
+                if (file_exists($modelsDir)) {
+                    $models = scandir($modelsDir);
+                    foreach ($models as $model) {
+                        if (preg_match("/^[a-z0-9]+\\.php\$/i", $model)) {
+                            /** @var Plugin $pluginClass */
+                            $model = str_replace(".php", "", $model);
+                            $modelClass = '\app\modules\\' . $module . '\models\\' . $model;
+                            ClassMaps::addModelToMap($module, $modelClass);
+                        }
+                    }
+                }
             }
         }
     }
